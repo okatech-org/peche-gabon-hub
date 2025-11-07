@@ -22,9 +22,16 @@ import {
   Download,
   Settings,
   Database,
+  LayoutDashboard,
 } from "lucide-react";
 
 const menuItems = [
+  {
+    group: "Vue d'ensemble",
+    items: [
+      { title: "Tableau de Bord", url: "/admin/dashboard", icon: LayoutDashboard },
+    ],
+  },
   {
     group: "Gestion des Utilisateurs",
     items: [

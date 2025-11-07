@@ -8,6 +8,7 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { UsersManagement } from "@/components/admin/UsersManagement";
 import { RolesManagement } from "@/components/admin/RolesManagement";
+import { AdminDashboard } from "@/components/admin/AdminDashboard";
 
 const Admin = () => {
   const { user, roles, signOut } = useAuth();
@@ -56,7 +57,8 @@ const Admin = () => {
           {/* Main Content */}
           <main className="flex-1 overflow-auto p-6 bg-background">
             <Routes>
-              <Route path="/" element={<Navigate to="/admin/users" replace />} />
+              <Route path="/" element={<AdminDashboard />} />
+              <Route path="/dashboard" element={<AdminDashboard />} />
               <Route path="/users" element={<UsersManagement />} />
               <Route path="/roles" element={<RolesManagement />} />
               <Route path="/audit" element={<AuditLogsPlaceholder />} />
