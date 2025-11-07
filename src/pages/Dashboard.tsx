@@ -47,6 +47,12 @@ const Dashboard = () => {
   const { user, roles, signOut } = useAuth();
   const navigate = useNavigate();
 
+  // Redirection automatique des admins vers le panel d'administration
+  if (roles.includes('admin')) {
+    navigate('/admin', { replace: true });
+    return null;
+  }
+
   const primaryRole = roles[0] || 'pecheur';
 
   const getDashboardContent = () => {
