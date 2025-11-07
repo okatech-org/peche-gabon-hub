@@ -527,6 +527,7 @@ export type Database = {
           nom: string
           piece_id: string | null
           prenom: string
+          sexe: string | null
           statut: string | null
           telephone: string | null
           type_carte: string | null
@@ -542,6 +543,7 @@ export type Database = {
           nom: string
           piece_id?: string | null
           prenom: string
+          sexe?: string | null
           statut?: string | null
           telephone?: string | null
           type_carte?: string | null
@@ -557,6 +559,7 @@ export type Database = {
           nom?: string
           piece_id?: string | null
           prenom?: string
+          sexe?: string | null
           statut?: string | null
           telephone?: string | null
           type_carte?: string | null
