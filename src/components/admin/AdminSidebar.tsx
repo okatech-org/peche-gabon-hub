@@ -54,6 +54,7 @@ const menuItems = [
     items: [
       { title: "Pirogues (PA)", url: "/admin/pirogues", icon: Users },
       { title: "Navires (PI)", url: "/admin/navires", icon: Anchor },
+      { title: "Licences", url: "/admin/licences", icon: FileText },
     ],
   },
   {
