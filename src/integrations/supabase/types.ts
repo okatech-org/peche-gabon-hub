@@ -86,6 +86,146 @@ export type Database = {
         }
         Relationships: []
       }
+      captures_detail: {
+        Row: {
+          created_at: string
+          espece_id: string
+          id: string
+          nb_individus: number | null
+          poids_kg: number
+          sortie_id: string
+        }
+        Insert: {
+          created_at?: string
+          espece_id: string
+          id?: string
+          nb_individus?: number | null
+          poids_kg: number
+          sortie_id: string
+        }
+        Update: {
+          created_at?: string
+          espece_id?: string
+          id?: string
+          nb_individus?: number | null
+          poids_kg?: number
+          sortie_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "captures_detail_espece_id_fkey"
+            columns: ["espece_id"]
+            isOneToOne: false
+            referencedRelation: "especes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "captures_detail_sortie_id_fkey"
+            columns: ["sortie_id"]
+            isOneToOne: false
+            referencedRelation: "sorties_peche"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      captures_pa: {
+        Row: {
+          annee: number
+          cpue: number | null
+          created_at: string
+          date_capture: string
+          declare_par: string | null
+          effort_unite: number | null
+          engin_id: string
+          espece_id: string
+          id: string
+          mois: number
+          nb_individus: number | null
+          observations: string | null
+          pirogue_id: string
+          poids_kg: number
+          site_id: string
+          updated_at: string
+          valide: boolean | null
+          valide_le: string | null
+          valide_par: string | null
+          zone_peche: string | null
+        }
+        Insert: {
+          annee: number
+          cpue?: number | null
+          created_at?: string
+          date_capture: string
+          declare_par?: string | null
+          effort_unite?: number | null
+          engin_id: string
+          espece_id: string
+          id?: string
+          mois: number
+          nb_individus?: number | null
+          observations?: string | null
+          pirogue_id: string
+          poids_kg: number
+          site_id: string
+          updated_at?: string
+          valide?: boolean | null
+          valide_le?: string | null
+          valide_par?: string | null
+          zone_peche?: string | null
+        }
+        Update: {
+          annee?: number
+          cpue?: number | null
+          created_at?: string
+          date_capture?: string
+          declare_par?: string | null
+          effort_unite?: number | null
+          engin_id?: string
+          espece_id?: string
+          id?: string
+          mois?: number
+          nb_individus?: number | null
+          observations?: string | null
+          pirogue_id?: string
+          poids_kg?: number
+          site_id?: string
+          updated_at?: string
+          valide?: boolean | null
+          valide_le?: string | null
+          valide_par?: string | null
+          zone_peche?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "captures_pa_engin_id_fkey"
+            columns: ["engin_id"]
+            isOneToOne: false
+            referencedRelation: "engins"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "captures_pa_espece_id_fkey"
+            columns: ["espece_id"]
+            isOneToOne: false
+            referencedRelation: "especes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "captures_pa_pirogue_id_fkey"
+            columns: ["pirogue_id"]
+            isOneToOne: false
+            referencedRelation: "pirogues"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "captures_pa_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cooperatives: {
         Row: {
           adresse: string | null
@@ -461,6 +601,123 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "sites_strate_id_fkey"
+            columns: ["strate_id"]
+            isOneToOne: false
+            referencedRelation: "strates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sorties_peche: {
+        Row: {
+          annee: number
+          capitaine: string | null
+          capture_totale_kg: number | null
+          cooperative_id: string | null
+          cpue: number | null
+          created_at: string
+          crustaces_kg: number | null
+          date_depart: string
+          date_retour: string | null
+          declare_par: string | null
+          demersaux_kg: number | null
+          effort_heures: number | null
+          engin_id: string | null
+          id: string
+          mois: number
+          nb_pecheurs: number | null
+          observations: string | null
+          pelagiques_kg: number | null
+          pirogue_id: string
+          site_id: string
+          strate_id: string | null
+          updated_at: string
+          valide: boolean | null
+          zone_peche: string | null
+        }
+        Insert: {
+          annee: number
+          capitaine?: string | null
+          capture_totale_kg?: number | null
+          cooperative_id?: string | null
+          cpue?: number | null
+          created_at?: string
+          crustaces_kg?: number | null
+          date_depart: string
+          date_retour?: string | null
+          declare_par?: string | null
+          demersaux_kg?: number | null
+          effort_heures?: number | null
+          engin_id?: string | null
+          id?: string
+          mois: number
+          nb_pecheurs?: number | null
+          observations?: string | null
+          pelagiques_kg?: number | null
+          pirogue_id: string
+          site_id: string
+          strate_id?: string | null
+          updated_at?: string
+          valide?: boolean | null
+          zone_peche?: string | null
+        }
+        Update: {
+          annee?: number
+          capitaine?: string | null
+          capture_totale_kg?: number | null
+          cooperative_id?: string | null
+          cpue?: number | null
+          created_at?: string
+          crustaces_kg?: number | null
+          date_depart?: string
+          date_retour?: string | null
+          declare_par?: string | null
+          demersaux_kg?: number | null
+          effort_heures?: number | null
+          engin_id?: string | null
+          id?: string
+          mois?: number
+          nb_pecheurs?: number | null
+          observations?: string | null
+          pelagiques_kg?: number | null
+          pirogue_id?: string
+          site_id?: string
+          strate_id?: string | null
+          updated_at?: string
+          valide?: boolean | null
+          zone_peche?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sorties_peche_cooperative_id_fkey"
+            columns: ["cooperative_id"]
+            isOneToOne: false
+            referencedRelation: "cooperatives"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sorties_peche_engin_id_fkey"
+            columns: ["engin_id"]
+            isOneToOne: false
+            referencedRelation: "engins"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sorties_peche_pirogue_id_fkey"
+            columns: ["pirogue_id"]
+            isOneToOne: false
+            referencedRelation: "pirogues"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sorties_peche_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "sites"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sorties_peche_strate_id_fkey"
             columns: ["strate_id"]
             isOneToOne: false
             referencedRelation: "strates"

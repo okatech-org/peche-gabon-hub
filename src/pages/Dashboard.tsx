@@ -192,7 +192,11 @@ const Dashboard = () => {
           </CardHeader>
           <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {roles.includes('pecheur') && (
-              <Button className="h-24 flex flex-col gap-2" variant="outline">
+              <Button 
+                className="h-24 flex flex-col gap-2" 
+                variant="outline"
+                onClick={() => navigate("/captures")}
+              >
                 <Fish className="h-6 w-6" />
                 Déclarer une Capture
               </Button>
