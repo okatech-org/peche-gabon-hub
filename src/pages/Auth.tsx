@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Waves, Fish } from "lucide-react";
+import { Waves, Fish, ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 
@@ -60,6 +60,17 @@ const Auth = () => {
 
   return (
     <div className="min-h-screen flex flex-col lg:flex-row">
+      {/* Back button */}
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => navigate("/")}
+        className="absolute top-4 left-4 text-white hover:bg-white/10"
+      >
+        <ArrowLeft className="mr-2 h-4 w-4" />
+        Retour à l'accueil
+      </Button>
+
       {/* Left side - Branding */}
       <div className="lg:w-1/2 bg-gradient-ocean p-8 lg:p-12 flex flex-col justify-center text-white">
         <div className="max-w-md mx-auto">
