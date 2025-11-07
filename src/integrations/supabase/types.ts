@@ -333,6 +333,75 @@ export type Database = {
         }
         Relationships: []
       }
+      licences: {
+        Row: {
+          annee: number
+          created_at: string
+          date_debut: string
+          date_fin: string
+          engins_autorises: string[]
+          especes_cibles: string[]
+          id: string
+          montant_total: number
+          numero: string
+          observations: string | null
+          pirogue_id: string
+          statut: string
+          updated_at: string
+          valide_le: string | null
+          valide_par: string | null
+        }
+        Insert: {
+          annee: number
+          created_at?: string
+          date_debut: string
+          date_fin: string
+          engins_autorises?: string[]
+          especes_cibles?: string[]
+          id?: string
+          montant_total: number
+          numero: string
+          observations?: string | null
+          pirogue_id: string
+          statut?: string
+          updated_at?: string
+          valide_le?: string | null
+          valide_par?: string | null
+        }
+        Update: {
+          annee?: number
+          created_at?: string
+          date_debut?: string
+          date_fin?: string
+          engins_autorises?: string[]
+          especes_cibles?: string[]
+          id?: string
+          montant_total?: number
+          numero?: string
+          observations?: string | null
+          pirogue_id?: string
+          statut?: string
+          updated_at?: string
+          valide_le?: string | null
+          valide_par?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "licences_pirogue_id_fkey"
+            columns: ["pirogue_id"]
+            isOneToOne: false
+            referencedRelation: "pirogues"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "licences_valide_par_fkey"
+            columns: ["valide_par"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       navires: {
         Row: {
           annee_construction: number | null
@@ -567,6 +636,59 @@ export type Database = {
         }
         Relationships: []
       }
+      quittances: {
+        Row: {
+          annee: number
+          created_at: string
+          date_echeance: string
+          date_paiement: string | null
+          id: string
+          licence_id: string
+          mois: number
+          montant: number
+          numero_recu: string | null
+          observations: string | null
+          statut: string
+          updated_at: string
+        }
+        Insert: {
+          annee: number
+          created_at?: string
+          date_echeance: string
+          date_paiement?: string | null
+          id?: string
+          licence_id: string
+          mois: number
+          montant: number
+          numero_recu?: string | null
+          observations?: string | null
+          statut?: string
+          updated_at?: string
+        }
+        Update: {
+          annee?: number
+          created_at?: string
+          date_echeance?: string
+          date_paiement?: string | null
+          id?: string
+          licence_id?: string
+          mois?: number
+          montant?: number
+          numero_recu?: string | null
+          observations?: string | null
+          statut?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quittances_licence_id_fkey"
+            columns: ["licence_id"]
+            isOneToOne: false
+            referencedRelation: "licences"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sites: {
         Row: {
           created_at: string
@@ -787,6 +909,10 @@ export type Database = {
           user_role: Database["public"]["Enums"]["app_role"]
         }
         Returns: undefined
+      }
+      est_dans_fenetre_paiement: {
+        Args: { p_date_echeance: string }
+        Returns: boolean
       }
       get_user_roles: {
         Args: { _user_id: string }
