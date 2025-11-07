@@ -19,9 +19,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2, Search, Plus, Edit, Trash2, FileCheck, Ship, CheckCircle, XCircle, Clock } from "lucide-react";
+import { Loader2, Search, Plus, Edit, Trash2, FileCheck, Ship, CheckCircle, XCircle, Clock, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import { GenerateQuittancesDialog } from "./GenerateQuittancesDialog";
 
 export const LicencesManagement = () => {
   const [licences, setLicences] = useState<any[]>([]);
@@ -30,6 +31,8 @@ export const LicencesManagement = () => {
   const [statutFilter, setStatutFilter] = useState<string>("all");
   const [especes, setEspeces] = useState<any[]>([]);
   const [engins, setEngins] = useState<any[]>([]);
+  const [generateDialogOpen, setGenerateDialogOpen] = useState(false);
+  const [selectedLicence, setSelectedLicence] = useState<any>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -91,7 +94,7 @@ export const LicencesManagement = () => {
     const newStatut = currentStatut === 'validee' ? 'en_attente' : 'validee';
     
     try {
-      const { error } = await supabase
+      const { error: updateError } = await supabase
         .from('licences')
         .update({ 
           statut: newStatut,
@@ -100,7 +103,15 @@ export const LicencesManagement = () => {
         })
         .eq('id', id);
 
-      if (error) throw error;
+      if (updateError) throw updateError;
+
+      // Si la licence vient d'être validée, ouvrir le dialogue de génération
+      if (newStatut === 'validee') {
+        const licence = licences.find(l => l.id === id);
+        setSelectedLicence(licence);
+        setGenerateDialogOpen(true);
+      }
+
       toast.success(newStatut === 'validee' ? "Licence validée" : "Validation annulée");
       loadData();
     } catch (error: any) {
@@ -153,6 +164,13 @@ export const LicencesManagement = () => {
 
   return (
     <div className="space-y-6">
+      <GenerateQuittancesDialog
+        open={generateDialogOpen}
+        onOpenChange={setGenerateDialogOpen}
+        licence={selectedLicence}
+        onSuccess={loadData}
+      />
+
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
@@ -289,9 +307,11 @@ export const LicencesManagement = () => {
                             variant="ghost" 
                             size="sm"
                             onClick={() => handleValidate(licence.id, licence.statut)}
-                            title={licence.statut === 'validee' ? 'Annuler la validation' : 'Valider'}
+                            title={licence.statut === 'validee' ? 'Annuler la validation' : 'Valider et générer les quittances'}
+                            className={licence.statut !== 'validee' ? 'text-green-600 hover:text-green-700' : ''}
                           >
-                            <CheckCircle className="h-4 w-4 text-green-600" />
+                            {licence.statut !== 'validee' && <Sparkles className="mr-1 h-3 w-3" />}
+                            <CheckCircle className="h-4 w-4" />
                           </Button>
                           <Button 
                             variant="ghost" 
