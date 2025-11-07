@@ -9,7 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2, TrendingUp, TrendingDown, AlertTriangle, Target, Calendar, DollarSign, Activity, Download, BarChart3, History } from "lucide-react";
+import { Loader2, TrendingUp, TrendingDown, AlertTriangle, Target, Calendar, DollarSign, Activity, Download, BarChart3, History, Wind } from "lucide-react";
 import { toast } from "sonner";
 import { generatePrevisionsPDF } from "@/lib/pdfExport";
 import { Button } from "@/components/ui/button";
@@ -55,6 +55,8 @@ export const PrevisionsDashboard = () => {
   const [selectedPeriod, setSelectedPeriod] = useState<string>("12"); // Nombre de mois à analyser
   const [exporting, setExporting] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [facteursExternes, setFacteursExternes] = useState<any[]>([]);
+  const [modeleSaisonnier, setModeleSaisonnier] = useState<any[]>([]);
 
   useEffect(() => {
     loadHistorique();
@@ -66,19 +68,33 @@ export const PrevisionsDashboard = () => {
       const dateDebut = new Date();
       dateDebut.setMonth(dateDebut.getMonth() - 24);
 
-      const { data, error } = await supabase
-        .from('quittances')
-        .select('*')
-        .gte('date_echeance', dateDebut.toISOString().split('T')[0])
-        .order('annee')
-        .order('mois');
+      const [quittancesResult, facteursResult, saisonnierResult] = await Promise.all([
+        supabase
+          .from('quittances')
+          .select('*')
+          .gte('date_echeance', dateDebut.toISOString().split('T')[0])
+          .order('annee')
+          .order('mois'),
+        supabase
+          .from('facteurs_externes')
+          .select('*')
+          .eq('actif', true)
+          .order('date_debut'),
+        supabase
+          .from('modeles_saisonniers')
+          .select('*')
+          .order('mois')
+      ]);
 
-      if (error) throw error;
+      if (quittancesResult.error) throw quittancesResult.error;
+
+      setFacteursExternes(facteursResult.data || []);
+      setModeleSaisonnier(saisonnierResult.data || []);
 
       // Regrouper par mois/année
       const groupedData: { [key: string]: HistoriqueData } = {};
 
-      (data || []).forEach((q) => {
+      (quittancesResult.data || []).forEach((q) => {
         const key = `${q.annee}-${q.mois}`;
         if (!groupedData[key]) {
           groupedData[key] = {
@@ -160,9 +176,29 @@ export const PrevisionsDashboard = () => {
     const previsions = Array.from({ length: 6 }, (_, i) => {
       const moisIndex = (now.getMonth() + i + 1) % 12;
       const annee = now.getFullYear() + Math.floor((now.getMonth() + i + 1) / 12);
+      const moisDate = new Date(annee, moisIndex, 15); // Milieu du mois
       
-      // Prévision basée sur la tendance
-      const tauxPrevu = Math.max(0, Math.min(100, moyenneTaux + (slope * (n + i))));
+      // Prévision basée sur la tendance de base
+      let tauxPrevu = moyenneTaux + (slope * (n + i));
+      
+      // Appliquer le coefficient saisonnier
+      const coeffSaisonnier = modeleSaisonnier.find(m => m.mois === moisIndex + 1)?.coefficient_saisonnier || 1.0;
+      tauxPrevu = tauxPrevu * coeffSaisonnier;
+      
+      // Appliquer les facteurs externes actifs pour cette période
+      facteursExternes.forEach(facteur => {
+        const dateDebut = new Date(facteur.date_debut);
+        const dateFin = new Date(facteur.date_fin);
+        if (moisDate >= dateDebut && moisDate <= dateFin) {
+          // Pondérer l'impact selon l'importance
+          const poids = facteur.importance === 'forte' ? 1.0 : facteur.importance === 'moyenne' ? 0.7 : 0.4;
+          tauxPrevu += (facteur.impact_prevu * poids);
+        }
+      });
+      
+      // Limiter le taux entre 0 et 100
+      tauxPrevu = Math.max(0, Math.min(100, tauxPrevu));
+      
       const montantPrevu = moyenneAttendu;
       const recouvrementPrevu = (montantPrevu * tauxPrevu) / 100;
 
@@ -475,6 +511,55 @@ export const PrevisionsDashboard = () => {
           </Button>
         </div>
       </div>
+
+      {/* Facteurs Externes Appliqués */}
+      {facteursExternes.length > 0 && (
+        <Card className="border-blue-200 bg-blue-50/30">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Wind className="h-5 w-5" />
+              Facteurs Externes Intégrés aux Prévisions
+            </CardTitle>
+            <CardDescription>
+              Ces facteurs sont automatiquement pris en compte dans le calcul des prévisions
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-3 md:grid-cols-2">
+              {facteursExternes.map((facteur) => (
+                <div key={facteur.id} className="flex items-start gap-3 p-3 border rounded-lg bg-background">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="font-medium">{facteur.nom}</span>
+                      <Badge variant={
+                        facteur.type_facteur === 'economique' ? 'default' :
+                        facteur.type_facteur === 'carburant' ? 'destructive' :
+                        'secondary'
+                      }>
+                        {facteur.type_facteur}
+                      </Badge>
+                    </div>
+                    <p className="text-xs text-muted-foreground mb-2">
+                      {new Date(facteur.date_debut).toLocaleDateString('fr-FR')} - {new Date(facteur.date_fin).toLocaleDateString('fr-FR')}
+                    </p>
+                    <div className="flex items-center gap-4 text-sm">
+                      <span className={`font-medium ${
+                        facteur.impact_prevu > 0 ? 'text-green-600' : 
+                        facteur.impact_prevu < 0 ? 'text-destructive' : ''
+                      }`}>
+                        Impact: {facteur.impact_prevu > 0 ? '+' : ''}{facteur.impact_prevu}%
+                      </span>
+                      <Badge variant="outline" className="text-xs">
+                        {facteur.importance}
+                      </Badge>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Indicateurs clés */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">

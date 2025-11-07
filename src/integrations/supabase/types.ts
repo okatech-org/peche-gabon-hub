@@ -333,6 +333,60 @@ export type Database = {
         }
         Relationships: []
       }
+      facteurs_externes: {
+        Row: {
+          actif: boolean
+          created_at: string
+          created_by: string | null
+          date_debut: string
+          date_fin: string
+          description: string | null
+          id: string
+          impact_prevu: number
+          impact_reel: number | null
+          importance: string
+          nom: string
+          type_facteur: string
+          unite: string | null
+          updated_at: string
+          valeur_numerique: number | null
+        }
+        Insert: {
+          actif?: boolean
+          created_at?: string
+          created_by?: string | null
+          date_debut: string
+          date_fin: string
+          description?: string | null
+          id?: string
+          impact_prevu: number
+          impact_reel?: number | null
+          importance?: string
+          nom: string
+          type_facteur: string
+          unite?: string | null
+          updated_at?: string
+          valeur_numerique?: number | null
+        }
+        Update: {
+          actif?: boolean
+          created_at?: string
+          created_by?: string | null
+          date_debut?: string
+          date_fin?: string
+          description?: string | null
+          id?: string
+          impact_prevu?: number
+          impact_reel?: number | null
+          importance?: string
+          nom?: string
+          type_facteur?: string
+          unite?: string | null
+          updated_at?: string
+          valeur_numerique?: number | null
+        }
+        Relationships: []
+      }
       licences: {
         Row: {
           annee: number
@@ -443,6 +497,39 @@ export type Database = {
           periode_test_debut?: string
           periode_test_fin?: string
           precision?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      modeles_saisonniers: {
+        Row: {
+          coefficient_saisonnier: number
+          created_at: string
+          fiabilite: number
+          id: string
+          mois: number
+          nb_annees_analyse: number
+          notes: string | null
+          updated_at: string
+        }
+        Insert: {
+          coefficient_saisonnier?: number
+          created_at?: string
+          fiabilite?: number
+          id?: string
+          mois: number
+          nb_annees_analyse?: number
+          notes?: string | null
+          updated_at?: string
+        }
+        Update: {
+          coefficient_saisonnier?: number
+          created_at?: string
+          fiabilite?: number
+          id?: string
+          mois?: number
+          nb_annees_analyse?: number
+          notes?: string | null
           updated_at?: string
         }
         Relationships: []

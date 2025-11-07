@@ -26,6 +26,7 @@ import {
   TrendingUp,
   History,
   Lightbulb,
+  Wind,
 } from "lucide-react";
 
 const menuItems = [
@@ -68,6 +69,7 @@ const menuItems = [
       { title: "Prévisions", url: "/admin/previsions", icon: TrendingUp },
       { title: "Historique Prévisions", url: "/admin/previsions-history", icon: History },
       { title: "Simulation Scénarios", url: "/admin/scenarios", icon: Lightbulb },
+      { title: "Facteurs Externes", url: "/admin/facteurs-externes", icon: Wind },
     ],
   },
   {
