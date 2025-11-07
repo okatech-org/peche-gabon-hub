@@ -9,6 +9,8 @@ import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { UsersManagement } from "@/components/admin/UsersManagement";
 import { RolesManagement } from "@/components/admin/RolesManagement";
 import { AdminDashboard } from "@/components/admin/AdminDashboard";
+import { EspecesManagement } from "@/components/admin/EspecesManagement";
+import { CooperativesManagement } from "@/components/admin/CooperativesManagement";
 
 const Admin = () => {
   const { user, roles, signOut } = useAuth();
@@ -62,10 +64,10 @@ const Admin = () => {
               <Route path="/users" element={<UsersManagement />} />
               <Route path="/roles" element={<RolesManagement />} />
               <Route path="/audit" element={<AuditLogsPlaceholder />} />
-              <Route path="/especes" element={<EspecesPlaceholder />} />
+              <Route path="/especes" element={<EspecesManagement />} />
               <Route path="/engins" element={<EnginsPlaceholder />} />
               <Route path="/sites" element={<SitesPlaceholder />} />
-              <Route path="/cooperatives" element={<CooperativesPlaceholder />} />
+              <Route path="/cooperatives" element={<CooperativesManagement />} />
               <Route path="/import" element={<ImportPlaceholder />} />
               <Route path="/export" element={<ExportPlaceholder />} />
               <Route path="/data-integrity" element={<DataIntegrityPlaceholder />} />
