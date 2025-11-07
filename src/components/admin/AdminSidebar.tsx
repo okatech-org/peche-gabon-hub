@@ -23,6 +23,8 @@ import {
   Settings,
   Database,
   LayoutDashboard,
+  TrendingUp,
+  History,
 } from "lucide-react";
 
 const menuItems = [
@@ -62,7 +64,8 @@ const menuItems = [
     items: [
       { title: "Quittances", url: "/admin/quittances", icon: FileText },
       { title: "Tableau de Bord", url: "/admin/finances-dashboard", icon: LayoutDashboard },
-      { title: "Prévisions", url: "/admin/previsions", icon: LayoutDashboard },
+      { title: "Prévisions", url: "/admin/previsions", icon: TrendingUp },
+      { title: "Historique Prévisions", url: "/admin/previsions-history", icon: History },
     ],
   },
   {

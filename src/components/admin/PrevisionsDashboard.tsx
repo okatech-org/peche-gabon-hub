@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Select,
@@ -8,7 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2, TrendingUp, TrendingDown, AlertTriangle, Target, Calendar, DollarSign, Activity, Download, BarChart3 } from "lucide-react";
+import { Loader2, TrendingUp, TrendingDown, AlertTriangle, Target, Calendar, DollarSign, Activity, Download, BarChart3, History } from "lucide-react";
 import { toast } from "sonner";
 import { generatePrevisionsPDF } from "@/lib/pdfExport";
 import { Button } from "@/components/ui/button";
@@ -48,10 +49,12 @@ interface ComparisonData {
 }
 
 export const PrevisionsDashboard = () => {
+  const { user } = useAuth();
   const [historique, setHistorique] = useState<HistoriqueData[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedPeriod, setSelectedPeriod] = useState<string>("12"); // Nombre de mois à analyser
   const [exporting, setExporting] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     loadHistorique();
@@ -266,6 +269,79 @@ export const PrevisionsDashboard = () => {
 
   const comparison = calculateComparison();
 
+  // Sauvegarder les prévisions dans l'historique
+  const handleSavePrevisions = async () => {
+    if (!previsions || !user) {
+      toast.error("Impossible de sauvegarder les prévisions");
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const today = new Date().toISOString().split('T')[0];
+
+      // Sauvegarder les prévisions
+      const previsionsToSave = previsions.previsions.map(prev => ({
+        version_date: today,
+        periode_analyse: parseInt(selectedPeriod),
+        mois_prevu: prev.mois,
+        annee_prevu: prev.annee,
+        montant_prevu: prev.montantPrevu,
+        taux_prevu: prev.tauxPrevu,
+        recouvrement_prevu: prev.recouvrementPrevu,
+        intervalle_confiance: prev.intervalleConfiance,
+        moyenne_taux: previsions.moyenneTaux,
+        tendance: previsions.tendance,
+        ecart_type: previsions.ecartType,
+        volatilite: previsions.volatilite,
+        created_by: user.id,
+      }));
+
+      const { error: prevError } = await supabase
+        .from('previsions_history')
+        .insert(previsionsToSave);
+
+      if (prevError) throw prevError;
+
+      // Sauvegarder la performance si disponible
+      if (comparison) {
+        const derniersMois = historique.slice(-6);
+        const periodeDebut = new Date(
+          derniersMois[0].annee,
+          derniersMois[0].mois - 1,
+          1
+        ).toISOString().split('T')[0];
+        const periodeFin = new Date(
+          derniersMois[derniersMois.length - 1].annee,
+          derniersMois[derniersMois.length - 1].mois - 1,
+          1
+        ).toISOString().split('T')[0];
+
+        const { error: perfError } = await supabase
+          .from('model_performance')
+          .insert({
+            evaluation_date: today,
+            periode_test_debut: periodeDebut,
+            periode_test_fin: periodeFin,
+            mape: comparison.mape,
+            bias: comparison.bias,
+            precision: comparison.precision,
+            nb_predictions: comparison.comparisons.length,
+            periode_analyse: parseInt(selectedPeriod),
+          });
+
+        if (perfError) throw perfError;
+      }
+
+      toast.success("Prévisions sauvegardées avec succès dans l'historique");
+    } catch (error: any) {
+      console.error('Error saving previsions:', error);
+      toast.error("Erreur lors de la sauvegarde des prévisions");
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const handleExportPDF = async () => {
     if (!previsions) return;
     
@@ -362,6 +438,24 @@ export const PrevisionsDashboard = () => {
               <SelectItem value="24">24 derniers mois</SelectItem>
             </SelectContent>
           </Select>
+          <Button 
+            onClick={handleSavePrevisions} 
+            disabled={saving || !previsions}
+            variant="secondary"
+            className="gap-2"
+          >
+            {saving ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Sauvegarde...
+              </>
+            ) : (
+              <>
+                <History className="h-4 w-4" />
+                Sauvegarder
+              </>
+            )}
+          </Button>
           <Button 
             onClick={handleExportPDF} 
             disabled={exporting || !previsions}

@@ -402,6 +402,51 @@ export type Database = {
           },
         ]
       }
+      model_performance: {
+        Row: {
+          bias: number
+          created_at: string
+          evaluation_date: string
+          id: string
+          mape: number
+          nb_predictions: number
+          notes: string | null
+          periode_analyse: number
+          periode_test_debut: string
+          periode_test_fin: string
+          precision: number
+          updated_at: string
+        }
+        Insert: {
+          bias: number
+          created_at?: string
+          evaluation_date: string
+          id?: string
+          mape: number
+          nb_predictions: number
+          notes?: string | null
+          periode_analyse: number
+          periode_test_debut: string
+          periode_test_fin: string
+          precision: number
+          updated_at?: string
+        }
+        Update: {
+          bias?: number
+          created_at?: string
+          evaluation_date?: string
+          id?: string
+          mape?: number
+          nb_predictions?: number
+          notes?: string | null
+          periode_analyse?: number
+          periode_test_debut?: string
+          periode_test_fin?: string
+          precision?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       navires: {
         Row: {
           annee_construction: number | null
@@ -548,6 +593,63 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      previsions_history: {
+        Row: {
+          annee_prevu: number
+          created_at: string
+          created_by: string | null
+          ecart_type: number
+          id: string
+          intervalle_confiance: number
+          mois_prevu: number
+          montant_prevu: number
+          moyenne_taux: number
+          periode_analyse: number
+          recouvrement_prevu: number
+          taux_prevu: number
+          tendance: string
+          updated_at: string
+          version_date: string
+          volatilite: string
+        }
+        Insert: {
+          annee_prevu: number
+          created_at?: string
+          created_by?: string | null
+          ecart_type: number
+          id?: string
+          intervalle_confiance: number
+          mois_prevu: number
+          montant_prevu: number
+          moyenne_taux: number
+          periode_analyse: number
+          recouvrement_prevu: number
+          taux_prevu: number
+          tendance: string
+          updated_at?: string
+          version_date: string
+          volatilite: string
+        }
+        Update: {
+          annee_prevu?: number
+          created_at?: string
+          created_by?: string | null
+          ecart_type?: number
+          id?: string
+          intervalle_confiance?: number
+          mois_prevu?: number
+          montant_prevu?: number
+          moyenne_taux?: number
+          periode_analyse?: number
+          recouvrement_prevu?: number
+          taux_prevu?: number
+          tendance?: string
+          updated_at?: string
+          version_date?: string
+          volatilite?: string
+        }
+        Relationships: []
       }
       profiles: {
         Row: {

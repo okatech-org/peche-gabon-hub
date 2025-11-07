@@ -20,6 +20,7 @@ import { LicencesManagement } from "@/components/admin/LicencesManagement";
 import { QuittancesManagement } from "@/components/admin/QuittancesManagement";
 import { FinancesDashboard } from "@/components/admin/FinancesDashboard";
 import { PrevisionsDashboard } from "@/components/admin/PrevisionsDashboard";
+import { PrevisionsHistoryDashboard } from "@/components/admin/PrevisionsHistoryDashboard";
 
 const Admin = () => {
   const { user, roles, signOut } = useAuth();
@@ -83,6 +84,7 @@ const Admin = () => {
               <Route path="/quittances" element={<QuittancesManagement />} />
               <Route path="/finances-dashboard" element={<FinancesDashboard />} />
               <Route path="/previsions" element={<PrevisionsDashboard />} />
+              <Route path="/previsions-history" element={<PrevisionsHistoryDashboard />} />
               <Route path="/import" element={<ImportManagement />} />
               <Route path="/export" element={<ExportPlaceholder />} />
               <Route path="/data-integrity" element={<DataIntegrityPlaceholder />} />
