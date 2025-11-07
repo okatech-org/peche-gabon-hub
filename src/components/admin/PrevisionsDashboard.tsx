@@ -8,8 +8,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2, TrendingUp, TrendingDown, AlertTriangle, Target, Calendar, DollarSign, Activity } from "lucide-react";
+import { Loader2, TrendingUp, TrendingDown, AlertTriangle, Target, Calendar, DollarSign, Activity, Download } from "lucide-react";
 import { toast } from "sonner";
+import { generatePrevisionsPDF } from "@/lib/pdfExport";
+import { Button } from "@/components/ui/button";
 import {
   LineChart,
   Line,
@@ -39,6 +41,7 @@ export const PrevisionsDashboard = () => {
   const [historique, setHistorique] = useState<HistoriqueData[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedPeriod, setSelectedPeriod] = useState<string>("12"); // Nombre de mois à analyser
+  const [exporting, setExporting] = useState(false);
 
   useEffect(() => {
     loadHistorique();
@@ -95,7 +98,21 @@ export const PrevisionsDashboard = () => {
   };
 
   // Calculer les prévisions
-  const calculatePrevisions = () => {
+  const calculatePrevisions = (): {
+    moyenneAttendu: number;
+    moyenneTaux: number;
+    tendance: 'hausse' | 'baisse' | 'stable';
+    ecartType: number;
+    volatilite: 'haute' | 'moyenne' | 'faible';
+    previsions: {
+      mois: number;
+      annee: number;
+      montantPrevu: number;
+      tauxPrevu: number;
+      recouvrementPrevu: number;
+      intervalleConfiance: number;
+    }[];
+  } | null => {
     const periodLength = parseInt(selectedPeriod);
     const dataToAnalyze = historique.slice(-periodLength);
 
@@ -168,6 +185,30 @@ export const PrevisionsDashboard = () => {
 
   const previsions = calculatePrevisions();
 
+  const handleExportPDF = async () => {
+    if (!previsions) return;
+    
+    setExporting(true);
+    try {
+      const combinedChart = document.getElementById('combined-chart');
+      const tauxChart = document.getElementById('taux-chart');
+      
+      await generatePrevisionsPDF(
+        previsions,
+        combinedChart,
+        tauxChart,
+        selectedPeriod
+      );
+      
+      toast.success('Rapport PDF généré avec succès');
+    } catch (error) {
+      console.error('Erreur lors de la génération du PDF:', error);
+      toast.error('Erreur lors de la génération du PDF');
+    } finally {
+      setExporting(false);
+    }
+  };
+
   // Préparer les données pour les graphiques
   const historiqueFormatted = historique.slice(-12).map(item => ({
     periode: `${getMoisLabel(item.mois)} ${item.annee}`,
@@ -229,16 +270,35 @@ export const PrevisionsDashboard = () => {
             Analyse prédictive basée sur l'historique des paiements
           </p>
         </div>
-        <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
-          <SelectTrigger className="w-48">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="6">6 derniers mois</SelectItem>
-            <SelectItem value="12">12 derniers mois</SelectItem>
-            <SelectItem value="24">24 derniers mois</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="flex items-center gap-3">
+          <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
+            <SelectTrigger className="w-48">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="6">6 derniers mois</SelectItem>
+              <SelectItem value="12">12 derniers mois</SelectItem>
+              <SelectItem value="24">24 derniers mois</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button 
+            onClick={handleExportPDF} 
+            disabled={exporting || !previsions}
+            className="gap-2"
+          >
+            {exporting ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Génération...
+              </>
+            ) : (
+              <>
+                <Download className="h-4 w-4" />
+                Export PDF
+              </>
+            )}
+          </Button>
+        </div>
       </div>
 
       {/* Indicateurs clés */}
@@ -345,7 +405,8 @@ export const PrevisionsDashboard = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <ResponsiveContainer width="100%" height={350}>
+          <div id="combined-chart">
+            <ResponsiveContainer width="100%" height={350}>
             <AreaChart data={combinedData}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="periode" />
@@ -374,6 +435,7 @@ export const PrevisionsDashboard = () => {
               />
             </AreaChart>
           </ResponsiveContainer>
+          </div>
         </CardContent>
       </Card>
 
@@ -384,7 +446,8 @@ export const PrevisionsDashboard = () => {
           <CardDescription>Historique et prévisions en pourcentage</CardDescription>
         </CardHeader>
         <CardContent>
-          <ResponsiveContainer width="100%" height={300}>
+          <div id="taux-chart">
+            <ResponsiveContainer width="100%" height={300}>
             <LineChart data={combinedData}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="periode" />
@@ -412,6 +475,7 @@ export const PrevisionsDashboard = () => {
               />
             </LineChart>
           </ResponsiveContainer>
+          </div>
         </CardContent>
       </Card>
 
