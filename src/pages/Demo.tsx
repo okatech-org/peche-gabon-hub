@@ -3,14 +3,17 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { useEffect, useState } from "react";
 import { 
   Fish, Clipboard, Users, Shield, MapPin, Building2, 
-  UserCog, Ship, Eye, BarChart3, Crown 
+  UserCog, Ship, Eye, BarChart3, Crown, Loader2 
 } from "lucide-react";
 
 const Demo = () => {
   const { signIn } = useAuth();
   const navigate = useNavigate();
+  const [isInitializing, setIsInitializing] = useState(true);
 
   const demoAccounts = [
     {
@@ -103,6 +106,25 @@ const Demo = () => {
     }
   ];
 
+  useEffect(() => {
+    const initializeDemoAccounts = async () => {
+      try {
+        const { data, error } = await supabase.functions.invoke('setup-demo-accounts');
+        
+        if (error) {
+          console.error('Error initializing demo accounts:', error);
+          toast.error("Erreur lors de l'initialisation des comptes de démonstration");
+        }
+      } catch (error) {
+        console.error('Error:', error);
+      } finally {
+        setIsInitializing(false);
+      }
+    };
+
+    initializeDemoAccounts();
+  }, []);
+
   const handleQuickAccess = async (email: string, roleName: string) => {
     try {
       await signIn(email, "Demo2025!");
@@ -111,6 +133,17 @@ const Demo = () => {
       toast.error("Erreur de connexion");
     }
   };
+
+  if (isInitializing) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mb-4" />
+          <p className="text-muted-foreground">Initialisation des comptes de démonstration...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-secondary/10">

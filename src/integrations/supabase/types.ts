@@ -112,6 +112,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      assign_demo_role: {
+        Args: {
+          user_email: string
+          user_role: Database["public"]["Enums"]["app_role"]
+        }
+        Returns: undefined
+      }
       get_user_roles: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"][]
