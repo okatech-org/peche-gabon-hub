@@ -58,6 +58,12 @@ const menuItems = [
     ],
   },
   {
+    group: "Finances",
+    items: [
+      { title: "Quittances", url: "/admin/quittances", icon: FileText },
+    ],
+  },
+  {
     group: "Données",
     items: [
       { title: "Import de Données", url: "/admin/import", icon: Upload },

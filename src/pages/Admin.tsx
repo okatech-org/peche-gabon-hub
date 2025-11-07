@@ -17,6 +17,7 @@ import { SitesManagement } from "@/components/admin/SitesManagement";
 import { PiroguesManagement } from "@/components/admin/PiroguesManagement";
 import { NaviresManagement } from "@/components/admin/NaviresManagement";
 import { LicencesManagement } from "@/components/admin/LicencesManagement";
+import { QuittancesManagement } from "@/components/admin/QuittancesManagement";
 
 const Admin = () => {
   const { user, roles, signOut } = useAuth();
@@ -77,6 +78,7 @@ const Admin = () => {
               <Route path="/pirogues" element={<PiroguesManagement />} />
               <Route path="/navires" element={<NaviresManagement />} />
               <Route path="/licences" element={<LicencesManagement />} />
+              <Route path="/quittances" element={<QuittancesManagement />} />
               <Route path="/import" element={<ImportManagement />} />
               <Route path="/export" element={<ExportPlaceholder />} />
               <Route path="/data-integrity" element={<DataIntegrityPlaceholder />} />
