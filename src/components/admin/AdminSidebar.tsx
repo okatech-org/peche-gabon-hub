@@ -50,6 +50,13 @@ const menuItems = [
     ],
   },
   {
+    group: "Flottes",
+    items: [
+      { title: "Pirogues (PA)", url: "/admin/pirogues", icon: Users },
+      { title: "Navires (PI)", url: "/admin/navires", icon: Anchor },
+    ],
+  },
+  {
     group: "Données",
     items: [
       { title: "Import de Données", url: "/admin/import", icon: Upload },

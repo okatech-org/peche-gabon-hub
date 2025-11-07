@@ -12,6 +12,7 @@ interface KPIData {
   capturesWeight: number;
   totalPirogues: number;
   totalCooperatives: number;
+  totalNavires: number;
 }
 
 export const AdminDashboard = () => {
@@ -25,7 +26,7 @@ export const AdminDashboard = () => {
   const loadKPIs = async () => {
     try {
       // Charger les KPIs en parallèle
-      const [usersResult, capturesResult, piroguesResult, coopResult] = await Promise.all([
+      const [usersResult, capturesResult, piroguesResult, coopResult, naviresResult] = await Promise.all([
         // Total utilisateurs
         supabase.from('profiles').select('id, created_at', { count: 'exact', head: true }),
         // Total captures
@@ -34,6 +35,8 @@ export const AdminDashboard = () => {
         supabase.from('pirogues').select('id', { count: 'exact', head: true }),
         // Total coopératives
         supabase.from('cooperatives').select('id', { count: 'exact', head: true }),
+        // Total navires industriels
+        supabase.from('navires').select('id', { count: 'exact', head: true }),
       ]);
 
       // Calculer les utilisateurs actifs (créés dans les 30 derniers jours)
@@ -55,6 +58,7 @@ export const AdminDashboard = () => {
         capturesWeight: totalWeight,
         totalPirogues: piroguesResult.count || 0,
         totalCooperatives: coopResult.count || 0,
+        totalNavires: naviresResult.count || 0,
       });
     } catch (error: any) {
       console.error('Error loading KPIs:', error);
@@ -90,19 +94,27 @@ export const AdminDashboard = () => {
     },
     {
       icon: FileText,
-      label: "Pirogues Enregistrées",
+      label: "Flotte Artisanale",
       value: kpiData.totalPirogues.toLocaleString('fr-FR'),
-      subtitle: "Flotte artisanale",
+      subtitle: "Pirogues enregistrées",
       color: "text-orange-600",
       bgColor: "bg-orange-50",
     },
     {
       icon: Shield,
-      label: "Coopératives",
-      value: kpiData.totalCooperatives.toLocaleString('fr-FR'),
-      subtitle: "Organisations actives",
+      label: "Flotte Industrielle",
+      value: kpiData.totalNavires.toLocaleString('fr-FR'),
+      subtitle: "Navires actifs",
       color: "text-purple-600",
       bgColor: "bg-purple-50",
+    },
+    {
+      icon: Shield,
+      label: "Coopératives",
+      value: kpiData.totalCooperatives.toLocaleString('fr-FR'),
+      subtitle: "Organisations",
+      color: "text-cyan-600",
+      bgColor: "bg-cyan-50",
     },
   ] : [];
 
@@ -113,9 +125,9 @@ export const AdminDashboard = () => {
         <p className="text-muted-foreground">Vue d'ensemble des statistiques système</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
         {loading ? (
-          Array(4).fill(0).map((_, i) => (
+          Array(5).fill(0).map((_, i) => (
             <Card key={i}>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <Skeleton className="h-4 w-24" />

@@ -14,6 +14,8 @@ import { CooperativesManagement } from "@/components/admin/CooperativesManagemen
 import { ImportManagement } from "@/components/admin/ImportManagement";
 import { EnginsManagement } from "@/components/admin/EnginsManagement";
 import { SitesManagement } from "@/components/admin/SitesManagement";
+import { PiroguesManagement } from "@/components/admin/PiroguesManagement";
+import { NaviresManagement } from "@/components/admin/NaviresManagement";
 
 const Admin = () => {
   const { user, roles, signOut } = useAuth();
@@ -71,6 +73,8 @@ const Admin = () => {
               <Route path="/engins" element={<EnginsManagement />} />
               <Route path="/sites" element={<SitesManagement />} />
               <Route path="/cooperatives" element={<CooperativesManagement />} />
+              <Route path="/pirogues" element={<PiroguesManagement />} />
+              <Route path="/navires" element={<NaviresManagement />} />
               <Route path="/import" element={<ImportManagement />} />
               <Route path="/export" element={<ExportPlaceholder />} />
               <Route path="/data-integrity" element={<DataIntegrityPlaceholder />} />

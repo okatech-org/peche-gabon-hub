@@ -61,9 +61,14 @@ const tableOptions = [
     columns: ['nom', 'nom_scientifique', 'code', 'categorie', 'description'],
   },
   { 
-    value: 'cooperatives', 
-    label: 'Coopératives',
-    columns: ['nom', 'responsable', 'telephone', 'email', 'adresse', 'statut'],
+    value: 'engins', 
+    label: 'Engins de Pêche',
+    columns: ['nom', 'type', 'description'],
+  },
+  { 
+    value: 'strates', 
+    label: 'Strates',
+    columns: ['nom', 'code', 'description'],
   },
   { 
     value: 'sites', 
@@ -71,14 +76,19 @@ const tableOptions = [
     columns: ['nom', 'province', 'description', 'latitude', 'longitude'],
   },
   { 
-    value: 'engins', 
-    label: 'Engins de Pêche',
-    columns: ['nom', 'type', 'description'],
+    value: 'cooperatives', 
+    label: 'Coopératives',
+    columns: ['nom', 'responsable', 'telephone', 'email', 'adresse', 'statut'],
   },
   { 
     value: 'proprietaires', 
     label: 'Propriétaires',
-    columns: ['nom', 'prenom', 'nationalite', 'piece_id', 'telephone', 'email', 'domicile'],
+    columns: ['nom', 'prenom', 'nationalite', 'sexe', 'piece_id', 'telephone', 'email', 'domicile'],
+  },
+  { 
+    value: 'armements', 
+    label: 'Armements PI',
+    columns: ['nom', 'responsable', 'email', 'telephone', 'adresse', 'statut'],
   },
 ];
 
