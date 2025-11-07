@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/select";
 import { Loader2, Search, Plus, Edit, Trash2, Receipt, CheckCircle, XCircle, Clock, AlertTriangle, DollarSign } from "lucide-react";
 import { toast } from "sonner";
+import { AddQuittanceDialog } from "./AddQuittanceDialog";
 
 export const QuittancesManagement = () => {
   const [quittances, setQuittances] = useState<any[]>([]);
@@ -28,6 +29,8 @@ export const QuittancesManagement = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statutFilter, setStatutFilter] = useState<string>("all");
   const [fenetreFilter, setFenetreFilter] = useState<boolean>(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingQuittance, setEditingQuittance] = useState<any>(null);
 
   useEffect(() => {
     loadData();
@@ -150,6 +153,16 @@ export const QuittancesManagement = () => {
     return <span className="text-xs text-muted-foreground">Dans {quittance.jours_restants} jours</span>;
   };
 
+  const handleEdit = (quittance: any) => {
+    setEditingQuittance(quittance);
+    setDialogOpen(true);
+  };
+
+  const handleCloseDialog = () => {
+    setDialogOpen(false);
+    setEditingQuittance(null);
+  };
+
   const getMoisLabel = (mois: number) => {
     const moisLabels = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
     return moisLabels[mois - 1] || mois;
@@ -170,6 +183,13 @@ export const QuittancesManagement = () => {
 
   return (
     <div className="space-y-6">
+      <AddQuittanceDialog
+        open={dialogOpen}
+        onOpenChange={handleCloseDialog}
+        onSuccess={loadData}
+        editingQuittance={editingQuittance}
+      />
+
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
@@ -183,7 +203,7 @@ export const QuittancesManagement = () => {
               </CardDescription>
             </div>
             <div className="flex gap-2">
-              <Button onClick={() => toast.info("Formulaire en développement")}>
+              <Button onClick={() => setDialogOpen(true)}>
                 <Plus className="mr-2 h-4 w-4" />
                 Nouvelle Quittance
               </Button>
@@ -305,7 +325,7 @@ export const QuittancesManagement = () => {
                           <Button 
                             variant="ghost" 
                             size="sm"
-                            onClick={() => toast.info("Modification en développement")}
+                            onClick={() => handleEdit(quittance)}
                           >
                             <Edit className="h-4 w-4" />
                           </Button>
