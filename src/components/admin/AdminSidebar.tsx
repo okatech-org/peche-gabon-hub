@@ -25,6 +25,7 @@ import {
   LayoutDashboard,
   TrendingUp,
   History,
+  Lightbulb,
 } from "lucide-react";
 
 const menuItems = [
@@ -66,6 +67,7 @@ const menuItems = [
       { title: "Tableau de Bord", url: "/admin/finances-dashboard", icon: LayoutDashboard },
       { title: "Prévisions", url: "/admin/previsions", icon: TrendingUp },
       { title: "Historique Prévisions", url: "/admin/previsions-history", icon: History },
+      { title: "Simulation Scénarios", url: "/admin/scenarios", icon: Lightbulb },
     ],
   },
   {
