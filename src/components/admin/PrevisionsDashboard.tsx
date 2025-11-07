@@ -8,7 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2, TrendingUp, TrendingDown, AlertTriangle, Target, Calendar, DollarSign, Activity, Download } from "lucide-react";
+import { Loader2, TrendingUp, TrendingDown, AlertTriangle, Target, Calendar, DollarSign, Activity, Download, BarChart3 } from "lucide-react";
 import { toast } from "sonner";
 import { generatePrevisionsPDF } from "@/lib/pdfExport";
 import { Button } from "@/components/ui/button";
@@ -35,6 +35,16 @@ interface HistoriqueData {
   attendu: number;
   paye: number;
   tauxRecouvrement: number;
+}
+
+interface ComparisonData {
+  periode: string;
+  mois: number;
+  annee: number;
+  reel: number;
+  prevu: number;
+  ecart: number;
+  ecartPourcentage: number;
 }
 
 export const PrevisionsDashboard = () => {
@@ -184,6 +194,77 @@ export const PrevisionsDashboard = () => {
   };
 
   const previsions = calculatePrevisions();
+
+  // Calculer les comparaisons prévisions vs réalisé
+  const calculateComparison = (): {
+    comparisons: ComparisonData[];
+    mape: number; // Mean Absolute Percentage Error
+    bias: number; // Biais moyen
+    precision: number; // % de prévisions dans l'intervalle ±10%
+  } | null => {
+    if (historique.length < 12) return null;
+
+    // Prendre les 6 derniers mois comme période de test
+    const derniersMois = historique.slice(-6);
+    
+    // Recalculer ce qu'auraient été les prévisions il y a 6 mois
+    const historiqueAvantTest = historique.slice(0, -6);
+    if (historiqueAvantTest.length < 3) return null;
+
+    const periodLength = parseInt(selectedPeriod);
+    const dataToAnalyze = historiqueAvantTest.slice(-Math.min(periodLength, historiqueAvantTest.length));
+
+    // Moyenne mobile pour le taux de recouvrement
+    const moyenneTaux = dataToAnalyze.reduce((sum, item) => sum + item.tauxRecouvrement, 0) / dataToAnalyze.length;
+    
+    // Tendance (régression linéaire)
+    const n = dataToAnalyze.length;
+    const sumX = dataToAnalyze.reduce((sum, _, idx) => sum + idx, 0);
+    const sumY = dataToAnalyze.reduce((sum, item) => sum + item.tauxRecouvrement, 0);
+    const sumXY = dataToAnalyze.reduce((sum, item, idx) => sum + (idx * item.tauxRecouvrement), 0);
+    const sumX2 = dataToAnalyze.reduce((sum, _, idx) => sum + (idx * idx), 0);
+    const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
+
+    // Générer les prévisions pour les 6 mois de test
+    const comparisons: ComparisonData[] = derniersMois.map((realData, idx) => {
+      const tauxPrevu = Math.max(0, Math.min(100, moyenneTaux + (slope * (n + idx))));
+      const recouvrementPrevu = (realData.attendu * tauxPrevu) / 100;
+      const recouvrementReel = realData.paye;
+      const ecart = recouvrementReel - recouvrementPrevu;
+      const ecartPourcentage = recouvrementPrevu > 0 ? (ecart / recouvrementPrevu) * 100 : 0;
+
+      return {
+        periode: `${getMoisLabel(realData.mois)} ${realData.annee}`,
+        mois: realData.mois,
+        annee: realData.annee,
+        reel: recouvrementReel,
+        prevu: recouvrementPrevu,
+        ecart,
+        ecartPourcentage,
+      };
+    });
+
+    // Calculer le MAPE (Mean Absolute Percentage Error)
+    const mape = comparisons.reduce((sum, item) => {
+      return sum + Math.abs(item.ecartPourcentage);
+    }, 0) / comparisons.length;
+
+    // Calculer le biais moyen
+    const bias = comparisons.reduce((sum, item) => sum + item.ecartPourcentage, 0) / comparisons.length;
+
+    // Calculer la précision (% dans l'intervalle ±10%)
+    const dansIntervalle = comparisons.filter(item => Math.abs(item.ecartPourcentage) <= 10).length;
+    const precision = (dansIntervalle / comparisons.length) * 100;
+
+    return {
+      comparisons,
+      mape,
+      bias,
+      precision,
+    };
+  };
+
+  const comparison = calculateComparison();
 
   const handleExportPDF = async () => {
     if (!previsions) return;
@@ -531,6 +612,195 @@ export const PrevisionsDashboard = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Analyse Comparative Prévisions vs Réalisé */}
+      {comparison && (
+        <>
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <BarChart3 className="h-5 w-5" />
+                Analyse Comparative: Prévisions vs Réalisé
+              </CardTitle>
+              <CardDescription>
+                Évaluation de la précision du modèle sur les 6 derniers mois
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-6">
+                {/* Métriques de précision */}
+                <div className="grid gap-4 md:grid-cols-3">
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-sm font-medium">MAPE (Erreur Moyenne)</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className={`text-2xl font-bold ${
+                        comparison.mape <= 10 ? 'text-green-600' : 
+                        comparison.mape <= 20 ? 'text-orange-600' : 
+                        'text-destructive'
+                      }`}>
+                        {comparison.mape.toFixed(1)}%
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {comparison.mape <= 10 ? 'Excellente précision' : 
+                         comparison.mape <= 20 ? 'Précision acceptable' : 
+                         'Précision à améliorer'}
+                      </p>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-sm font-medium">Biais du Modèle</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className={`text-2xl font-bold ${
+                        Math.abs(comparison.bias) <= 5 ? 'text-green-600' : 
+                        Math.abs(comparison.bias) <= 15 ? 'text-orange-600' : 
+                        'text-destructive'
+                      }`}>
+                        {comparison.bias > 0 ? '+' : ''}{comparison.bias.toFixed(1)}%
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {comparison.bias > 5 ? 'Surestimation' : 
+                         comparison.bias < -5 ? 'Sous-estimation' : 
+                         'Bien calibré'}
+                      </p>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-sm font-medium">Précision ±10%</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className={`text-2xl font-bold ${
+                        comparison.precision >= 80 ? 'text-green-600' : 
+                        comparison.precision >= 60 ? 'text-orange-600' : 
+                        'text-destructive'
+                      }`}>
+                        {comparison.precision.toFixed(0)}%
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        des prévisions dans l'intervalle
+                      </p>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Graphique de comparaison */}
+                <div>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={comparison.comparisons}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="periode" />
+                      <YAxis />
+                      <Tooltip 
+                        formatter={(value: number) => `${(value / 1000).toFixed(1)}k FCFA`}
+                      />
+                      <Legend />
+                      <Bar 
+                        dataKey="prevu" 
+                        fill="hsl(var(--primary))" 
+                        fillOpacity={0.8}
+                        name="Prévu"
+                      />
+                      <Bar 
+                        dataKey="reel" 
+                        fill="hsl(var(--accent))" 
+                        fillOpacity={0.8}
+                        name="Réalisé"
+                      />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+
+                {/* Tableau détaillé */}
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b">
+                        <th className="text-left py-3 px-4 font-medium">Période</th>
+                        <th className="text-right py-3 px-4 font-medium">Prévu</th>
+                        <th className="text-right py-3 px-4 font-medium">Réalisé</th>
+                        <th className="text-right py-3 px-4 font-medium">Écart</th>
+                        <th className="text-right py-3 px-4 font-medium">Écart %</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {comparison.comparisons.map((comp, idx) => (
+                        <tr key={idx} className="border-b hover:bg-muted/50">
+                          <td className="py-3 px-4 font-medium">{comp.periode}</td>
+                          <td className="text-right py-3 px-4">
+                            {comp.prevu.toLocaleString()} FCFA
+                          </td>
+                          <td className="text-right py-3 px-4">
+                            {comp.reel.toLocaleString()} FCFA
+                          </td>
+                          <td className={`text-right py-3 px-4 font-medium ${
+                            comp.ecart >= 0 ? 'text-green-600' : 'text-destructive'
+                          }`}>
+                            {comp.ecart > 0 ? '+' : ''}{comp.ecart.toLocaleString()} FCFA
+                          </td>
+                          <td className="text-right py-3 px-4">
+                            <Badge variant={
+                              Math.abs(comp.ecartPourcentage) <= 10 ? "default" : 
+                              Math.abs(comp.ecartPourcentage) <= 20 ? "secondary" : 
+                              "destructive"
+                            }>
+                              {comp.ecartPourcentage > 0 ? '+' : ''}{comp.ecartPourcentage.toFixed(1)}%
+                            </Badge>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Ajustements recommandés */}
+                <Alert>
+                  <Target className="h-4 w-4" />
+                  <AlertTitle>Ajustements Recommandés du Modèle</AlertTitle>
+                  <AlertDescription>
+                    <ul className="space-y-2 mt-2">
+                      {comparison.bias > 10 && (
+                        <li className="text-sm">
+                          • Le modèle <strong>surestime systématiquement</strong> (+{comparison.bias.toFixed(1)}%). 
+                          Réduire le facteur de prévision de {(comparison.bias / 100).toFixed(2)}.
+                        </li>
+                      )}
+                      {comparison.bias < -10 && (
+                        <li className="text-sm">
+                          • Le modèle <strong>sous-estime systématiquement</strong> ({comparison.bias.toFixed(1)}%). 
+                          Augmenter le facteur de prévision de {Math.abs(comparison.bias / 100).toFixed(2)}.
+                        </li>
+                      )}
+                      {comparison.mape > 20 && (
+                        <li className="text-sm">
+                          • Erreur moyenne élevée ({comparison.mape.toFixed(1)}%). 
+                          Considérer l'intégration de <strong>facteurs saisonniers</strong> ou de <strong>variables externes</strong>.
+                        </li>
+                      )}
+                      {comparison.precision < 60 && (
+                        <li className="text-sm">
+                          • Précision faible ({comparison.precision.toFixed(0)}% dans l'intervalle). 
+                          Augmenter la période d'analyse ou utiliser des <strong>méthodes de prévision plus sophistiquées</strong>.
+                        </li>
+                      )}
+                      {comparison.mape <= 10 && Math.abs(comparison.bias) <= 5 && comparison.precision >= 80 && (
+                        <li className="text-sm text-green-600">
+                          • ✓ Le modèle affiche une <strong>excellente performance</strong>. Continuer avec les paramètres actuels.
+                        </li>
+                      )}
+                    </ul>
+                  </AlertDescription>
+                </Alert>
+              </div>
+            </CardContent>
+          </Card>
+        </>
+      )}
 
       {/* Recommandations */}
       <Card>
