@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      armements: {
+        Row: {
+          adresse: string | null
+          created_at: string
+          email: string | null
+          id: string
+          nom: string
+          responsable: string | null
+          statut: string | null
+          telephone: string | null
+          updated_at: string
+        }
+        Insert: {
+          adresse?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          nom: string
+          responsable?: string | null
+          statut?: string | null
+          telephone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          adresse?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          nom?: string
+          responsable?: string | null
+          statut?: string | null
+          telephone?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       audit_log: {
         Row: {
           action: string
@@ -50,6 +86,260 @@ export type Database = {
         }
         Relationships: []
       }
+      cooperatives: {
+        Row: {
+          adresse: string | null
+          created_at: string
+          email: string | null
+          id: string
+          nom: string
+          responsable: string | null
+          site_id: string | null
+          statut: string | null
+          telephone: string | null
+          updated_at: string
+        }
+        Insert: {
+          adresse?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          nom: string
+          responsable?: string | null
+          site_id?: string | null
+          statut?: string | null
+          telephone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          adresse?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          nom?: string
+          responsable?: string | null
+          site_id?: string | null
+          statut?: string | null
+          telephone?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cooperatives_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      engins: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          nom: string
+          type: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          nom: string
+          type?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          nom?: string
+          type?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      especes: {
+        Row: {
+          categorie: Database["public"]["Enums"]["espece_categorie"]
+          code: string | null
+          created_at: string
+          description: string | null
+          id: string
+          nom: string
+          nom_scientifique: string | null
+          updated_at: string
+        }
+        Insert: {
+          categorie?: Database["public"]["Enums"]["espece_categorie"]
+          code?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          nom: string
+          nom_scientifique?: string | null
+          updated_at?: string
+        }
+        Update: {
+          categorie?: Database["public"]["Enums"]["espece_categorie"]
+          code?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          nom?: string
+          nom_scientifique?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      navires: {
+        Row: {
+          annee_construction: number | null
+          armement_id: string
+          capitaine: string | null
+          created_at: string
+          id: string
+          jauge_brute: number | null
+          largeur_m: number | null
+          longueur_m: number | null
+          matricule: string
+          nom: string
+          pavillon: string | null
+          port_attache: string | null
+          puissance_moteur_kw: number | null
+          statut: string | null
+          type_navire: string | null
+          updated_at: string
+        }
+        Insert: {
+          annee_construction?: number | null
+          armement_id: string
+          capitaine?: string | null
+          created_at?: string
+          id?: string
+          jauge_brute?: number | null
+          largeur_m?: number | null
+          longueur_m?: number | null
+          matricule: string
+          nom: string
+          pavillon?: string | null
+          port_attache?: string | null
+          puissance_moteur_kw?: number | null
+          statut?: string | null
+          type_navire?: string | null
+          updated_at?: string
+        }
+        Update: {
+          annee_construction?: number | null
+          armement_id?: string
+          capitaine?: string | null
+          created_at?: string
+          id?: string
+          jauge_brute?: number | null
+          largeur_m?: number | null
+          longueur_m?: number | null
+          matricule?: string
+          nom?: string
+          pavillon?: string | null
+          port_attache?: string | null
+          puissance_moteur_kw?: number | null
+          statut?: string | null
+          type_navire?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "navires_armement_id_fkey"
+            columns: ["armement_id"]
+            isOneToOne: false
+            referencedRelation: "armements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pirogues: {
+        Row: {
+          annee_construction: number | null
+          cooperative_id: string | null
+          created_at: string
+          id: string
+          immatriculation: string
+          largeur_m: number | null
+          longueur_m: number | null
+          materiau: string | null
+          moteur_marque: string | null
+          nb_pecheurs: number | null
+          nom: string
+          proprietaire_id: string
+          puissance_cv: number | null
+          site_attache_id: string | null
+          statut: string | null
+          type: Database["public"]["Enums"]["pirogue_type"]
+          updated_at: string
+        }
+        Insert: {
+          annee_construction?: number | null
+          cooperative_id?: string | null
+          created_at?: string
+          id?: string
+          immatriculation: string
+          largeur_m?: number | null
+          longueur_m?: number | null
+          materiau?: string | null
+          moteur_marque?: string | null
+          nb_pecheurs?: number | null
+          nom: string
+          proprietaire_id: string
+          puissance_cv?: number | null
+          site_attache_id?: string | null
+          statut?: string | null
+          type?: Database["public"]["Enums"]["pirogue_type"]
+          updated_at?: string
+        }
+        Update: {
+          annee_construction?: number | null
+          cooperative_id?: string | null
+          created_at?: string
+          id?: string
+          immatriculation?: string
+          largeur_m?: number | null
+          longueur_m?: number | null
+          materiau?: string | null
+          moteur_marque?: string | null
+          nb_pecheurs?: number | null
+          nom?: string
+          proprietaire_id?: string
+          puissance_cv?: number | null
+          site_attache_id?: string | null
+          statut?: string | null
+          type?: Database["public"]["Enums"]["pirogue_type"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pirogues_cooperative_id_fkey"
+            columns: ["cooperative_id"]
+            isOneToOne: false
+            referencedRelation: "cooperatives"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pirogues_proprietaire_id_fkey"
+            columns: ["proprietaire_id"]
+            isOneToOne: false
+            referencedRelation: "proprietaires"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pirogues_site_attache_id_fkey"
+            columns: ["site_attache_id"]
+            isOneToOne: false
+            referencedRelation: "sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           cooperative_id: string | null
@@ -82,6 +372,125 @@ export type Database = {
           last_name?: string | null
           phone?: string | null
           province?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      proprietaires: {
+        Row: {
+          created_at: string
+          date_naissance: string | null
+          domicile: string | null
+          email: string | null
+          id: string
+          nationalite: string | null
+          nom: string
+          piece_id: string | null
+          prenom: string
+          statut: string | null
+          telephone: string | null
+          type_carte: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          date_naissance?: string | null
+          domicile?: string | null
+          email?: string | null
+          id?: string
+          nationalite?: string | null
+          nom: string
+          piece_id?: string | null
+          prenom: string
+          statut?: string | null
+          telephone?: string | null
+          type_carte?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          date_naissance?: string | null
+          domicile?: string | null
+          email?: string | null
+          id?: string
+          nationalite?: string | null
+          nom?: string
+          piece_id?: string | null
+          prenom?: string
+          statut?: string | null
+          telephone?: string | null
+          type_carte?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      sites: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          latitude: number | null
+          longitude: number | null
+          nom: string
+          province: string | null
+          strate_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          nom: string
+          province?: string | null
+          strate_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          nom?: string
+          province?: string | null
+          strate_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sites_strate_id_fkey"
+            columns: ["strate_id"]
+            isOneToOne: false
+            referencedRelation: "strates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      strates: {
+        Row: {
+          code: string | null
+          created_at: string
+          description: string | null
+          id: string
+          nom: string
+          updated_at: string
+        }
+        Insert: {
+          code?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          nom: string
+          updated_at?: string
+        }
+        Update: {
+          code?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          nom?: string
           updated_at?: string
         }
         Relationships: []
@@ -153,6 +562,11 @@ export type Database = {
         | "observateur_pi"
         | "analyste"
         | "ministre"
+      espece_categorie: "pelagique" | "demersal" | "crustace" | "autre"
+      pirogue_type:
+        | "artisanale_motorisee"
+        | "artisanale_non_motorisee"
+        | "semi_industrielle"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -292,6 +706,12 @@ export const Constants = {
         "observateur_pi",
         "analyste",
         "ministre",
+      ],
+      espece_categorie: ["pelagique", "demersal", "crustace", "autre"],
+      pirogue_type: [
+        "artisanale_motorisee",
+        "artisanale_non_motorisee",
+        "semi_industrielle",
       ],
     },
   },
