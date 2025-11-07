@@ -61,6 +61,7 @@ const menuItems = [
     group: "Finances",
     items: [
       { title: "Quittances", url: "/admin/quittances", icon: FileText },
+      { title: "Tableau de Bord", url: "/admin/finances-dashboard", icon: LayoutDashboard },
     ],
   },
   {
