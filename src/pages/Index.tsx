@@ -26,18 +26,19 @@ const Index = () => {
               <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
                 <Button
                   size="lg"
-                  onClick={() => navigate("/auth")}
+                  onClick={() => navigate("/demo")}
                   className="bg-white text-primary hover:bg-white/90"
                 >
-                  Accéder à la Plateforme
+                  Mode Démonstration
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
                 <Button
                   size="lg"
                   variant="outline"
+                  onClick={() => navigate("/auth")}
                   className="border-white text-white hover:bg-white/10"
                 >
-                  En Savoir Plus
+                  Connexion
                 </Button>
               </div>
             </div>
