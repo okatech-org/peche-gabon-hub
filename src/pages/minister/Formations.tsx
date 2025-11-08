@@ -33,7 +33,10 @@ import { Button } from "@/components/ui/button";
 export default function Formations() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("predictions");
-  const [compactView, setCompactView] = useState(false);
+  const [compactView, setCompactView] = useState(() => {
+    const saved = localStorage.getItem("formations-compact-view");
+    return saved === "true";
+  });
 
   const searchableContent = {
     predictions: ["prédictions", "ia", "intelligence artificielle", "besoins", "automatique"],
@@ -56,6 +59,12 @@ export default function Formations() {
   const handleClearSearch = () => {
     setSearchQuery("");
   };
+
+  const toggleCompactView = () => {
+    const newValue = !compactView;
+    setCompactView(newValue);
+    localStorage.setItem("formations-compact-view", String(newValue));
+  };
   return (
     <div className="space-y-6">
       <div className="flex items-start justify-between gap-4">
@@ -66,7 +75,7 @@ export default function Formations() {
         <Button
           variant="outline"
           size="sm"
-          onClick={() => setCompactView(!compactView)}
+          onClick={toggleCompactView}
           className="gap-2 shrink-0"
         >
           {compactView ? (
