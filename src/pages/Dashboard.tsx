@@ -58,6 +58,11 @@ const Dashboard = () => {
     cpueMoyen: 0,
     cpueTrend: "",
     notifications: 0,
+    province: "",
+    capturesMoyenneProvince: 0,
+    cpueMoyenProvince: 0,
+    comparaisonCaptures: "",
+    comparaisonCPUE: "",
   });
 
   // Redirection automatique des admins vers le panel d'administration
@@ -93,16 +98,19 @@ const Dashboard = () => {
         return;
       }
 
-      // Récupérer les pirogues du propriétaire
+      // Récupérer les pirogues du propriétaire avec leur site pour la province
       const { data: piroguesData } = await supabase
         .from("pirogues")
-        .select("id")
+        .select("id, site:sites(province)")
         .eq("proprietaire_id", proprietaireData.id);
 
       if (!piroguesData || piroguesData.length === 0) {
         setLoading(false);
         return;
       }
+
+      // Déterminer la province du pêcheur (depuis la première pirogue ayant un site)
+      const province = piroguesData.find(p => p.site?.province)?.site?.province || "";
 
       const pirogueIds = piroguesData.map(p => p.id);
       const now = new Date();
@@ -165,6 +173,75 @@ const Dashboard = () => {
       const notifications = (quittancesRetard?.length || 0) + 
         (licenceStatut === "Expirée" ? 1 : 0);
 
+      // Calculer les moyennes provinciales si on a une province
+      let capturesMoyenneProvince = 0;
+      let cpueMoyenProvince = 0;
+      let comparaisonCaptures = "";
+      let comparaisonCPUE = "";
+
+      if (province) {
+        // Récupérer toutes les pirogues de la province
+        const { data: piroguesProvince } = await supabase
+          .from("pirogues")
+          .select("id, site:sites!inner(province)")
+          .eq("site.province", province);
+
+        if (piroguesProvince && piroguesProvince.length > 1) {
+          const pirogueIdsProvince = piroguesProvince.map(p => p.id);
+          
+          // Exclure les pirogues du pêcheur actuel pour la comparaison
+          const autresPiroguesIds = pirogueIdsProvince.filter(id => !pirogueIds.includes(id));
+
+          if (autresPiroguesIds.length > 0) {
+            // Captures moyennes de la province
+            const { data: capturesProvinceData } = await supabase
+              .from("captures_pa")
+              .select("poids_kg, cpue, pirogue_id")
+              .in("pirogue_id", autresPiroguesIds)
+              .eq("mois", currentMonth)
+              .eq("annee", currentYear);
+
+            if (capturesProvinceData && capturesProvinceData.length > 0) {
+              // Grouper par pirogue pour avoir la moyenne par pêcheur
+              const capturesParPirogue = new Map<string, { total: number; cpues: number[] }>();
+              
+              capturesProvinceData.forEach(c => {
+                const existing = capturesParPirogue.get(c.pirogue_id) || { total: 0, cpues: [] };
+                existing.total += c.poids_kg || 0;
+                if (c.cpue) existing.cpues.push(c.cpue);
+                capturesParPirogue.set(c.pirogue_id, existing);
+              });
+
+              const nbPecheurs = capturesParPirogue.size;
+              const totalCapturesProvince = Array.from(capturesParPirogue.values())
+                .reduce((sum, val) => sum + val.total, 0);
+              
+              capturesMoyenneProvince = nbPecheurs > 0 
+                ? totalCapturesProvince / nbPecheurs 
+                : 0;
+
+              // CPUE moyen de la province
+              const tousLesCPUEs = Array.from(capturesParPirogue.values())
+                .flatMap(val => val.cpues);
+              cpueMoyenProvince = tousLesCPUEs.length > 0
+                ? tousLesCPUEs.reduce((a, b) => a + b, 0) / tousLesCPUEs.length
+                : 0;
+
+              // Comparaisons
+              if (capturesMoyenneProvince > 0) {
+                const diffCaptures = ((capturesMois - capturesMoyenneProvince) / capturesMoyenneProvince) * 100;
+                comparaisonCaptures = `${diffCaptures > 0 ? '+' : ''}${diffCaptures.toFixed(0)}% vs moyenne provinciale`;
+              }
+
+              if (cpueMoyenProvince > 0 && cpueMoyen > 0) {
+                const diffCPUE = ((cpueMoyen - cpueMoyenProvince) / cpueMoyenProvince) * 100;
+                comparaisonCPUE = `${diffCPUE > 0 ? '+' : ''}${diffCPUE.toFixed(0)}% vs moyenne provinciale`;
+              }
+            }
+          }
+        }
+      }
+
       setPecheurStats({
         capturesMois,
         capturesMoisTrend,
@@ -172,6 +249,11 @@ const Dashboard = () => {
         cpueMoyen: Number(cpueMoyen.toFixed(1)),
         cpueTrend: capturesMoisTrend ? `${capturesMoisTrend.replace(/[+-]/, '')} vs mois dernier` : "",
         notifications,
+        province,
+        capturesMoyenneProvince: Number(capturesMoyenneProvince.toFixed(0)),
+        cpueMoyenProvince: Number(cpueMoyenProvince.toFixed(1)),
+        comparaisonCaptures,
+        comparaisonCPUE,
       });
     } catch (error) {
       console.error("Erreur lors du chargement des données pêcheur:", error);
@@ -337,14 +419,65 @@ const Dashboard = () => {
               <CardContent>
                 <div className="text-2xl font-bold">{kpi.value}</div>
                 {kpi.trend && (
-                  <p className={`text-xs ${kpi.trend.startsWith('+') ? 'text-green-600' : 'text-red-600'}`}>
-                    {kpi.trend} vs mois dernier
+                  <p className={`text-xs ${kpi.trend.startsWith('+') ? 'text-green-600' : kpi.trend.startsWith('-') ? 'text-red-600' : 'text-muted-foreground'}`}>
+                    {kpi.trend}
                   </p>
                 )}
               </CardContent>
             </Card>
           ))}
         </div>
+
+        {/* Comparaison Provinciale */}
+        {isPecheur && pecheurStats.province && pecheurStats.capturesMoyenneProvince > 0 && (
+          <Card className="shadow-card mb-8">
+            <CardHeader>
+              <CardTitle>Comparaison Province: {pecheurStats.province}</CardTitle>
+              <CardDescription>
+                Vos performances comparées à la moyenne des pêcheurs de votre province
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">Vos captures ce mois</span>
+                    <span className="text-lg font-bold">{pecheurStats.capturesMois} kg</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">Moyenne provinciale</span>
+                    <span className="text-lg font-semibold text-muted-foreground">
+                      {pecheurStats.capturesMoyenneProvince} kg
+                    </span>
+                  </div>
+                  {pecheurStats.comparaisonCaptures && (
+                    <div className={`text-sm font-medium ${pecheurStats.comparaisonCaptures.startsWith('+') ? 'text-green-600' : 'text-red-600'}`}>
+                      {pecheurStats.comparaisonCaptures}
+                    </div>
+                  )}
+                </div>
+                
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">Votre CPUE moyen</span>
+                    <span className="text-lg font-bold">{pecheurStats.cpueMoyen}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">CPUE moyen provincial</span>
+                    <span className="text-lg font-semibold text-muted-foreground">
+                      {pecheurStats.cpueMoyenProvince}
+                    </span>
+                  </div>
+                  {pecheurStats.comparaisonCPUE && (
+                    <div className={`text-sm font-medium ${pecheurStats.comparaisonCPUE.startsWith('+') ? 'text-green-600' : 'text-red-600'}`}>
+                      {pecheurStats.comparaisonCPUE}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Quick Actions */}
         <Card className="shadow-card">
