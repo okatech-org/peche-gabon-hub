@@ -81,16 +81,10 @@ const actionsItems = [
     description: "Notifications automatiques"
   },
   { 
-    title: "Documents", 
-    url: "/minister-dashboard/documents", 
-    icon: FileText,
-    description: "Génération documents ministériels"
-  },
-  { 
-    title: "Pouvoirs", 
-    url: "/minister-dashboard/powers", 
+    title: "Actions Ministérielles", 
+    url: "/minister-dashboard/actions", 
     icon: Gavel,
-    description: "Actions ministérielles"
+    description: "Documents, réglementations, notifications"
   },
   { 
     title: "Historique", 

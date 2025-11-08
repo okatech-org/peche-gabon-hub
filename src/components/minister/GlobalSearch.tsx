@@ -97,19 +97,11 @@ const sections: SearchResult[] = [
     badge: "3"
   },
   { 
-    id: "documents", 
+    id: "actions", 
     type: "section", 
-    title: "Documents", 
-    description: "Génération documents ministériels",
-    url: "/minister-dashboard/documents",
-    icon: FileText
-  },
-  { 
-    id: "powers", 
-    type: "section", 
-    title: "Pouvoirs", 
-    description: "Actions ministérielles",
-    url: "/minister-dashboard/powers",
+    title: "Actions Ministérielles", 
+    description: "Documents, réglementations, notifications",
+    url: "/minister-dashboard/actions",
     icon: Gavel
   },
   { 
@@ -166,7 +158,7 @@ export function GlobalSearch() {
         type: "document" as const,
         title: doc.titre,
         description: doc.numero_reference,
-        url: "/minister-dashboard/documents",
+        url: "/minister-dashboard/actions",
         icon: FileText,
         badge: doc.type_document,
         date: new Date(doc.created_at)

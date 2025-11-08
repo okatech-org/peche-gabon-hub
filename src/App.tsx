@@ -21,8 +21,7 @@ import Surveillance from "./pages/minister/Surveillance";
 import Economy from "./pages/minister/Economy";
 import InstitutionalFlows from "./pages/minister/InstitutionalFlows";
 import Alerts from "./pages/minister/Alerts";
-import Documents from "./pages/minister/Documents";
-import Powers from "./pages/minister/Powers";
+import ActionsMinisterielles from "./pages/minister/ActionsMinisterielles";
 import History from "./pages/minister/History";
 import Settings from "./pages/minister/Settings";
 import PublicDocumentsRegistry from "./pages/PublicDocumentsRegistry";
@@ -96,8 +95,7 @@ function App() {
               <Route path="economy" element={<Economy />} />
               <Route path="institutional-flows" element={<InstitutionalFlows />} />
               <Route path="alerts" element={<Alerts />} />
-              <Route path="documents" element={<Documents />} />
-              <Route path="powers" element={<Powers />} />
+              <Route path="actions" element={<ActionsMinisterielles />} />
               <Route path="history" element={<History />} />
               <Route path="settings" element={<Settings />} />
             </Route>
