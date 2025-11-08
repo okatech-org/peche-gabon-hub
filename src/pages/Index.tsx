@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Fish, Waves, Shield, BarChart3, Users, ArrowRight } from "lucide-react";
+import { Fish, Waves, Shield, BarChart3, Users, ArrowRight, FileText } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const Index = () => {
@@ -39,6 +39,15 @@ const Index = () => {
                   className="border-white text-white hover:bg-white/10"
                 >
                   Connexion
+                </Button>
+                <Button
+                  size="lg"
+                  variant="secondary"
+                  onClick={() => navigate("/registre-documents")}
+                  className="border-white"
+                >
+                  <FileText className="mr-2 h-5 w-5" />
+                  Registre Public
                 </Button>
               </div>
             </div>

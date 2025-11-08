@@ -14,6 +14,7 @@ import Demo from "./pages/Demo";
 import Captures from "./pages/Captures";
 import MonCompte from "./pages/MonCompte";
 import MinisterDashboard from "./pages/MinisterDashboard";
+import PublicDocumentsRegistry from "./pages/PublicDocumentsRegistry";
 import DGPADashboard from "./pages/DGPADashboard";
 import ANPADashboard from "./pages/ANPADashboard";
 import AGASADashboard from "./pages/AGASADashboard";
@@ -36,6 +37,7 @@ function App() {
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/demo" element={<Demo />} />
+            <Route path="/registre-documents" element={<PublicDocumentsRegistry />} />
             <Route
               path="/dashboard"
               element={
