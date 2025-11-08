@@ -5,10 +5,10 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Building2, DollarSign, TrendingUp, Download, PieChart, BarChart3 } from "lucide-react";
+import { Loader2, Building2, DollarSign, TrendingUp, Download, PieChart, BarChart3, LineChart as LineChartIcon, Calendar } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Cell, Pie, PieChart as RechartsPieChart, ResponsiveContainer, Tooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
+import { Cell, Pie, PieChart as RechartsPieChart, ResponsiveContainer, Tooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid, LineChart, Line, Area, AreaChart } from "recharts";
 
 interface RemonteeStats {
   institution: string;
@@ -38,6 +38,22 @@ interface EvolutionMensuelle {
   montant: number;
 }
 
+interface ComparaisonAnnuelle {
+  annee: number;
+  montant_total: number;
+  montant_paye: number;
+  montant_planifie: number;
+  nb_remontees: number;
+}
+
+interface TendanceInstitution {
+  institution: string;
+  donnees: Array<{
+    annee: number;
+    montant: number;
+  }>;
+}
+
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
 const MOIS_NOMS = ["Jan", "Fév", "Mar", "Avr", "Mai", "Jun", "Jul", "Aoû", "Sep", "Oct", "Nov", "Déc"];
 
@@ -45,14 +61,22 @@ export function RemonteesInstitutionnellesDashboard() {
   const [stats, setStats] = useState<RemonteeStats[]>([]);
   const [remontees, setRemontees] = useState<RemonteeDetail[]>([]);
   const [evolution, setEvolution] = useState<EvolutionMensuelle[]>([]);
+  const [comparaisonAnnuelle, setComparaisonAnnuelle] = useState<ComparaisonAnnuelle[]>([]);
+  const [tendancesInstitutions, setTendancesInstitutions] = useState<TendanceInstitution[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [totalRemontees, setTotalRemontees] = useState(0);
   const [exporting, setExporting] = useState(false);
+  const [yearsRange, setYearsRange] = useState<number[]>([]);
 
   useEffect(() => {
     loadData();
+    loadComparaisonAnnuelle();
   }, [selectedYear]);
+
+  useEffect(() => {
+    loadTendancesInstitutions();
+  }, []);
 
   const loadData = async () => {
     try {
@@ -137,6 +161,101 @@ export function RemonteesInstitutionnellesDashboard() {
       toast.error("Erreur lors du chargement des données");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadComparaisonAnnuelle = async () => {
+    try {
+      const currentYear = new Date().getFullYear();
+      const years = Array.from({ length: 5 }, (_, i) => currentYear - i);
+      setYearsRange(years);
+
+      const comparaisons: ComparaisonAnnuelle[] = [];
+
+      for (const year of years) {
+        const { data, error } = await supabase
+          .from("remontees_effectives")
+          .select("*")
+          .eq("periode_annee", year);
+
+        if (error) throw error;
+
+        const montantTotal = (data || []).reduce(
+          (sum, r) => sum + parseFloat(r.montant_remonte.toString()),
+          0
+        );
+        const montantPaye = (data || [])
+          .filter((r) => r.statut_virement === "effectue")
+          .reduce((sum, r) => sum + parseFloat(r.montant_remonte.toString()), 0);
+        const montantPlanifie = (data || [])
+          .filter((r) => r.statut_virement === "planifie")
+          .reduce((sum, r) => sum + parseFloat(r.montant_remonte.toString()), 0);
+
+        comparaisons.push({
+          annee: year,
+          montant_total: montantTotal,
+          montant_paye: montantPaye,
+          montant_planifie: montantPlanifie,
+          nb_remontees: data?.length || 0,
+        });
+      }
+
+      setComparaisonAnnuelle(comparaisons);
+    } catch (error) {
+      console.error("Erreur lors du chargement de la comparaison annuelle:", error);
+    }
+  };
+
+  const loadTendancesInstitutions = async () => {
+    try {
+      const currentYear = new Date().getFullYear();
+      const years = Array.from({ length: 5 }, (_, i) => currentYear - i);
+
+      // Charger les institutions
+      const { data: institutions, error: instError } = await supabase
+        .from("repartition_institutionnelle")
+        .select("*")
+        .eq("actif", true);
+
+      if (instError) throw instError;
+
+      const tendances: TendanceInstitution[] = [];
+
+      for (const institution of institutions || []) {
+        const donnees = [];
+
+        for (const year of years) {
+          const { data, error } = await supabase
+            .from("remontees_effectives")
+            .select("montant_remonte")
+            .eq("institution_id", institution.id)
+            .eq("periode_annee", year);
+
+          if (error) throw error;
+
+          const montantTotal = (data || []).reduce(
+            (sum, r) => sum + parseFloat(r.montant_remonte.toString()),
+            0
+          );
+
+          donnees.push({
+            annee: year,
+            montant: montantTotal,
+          });
+        }
+
+        // Inverser pour avoir l'ordre chronologique
+        donnees.reverse();
+
+        tendances.push({
+          institution: institution.nom_institution,
+          donnees,
+        });
+      }
+
+      setTendancesInstitutions(tendances);
+    } catch (error) {
+      console.error("Erreur lors du chargement des tendances:", error);
     }
   };
 
@@ -352,14 +471,22 @@ export function RemonteesInstitutionnellesDashboard() {
       <Card>
         <CardContent className="pt-6">
           <Tabs defaultValue="repartition" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-5">
               <TabsTrigger value="repartition">
                 <PieChart className="h-4 w-4 mr-2" />
                 Répartition
               </TabsTrigger>
               <TabsTrigger value="evolution">
                 <BarChart3 className="h-4 w-4 mr-2" />
-                Évolution
+                Mensuel
+              </TabsTrigger>
+              <TabsTrigger value="comparaison">
+                <Calendar className="h-4 w-4 mr-2" />
+                Multi-années
+              </TabsTrigger>
+              <TabsTrigger value="tendances">
+                <LineChartIcon className="h-4 w-4 mr-2" />
+                Tendances
               </TabsTrigger>
               <TabsTrigger value="details">Détails</TabsTrigger>
             </TabsList>
@@ -453,6 +580,190 @@ export function RemonteesInstitutionnellesDashboard() {
                     <Bar dataKey="montant" fill="#0088FE" name="Montant (FCFA)" />
                   </BarChart>
                 </ResponsiveContainer>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="comparaison" className="space-y-4">
+              <div className="space-y-6">
+                <div className="h-96">
+                  <h3 className="text-lg font-semibold mb-4 text-center">
+                    Comparaison des Remontées sur 5 ans
+                  </h3>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={[...comparaisonAnnuelle].reverse()}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="annee" />
+                      <YAxis />
+                      <Tooltip
+                        formatter={(value: number) => `${value.toLocaleString()} FCFA`}
+                      />
+                      <Legend />
+                      <Bar dataKey="montant_total" fill="#0088FE" name="Total" />
+                      <Bar dataKey="montant_paye" fill="#00C49F" name="Payé" />
+                      <Bar dataKey="montant_planifie" fill="#FFBB28" name="Planifié" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+
+                {/* Statistiques de croissance */}
+                <div className="grid md:grid-cols-3 gap-4">
+                  {comparaisonAnnuelle.length >= 2 && (
+                    <>
+                      <Card>
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-sm font-medium">Croissance Annuelle</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          {(() => {
+                            const derniere = comparaisonAnnuelle[0];
+                            const precedente = comparaisonAnnuelle[1];
+                            const croissance = precedente.montant_total > 0
+                              ? ((derniere.montant_total - precedente.montant_total) / precedente.montant_total) * 100
+                              : 0;
+                            return (
+                              <>
+                                <div className={`text-2xl font-bold ${croissance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                  {croissance >= 0 ? '+' : ''}{croissance.toFixed(1)}%
+                                </div>
+                                <p className="text-xs text-muted-foreground">
+                                  {derniere.annee} vs {precedente.annee}
+                                </p>
+                              </>
+                            );
+                          })()}
+                        </CardContent>
+                      </Card>
+
+                      <Card>
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-sm font-medium">Meilleure Année</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          {(() => {
+                            const meilleure = [...comparaisonAnnuelle].sort(
+                              (a, b) => b.montant_total - a.montant_total
+                            )[0];
+                            return (
+                              <>
+                                <div className="text-2xl font-bold">{meilleure.annee}</div>
+                                <p className="text-xs text-muted-foreground">
+                                  {meilleure.montant_total.toLocaleString()} FCFA
+                                </p>
+                              </>
+                            );
+                          })()}
+                        </CardContent>
+                      </Card>
+
+                      <Card>
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-sm font-medium">Moyenne 5 ans</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          {(() => {
+                            const moyenne = comparaisonAnnuelle.reduce(
+                              (sum, c) => sum + c.montant_total,
+                              0
+                            ) / comparaisonAnnuelle.length;
+                            return (
+                              <>
+                                <div className="text-2xl font-bold">
+                                  {moyenne.toLocaleString()} FCFA
+                                </div>
+                                <p className="text-xs text-muted-foreground">
+                                  {comparaisonAnnuelle[0].annee - 4} - {comparaisonAnnuelle[0].annee}
+                                </p>
+                              </>
+                            );
+                          })()}
+                        </CardContent>
+                      </Card>
+                    </>
+                  )}
+                </div>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="tendances" className="space-y-4">
+              <div className="h-96">
+                <h3 className="text-lg font-semibold mb-4 text-center">
+                  Évolution par Institution sur 5 ans
+                </h3>
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart
+                    data={(() => {
+                      // Transformer les données pour avoir un format compatible
+                      const years = [...new Set(
+                        tendancesInstitutions.flatMap((t) => t.donnees.map((d) => d.annee))
+                      )].sort();
+
+                      return years.map((annee) => {
+                        const point: any = { annee };
+                        tendancesInstitutions.forEach((inst) => {
+                          const donnee = inst.donnees.find((d) => d.annee === annee);
+                          point[inst.institution] = donnee?.montant || 0;
+                        });
+                        return point;
+                      });
+                    })()}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="annee" />
+                    <YAxis />
+                    <Tooltip
+                      formatter={(value: number) => `${value.toLocaleString()} FCFA`}
+                    />
+                    <Legend />
+                    {tendancesInstitutions.map((inst, idx) => (
+                      <Line
+                        key={inst.institution}
+                        type="monotone"
+                        dataKey={inst.institution}
+                        stroke={COLORS[idx % COLORS.length]}
+                        strokeWidth={2}
+                        dot={{ r: 4 }}
+                      />
+                    ))}
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+
+              {/* Tableau de croissance par institution */}
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Institution</TableHead>
+                      <TableHead className="text-right">Croissance</TableHead>
+                      <TableHead className="text-right">Montant {comparaisonAnnuelle[0]?.annee}</TableHead>
+                      <TableHead className="text-right">Montant {comparaisonAnnuelle[1]?.annee}</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {tendancesInstitutions.map((inst) => {
+                      const dernier = inst.donnees[inst.donnees.length - 1]?.montant || 0;
+                      const precedent = inst.donnees[inst.donnees.length - 2]?.montant || 0;
+                      const croissance = precedent > 0
+                        ? ((dernier - precedent) / precedent) * 100
+                        : 0;
+
+                      return (
+                        <TableRow key={inst.institution}>
+                          <TableCell className="font-medium">{inst.institution}</TableCell>
+                          <TableCell className={`text-right font-semibold ${croissance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                            {croissance >= 0 ? '+' : ''}{croissance.toFixed(1)}%
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {dernier.toLocaleString()} FCFA
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {precedent.toLocaleString()} FCFA
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
               </div>
             </TabsContent>
 
