@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, FileText, Search, Download, Eye, Trash2, Edit, Plus } from "lucide-react";
+import { Loader2, FileText, Search, Download, Eye, Trash2, Edit, Plus, Bell } from "lucide-react";
 import { toast } from "sonner";
 import { GenerateDocumentDialog } from "./GenerateDocumentDialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -49,6 +49,7 @@ export const MinisterialDocumentsPanel = () => {
   const [showGenerateDialog, setShowGenerateDialog] = useState(false);
   const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
   const [showViewDialog, setShowViewDialog] = useState(false);
+  const [sendingNotifications, setSendingNotifications] = useState<string | null>(null);
 
   useEffect(() => {
     loadDocuments();
@@ -145,6 +146,32 @@ ${doc.date_publication ? `Publié le ${format(new Date(doc.date_publication), "d
   const handleView = (doc: Document) => {
     setSelectedDocument(doc);
     setShowViewDialog(true);
+  };
+
+  const handleSendNotifications = async (documentId: string, titre: string) => {
+    try {
+      setSendingNotifications(documentId);
+      
+      const { data, error } = await supabase.functions.invoke('simulate-notifications', {
+        body: { documentId }
+      });
+
+      if (error) throw error;
+
+      toast.success(
+        data.message || "Notifications simulées envoyées avec succès!",
+        {
+          description: `${data.notifications?.length || 0} notification(s) envoyée(s) aux abonnés`
+        }
+      );
+    } catch (error: any) {
+      console.error("Error sending notifications:", error);
+      toast.error("Erreur lors de l'envoi des notifications", {
+        description: error.message
+      });
+    } finally {
+      setSendingNotifications(null);
+    }
   };
 
   const filtered = documents.filter(doc => {
@@ -281,6 +308,22 @@ ${doc.date_publication ? `Publié le ${format(new Date(doc.date_publication), "d
                           >
                             <Download className="h-4 w-4" />
                           </Button>
+                          {doc.statut === "publie" && (
+                            <Button
+                              size="sm"
+                              variant="default"
+                              onClick={() => handleSendNotifications(doc.id, doc.titre)}
+                              disabled={sendingNotifications === doc.id}
+                              className="gap-2"
+                            >
+                              {sendingNotifications === doc.id ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <Bell className="h-4 w-4" />
+                              )}
+                              Notifier
+                            </Button>
+                          )}
                           {doc.statut === "brouillon" && (
                             <Select
                               value={doc.statut}
