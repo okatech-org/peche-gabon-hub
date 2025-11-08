@@ -23,7 +23,8 @@ import {
   Loader2,
   Filter,
   X,
-  ArrowRight
+  ArrowRight,
+  FileDown
 } from "lucide-react";
 import { format, differenceInHours, startOfMonth, endOfMonth, subMonths } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -39,6 +40,9 @@ import {
   ResponsiveContainer,
   Legend
 } from "recharts";
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
+import { toast } from "sonner";
 
 interface ValidationStats {
   total: number;
@@ -68,6 +72,7 @@ interface TendanceData {
 export function ValidationStats() {
   const [loading, setLoading] = useState(true);
   const [loadingTendances, setLoadingTendances] = useState(true);
+  const [exportingPdf, setExportingPdf] = useState(false);
   const [formateurs, setFormateurs] = useState<Formateur[]>([]);
   const [stats, setStats] = useState<ValidationStats>({
     total: 0,
@@ -317,6 +322,205 @@ export function ValidationStats() {
     );
   };
 
+  const exportToPDF = async () => {
+    try {
+      setExportingPdf(true);
+      toast.info("Génération du PDF en cours...");
+
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      let yPosition = 20;
+
+      // En-tête
+      pdf.setFontSize(20);
+      pdf.setTextColor(33, 33, 33);
+      pdf.text("Rapport de Validation des Formations", pageWidth / 2, yPosition, { align: 'center' });
+      
+      yPosition += 10;
+      pdf.setFontSize(10);
+      pdf.setTextColor(100, 100, 100);
+      pdf.text(`Généré le ${format(new Date(), "dd MMMM yyyy à HH:mm", { locale: fr })}`, pageWidth / 2, yPosition, { align: 'center' });
+      
+      yPosition += 15;
+
+      // Période et filtres
+      if (dateDebut || dateFin || formateurId || typeFormation) {
+        pdf.setFontSize(10);
+        pdf.setTextColor(50, 50, 50);
+        pdf.text("Filtres appliqués:", 20, yPosition);
+        yPosition += 5;
+        
+        if (dateDebut || dateFin) {
+          const periodeText = `Période: ${dateDebut ? format(new Date(dateDebut), "dd/MM/yyyy", { locale: fr }) : "Début"} - ${dateFin ? format(new Date(dateFin), "dd/MM/yyyy", { locale: fr }) : "Fin"}`;
+          pdf.text(periodeText, 20, yPosition);
+          yPosition += 5;
+        }
+        if (formateurId) {
+          const formateur = formateurs.find(f => f.id === formateurId);
+          pdf.text(`Formateur: ${formateur?.prenom} ${formateur?.nom}`, 20, yPosition);
+          yPosition += 5;
+        }
+        if (typeFormation) {
+          pdf.text(`Type: ${typeFormation}`, 20, yPosition);
+          yPosition += 5;
+        }
+        yPosition += 5;
+      }
+
+      // Métriques principales
+      pdf.setFontSize(14);
+      pdf.setTextColor(33, 33, 33);
+      pdf.text("Métriques Clés", 20, yPosition);
+      yPosition += 8;
+
+      const metrics = [
+        { label: "Taux d'approbation", value: `${stats.tauxApprobation.toFixed(1)}%` },
+        { label: "Temps de révision moyen", value: `${stats.tempsRevisionMoyen.toFixed(1)}h` },
+        { label: "Formations approuvées", value: `${stats.approuvees}` },
+        { label: "Formations rejetées", value: `${stats.rejetees}` },
+        { label: "En attente", value: `${stats.enAttente}` },
+        { label: "Total traité", value: `${stats.total}` }
+      ];
+
+      pdf.setFontSize(10);
+      metrics.forEach((metric, index) => {
+        const x = 20 + (index % 2) * 90;
+        const y = yPosition + Math.floor(index / 2) * 8;
+        pdf.setTextColor(100, 100, 100);
+        pdf.text(metric.label + ":", x, y);
+        pdf.setTextColor(33, 33, 33);
+        pdf.setFont(undefined, 'bold');
+        pdf.text(metric.value, x + 60, y);
+        pdf.setFont(undefined, 'normal');
+      });
+
+      yPosition += 30;
+
+      // Capture des graphiques
+      const graphiquesElement = document.getElementById('graphiques-evolution');
+      if (graphiquesElement) {
+        if (yPosition > pageHeight - 120) {
+          pdf.addPage();
+          yPosition = 20;
+        }
+
+        pdf.setFontSize(14);
+        pdf.text("Évolution Temporelle", 20, yPosition);
+        yPosition += 10;
+
+        const canvas = await html2canvas(graphiquesElement, {
+          scale: 2,
+          backgroundColor: '#ffffff',
+          logging: false
+        });
+
+        const imgData = canvas.toDataURL('image/png');
+        const imgWidth = pageWidth - 40;
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+        if (yPosition + imgHeight > pageHeight - 20) {
+          pdf.addPage();
+          yPosition = 20;
+        }
+
+        pdf.addImage(imgData, 'PNG', 20, yPosition, imgWidth, imgHeight);
+        yPosition += imgHeight + 10;
+      }
+
+      // Distribution des statuts
+      if (yPosition > pageHeight - 60) {
+        pdf.addPage();
+        yPosition = 20;
+      }
+
+      pdf.setFontSize(14);
+      pdf.text("Distribution des Statuts", 20, yPosition);
+      yPosition += 8;
+
+      const barHeight = 6;
+      const barWidth = pageWidth - 80;
+
+      // Approuvées
+      pdf.setFontSize(10);
+      pdf.setTextColor(100, 100, 100);
+      pdf.text(`Approuvées: ${stats.approuvees}`, 20, yPosition);
+      yPosition += 5;
+      pdf.setFillColor(34, 197, 94);
+      pdf.rect(20, yPosition, (stats.approuvees / stats.total) * barWidth, barHeight, 'F');
+      yPosition += 10;
+
+      // Rejetées
+      pdf.text(`Rejetées: ${stats.rejetees}`, 20, yPosition);
+      yPosition += 5;
+      pdf.setFillColor(239, 68, 68);
+      pdf.rect(20, yPosition, (stats.rejetees / stats.total) * barWidth, barHeight, 'F');
+      yPosition += 10;
+
+      // En attente
+      pdf.text(`En attente: ${stats.enAttente}`, 20, yPosition);
+      yPosition += 5;
+      pdf.setFillColor(249, 115, 22);
+      pdf.rect(20, yPosition, (stats.enAttente / stats.total) * barWidth, barHeight, 'F');
+      yPosition += 15;
+
+      // Raisons de rejet
+      if (stats.raisonsRejet.length > 0) {
+        if (yPosition > pageHeight - 80) {
+          pdf.addPage();
+          yPosition = 20;
+        }
+
+        pdf.setFontSize(14);
+        pdf.setTextColor(33, 33, 33);
+        pdf.text("Principales Raisons de Rejet", 20, yPosition);
+        yPosition += 8;
+
+        pdf.setFontSize(10);
+        stats.raisonsRejet.forEach((raison, index) => {
+          if (yPosition > pageHeight - 20) {
+            pdf.addPage();
+            yPosition = 20;
+          }
+
+          pdf.setTextColor(100, 100, 100);
+          pdf.text(`${index + 1}.`, 20, yPosition);
+          pdf.setTextColor(33, 33, 33);
+          
+          const maxWidth = pageWidth - 50;
+          const lines = pdf.splitTextToSize(`(${raison.count}x) ${raison.raison}`, maxWidth);
+          pdf.text(lines, 27, yPosition);
+          yPosition += 5 * lines.length + 3;
+        });
+      }
+
+      // Pied de page sur toutes les pages
+      const totalPages = pdf.internal.pages.length - 1;
+      for (let i = 1; i <= totalPages; i++) {
+        pdf.setPage(i);
+        pdf.setFontSize(8);
+        pdf.setTextColor(150, 150, 150);
+        pdf.text(
+          `Page ${i} sur ${totalPages} - Ministère des Pêches`,
+          pageWidth / 2,
+          pageHeight - 10,
+          { align: 'center' }
+        );
+      }
+
+      // Sauvegarder le PDF
+      const filename = `rapport-validation-${format(new Date(), "yyyy-MM-dd-HHmm")}.pdf`;
+      pdf.save(filename);
+      
+      toast.success("Rapport PDF généré avec succès");
+    } catch (error) {
+      console.error("Erreur génération PDF:", error);
+      toast.error("Erreur lors de la génération du PDF");
+    } finally {
+      setExportingPdf(false);
+    }
+  };
+
   const loadStats = async () => {
     try {
       setLoading(true);
@@ -426,12 +630,27 @@ export function ValidationStats() {
                 Vue d'ensemble des performances du système de validation
               </CardDescription>
             </div>
-            {hasActiveFilters && (
-              <Button variant="ghost" size="sm" onClick={resetFilters}>
-                <X className="h-4 w-4 mr-1" />
-                Réinitialiser
+            <div className="flex items-center gap-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={exportToPDF}
+                disabled={exportingPdf}
+              >
+                {exportingPdf ? (
+                  <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                ) : (
+                  <FileDown className="h-4 w-4 mr-1" />
+                )}
+                Exporter PDF
               </Button>
-            )}
+              {hasActiveFilters && (
+                <Button variant="ghost" size="sm" onClick={resetFilters}>
+                  <X className="h-4 w-4 mr-1" />
+                  Réinitialiser
+                </Button>
+              )}
+            </div>
           </div>
         </CardHeader>
       </Card>
@@ -746,7 +965,7 @@ export function ValidationStats() {
             Tendances des performances de validation au fil du temps
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent id="graphiques-evolution">
           {loadingTendances ? (
             <div className="flex items-center justify-center py-8">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
