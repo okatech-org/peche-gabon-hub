@@ -2176,6 +2176,51 @@ export type Database = {
           },
         ]
       }
+      parties_prenantes: {
+        Row: {
+          actif: boolean | null
+          created_at: string | null
+          email: string
+          fonction: string | null
+          id: string
+          nom: string
+          organisation: string | null
+          preferences: Json | null
+          prenom: string
+          telephone: string | null
+          types_rapports: string[] | null
+          updated_at: string | null
+        }
+        Insert: {
+          actif?: boolean | null
+          created_at?: string | null
+          email: string
+          fonction?: string | null
+          id?: string
+          nom: string
+          organisation?: string | null
+          preferences?: Json | null
+          prenom: string
+          telephone?: string | null
+          types_rapports?: string[] | null
+          updated_at?: string | null
+        }
+        Update: {
+          actif?: boolean | null
+          created_at?: string | null
+          email?: string
+          fonction?: string | null
+          id?: string
+          nom?: string
+          organisation?: string | null
+          preferences?: Json | null
+          prenom?: string
+          telephone?: string | null
+          types_rapports?: string[] | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       pirogues: {
         Row: {
           annee_construction: number | null
@@ -2492,6 +2537,110 @@ export type Database = {
             columns: ["licence_id"]
             isOneToOne: false
             referencedRelation: "licences"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rapports_automatises: {
+        Row: {
+          actif: boolean | null
+          copie_cachee: string[] | null
+          created_at: string | null
+          derniere_execution: string | null
+          description: string | null
+          destinataires: string[]
+          filtres: Json | null
+          frequence: string
+          heure_execution: string | null
+          id: string
+          jour_execution: number | null
+          nom: string
+          prochaine_execution: string | null
+          template_email: string | null
+          type_rapport: string
+          updated_at: string | null
+        }
+        Insert: {
+          actif?: boolean | null
+          copie_cachee?: string[] | null
+          created_at?: string | null
+          derniere_execution?: string | null
+          description?: string | null
+          destinataires: string[]
+          filtres?: Json | null
+          frequence?: string
+          heure_execution?: string | null
+          id?: string
+          jour_execution?: number | null
+          nom: string
+          prochaine_execution?: string | null
+          template_email?: string | null
+          type_rapport: string
+          updated_at?: string | null
+        }
+        Update: {
+          actif?: boolean | null
+          copie_cachee?: string[] | null
+          created_at?: string | null
+          derniere_execution?: string | null
+          description?: string | null
+          destinataires?: string[]
+          filtres?: Json | null
+          frequence?: string
+          heure_execution?: string | null
+          id?: string
+          jour_execution?: number | null
+          nom?: string
+          prochaine_execution?: string | null
+          template_email?: string | null
+          type_rapport?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      rapports_envois_historique: {
+        Row: {
+          created_at: string | null
+          date_envoi: string | null
+          fichier_path: string | null
+          id: string
+          message_erreur: string | null
+          metadata: Json | null
+          nb_destinataires: number | null
+          rapport_id: string | null
+          statut: string
+          taille_fichier_kb: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          date_envoi?: string | null
+          fichier_path?: string | null
+          id?: string
+          message_erreur?: string | null
+          metadata?: Json | null
+          nb_destinataires?: number | null
+          rapport_id?: string | null
+          statut: string
+          taille_fichier_kb?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          date_envoi?: string | null
+          fichier_path?: string | null
+          id?: string
+          message_erreur?: string | null
+          metadata?: Json | null
+          nb_destinataires?: number | null
+          rapport_id?: string | null
+          statut?: string
+          taille_fichier_kb?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rapports_envois_historique_rapport_id_fkey"
+            columns: ["rapport_id"]
+            isOneToOne: false
+            referencedRelation: "rapports_automatises"
             referencedColumns: ["id"]
           },
         ]
@@ -3910,6 +4059,15 @@ export type Database = {
       calculer_metriques_precision: {
         Args: { p_date_debut: string; p_date_fin: string }
         Returns: Json
+      }
+      calculer_prochaine_execution: {
+        Args: {
+          p_derniere_execution?: string
+          p_frequence: string
+          p_heure_execution: string
+          p_jour_execution: number
+        }
+        Returns: string
       }
       est_dans_fenetre_paiement: {
         Args: { p_date_echeance: string }
