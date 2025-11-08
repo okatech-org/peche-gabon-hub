@@ -1,23 +1,18 @@
 import { useAuth } from "@/hooks/useAuth";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
-  Fish, 
-  LogOut,
   TrendingUp,
   BarChart3,
   Activity,
   AlertTriangle,
-  FileText,
-  Bell,
-  MapPin,
   Loader2
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { MinisterSidebar } from "@/components/minister/MinisterSidebar";
 import PublishRegulationDialog from "@/components/minister/PublishRegulationDialog";
 import SendNotificationDialog from "@/components/minister/SendNotificationDialog";
 import LockZoneDialog from "@/components/minister/LockZoneDialog";
@@ -164,170 +159,186 @@ const MinisterDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-subtle">
-      {/* Header */}
-      <header className="border-b bg-card shadow-card">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Fish className="h-8 w-8 text-primary" />
-            <div>
-              <h1 className="text-2xl font-bold">PÊCHE GABON</h1>
-              <p className="text-sm text-muted-foreground">
-                {user?.email}
-              </p>
+    <SidebarProvider defaultOpen={true}>
+      <div className="min-h-screen w-full flex bg-gradient-subtle">
+        <MinisterSidebar />
+        
+        <div className="flex-1 flex flex-col min-w-0">
+          {/* Header */}
+          <header className="sticky top-0 z-10 border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60 shadow-sm">
+            <div className="flex items-center gap-4 px-6 py-3">
+              <SidebarTrigger className="hover:bg-muted" />
+              <div className="flex-1 min-w-0">
+                <h1 className="text-xl font-bold truncate">Tableau de Bord Exécutif</h1>
+                <p className="text-sm text-muted-foreground truncate">
+                  Vue stratégique du secteur halieutique
+                </p>
+              </div>
+              <div className="flex items-center gap-3">
+                <Badge variant="secondary" className="bg-accent hidden sm:flex">
+                  Ministre
+                </Badge>
+                <ExportPDFButton filters={filters} />
+              </div>
             </div>
-          </div>
-          <div className="flex items-center gap-4">
-            <Badge variant="secondary" className="bg-accent">
-              Ministre
-            </Badge>
-            <Button variant="outline" onClick={signOut}>
-              <LogOut className="h-4 w-4 mr-2" />
-              Déconnexion
-            </Button>
-          </div>
+          </header>
+
+          {/* Main Content */}
+          <main className="flex-1 overflow-auto" id="main-content">
+            <div className="container mx-auto px-6 py-6 space-y-6">
+              {/* Section Overview */}
+              <div id="overview">
+
+                {/* KPIs Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+                  <Card className="shadow-card hover:shadow-elevated transition-all">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium text-muted-foreground">
+                        Production Annuelle
+                      </CardTitle>
+                      <TrendingUp className="h-4 w-4 text-primary" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">{kpis.productionAnnuelle.toFixed(1)}T</div>
+                      {kpis.productionTrend && (
+                        <p className={`text-xs ${kpis.productionTrend.startsWith('+') ? 'text-green-600' : 'text-red-600'}`}>
+                          {kpis.productionTrend}
+                        </p>
+                      )}
+                    </CardContent>
+                  </Card>
+
+                  <Card className="shadow-card hover:shadow-elevated transition-all">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium text-muted-foreground">
+                        Exportations
+                      </CardTitle>
+                      <BarChart3 className="h-4 w-4 text-primary" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">{kpis.exportations.toFixed(1)}T</div>
+                      {kpis.exportationsTrend && (
+                        <p className={`text-xs ${kpis.exportationsTrend.startsWith('+') ? 'text-green-600' : 'text-red-600'}`}>
+                          {kpis.exportationsTrend}
+                        </p>
+                      )}
+                    </CardContent>
+                  </Card>
+
+                  <Card className="shadow-card hover:shadow-elevated transition-all">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium text-muted-foreground">
+                        CPUE Moyenne
+                      </CardTitle>
+                      <Activity className="h-4 w-4 text-primary" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">{kpis.cpueMoyenne}</div>
+                      {kpis.cpueTrend && (
+                        <p className={`text-xs ${kpis.cpueTrend.startsWith('+') ? 'text-green-600' : 'text-red-600'}`}>
+                          {kpis.cpueTrend}
+                        </p>
+                      )}
+                    </CardContent>
+                  </Card>
+
+                  <Card className="shadow-card hover:shadow-elevated transition-all">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium text-muted-foreground">
+                        Infractions
+                      </CardTitle>
+                      <AlertTriangle className="h-4 w-4 text-primary" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">{kpis.infractions}</div>
+                      {kpis.infractionsTrend && (
+                        <p className={`text-xs ${kpis.infractionsTrend.startsWith('+') ? 'text-red-600' : 'text-green-600'}`}>
+                          {kpis.infractionsTrend}
+                        </p>
+                      )}
+                    </CardContent>
+                  </Card>
+                </div>
+
+                <ExecutiveStats />
+              </div>
+
+              {/* Global Filters */}
+              <GlobalFilters onFiltersChange={setFilters} />
+
+              {/* Section Alerts */}
+              <div id="alerts">
+                <AlertsPanel />
+              </div>
+
+              {/* Section Artisanal */}
+              <div id="artisanal">
+                <div className="mb-4">
+                  <h2 className="text-2xl font-bold">Pêche Artisanale</h2>
+                  <p className="text-sm text-muted-foreground">Captures, CPUE, licences et conformité</p>
+                </div>
+                <ArtisanalFishingStats />
+              </div>
+
+              {/* Section Industrial */}
+              <div id="industrial">
+                <div className="mb-4">
+                  <h2 className="text-2xl font-bold">Pêche Industrielle</h2>
+                  <p className="text-sm text-muted-foreground">Navires, armements et activité</p>
+                </div>
+                <IndustrialFishingStats />
+              </div>
+
+              {/* Section Surveillance */}
+              <div id="surveillance">
+                <div className="mb-4">
+                  <h2 className="text-2xl font-bold">Surveillance & Contrôle</h2>
+                  <p className="text-sm text-muted-foreground">Carte interactive, zones restreintes et infractions</p>
+                </div>
+                <SurveillanceStats />
+              </div>
+
+              {/* Section Economic */}
+              <div id="economic">
+                <div className="mb-4">
+                  <h2 className="text-2xl font-bold">Économie de la Pêche</h2>
+                  <p className="text-sm text-muted-foreground">Exportations, valeur et prix</p>
+                </div>
+                <EconomicStats />
+              </div>
+
+              {/* Section Powers */}
+              <div id="powers">
+                <div className="mb-4">
+                  <h2 className="text-2xl font-bold">Pouvoirs Ministériels</h2>
+                  <p className="text-sm text-muted-foreground">Actions réglementaires et notifications</p>
+                </div>
+                <Card className="shadow-card">
+                  <CardHeader>
+                    <CardTitle>Actions Disponibles</CardTitle>
+                    <CardDescription>Exercez vos prérogatives ministérielles</CardDescription>
+                  </CardHeader>
+                  <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <PublishRegulationDialog />
+                    <SendNotificationDialog />
+                    <LockZoneDialog />
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Section History */}
+              <div id="history">
+                <div className="mb-4">
+                  <h2 className="text-2xl font-bold">Historique & Archives</h2>
+                  <p className="text-sm text-muted-foreground">Réglementations, notifications et audit</p>
+                </div>
+                <MinisterHistory />
+              </div>
+            </div>
+          </main>
         </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="container mx-auto px-4 py-8" id="main-content">
-        <div className="mb-8 flex items-center justify-between">
-          <div>
-            <h2 className="text-3xl font-bold mb-2">Tableau de Bord Exécutif</h2>
-            <p className="text-muted-foreground">Vue d'ensemble stratégique du secteur halieutique</p>
-          </div>
-          <ExportPDFButton filters={filters} />
-        </div>
-
-        {/* KPIs Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <Card className="shadow-card hover:shadow-elevated transition-all">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Production Annuelle
-              </CardTitle>
-              <TrendingUp className="h-4 w-4 text-primary" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{kpis.productionAnnuelle.toFixed(1)}T</div>
-              {kpis.productionTrend && (
-                <p className={`text-xs ${kpis.productionTrend.startsWith('+') ? 'text-green-600' : 'text-red-600'}`}>
-                  {kpis.productionTrend}
-                </p>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card className="shadow-card hover:shadow-elevated transition-all">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Exportations
-              </CardTitle>
-              <BarChart3 className="h-4 w-4 text-primary" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{kpis.exportations.toFixed(1)}T</div>
-              {kpis.exportationsTrend && (
-                <p className={`text-xs ${kpis.exportationsTrend.startsWith('+') ? 'text-green-600' : 'text-red-600'}`}>
-                  {kpis.exportationsTrend}
-                </p>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card className="shadow-card hover:shadow-elevated transition-all">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                CPUE Moyenne
-              </CardTitle>
-              <Activity className="h-4 w-4 text-primary" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{kpis.cpueMoyenne}</div>
-              {kpis.cpueTrend && (
-                <p className={`text-xs ${kpis.cpueTrend.startsWith('+') ? 'text-green-600' : 'text-red-600'}`}>
-                  {kpis.cpueTrend}
-                </p>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card className="shadow-card hover:shadow-elevated transition-all">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Infractions
-              </CardTitle>
-              <AlertTriangle className="h-4 w-4 text-primary" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{kpis.infractions}</div>
-              {kpis.infractionsTrend && (
-                <p className={`text-xs ${kpis.infractionsTrend.startsWith('+') ? 'text-red-600' : 'text-green-600'}`}>
-                  {kpis.infractionsTrend}
-                </p>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Actions Rapides */}
-        <Card className="shadow-card mb-8">
-          <CardHeader>
-            <CardTitle>Actions Rapides</CardTitle>
-            <CardDescription>Accédez rapidement aux fonctionnalités principales</CardDescription>
-          </CardHeader>
-          <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <PublishRegulationDialog />
-            <SendNotificationDialog />
-            <LockZoneDialog />
-          </CardContent>
-        </Card>
-
-        {/* Global Filters */}
-        <GlobalFilters onFiltersChange={setFilters} />
-
-        {/* Alerts Panel */}
-        <div className="mb-8">
-          <AlertsPanel />
-        </div>
-
-        {/* Detailed Stats Tabs */}
-        <Tabs defaultValue="executive" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-6">
-            <TabsTrigger value="executive">Vue d'ensemble</TabsTrigger>
-            <TabsTrigger value="artisanal">Pêche Artisanale</TabsTrigger>
-            <TabsTrigger value="industrial">Pêche Industrielle</TabsTrigger>
-            <TabsTrigger value="surveillance">Surveillance</TabsTrigger>
-            <TabsTrigger value="economic">Économie</TabsTrigger>
-            <TabsTrigger value="history">Historique</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="executive">
-            <ExecutiveStats />
-          </TabsContent>
-
-          <TabsContent value="artisanal">
-            <ArtisanalFishingStats />
-          </TabsContent>
-
-          <TabsContent value="industrial">
-            <IndustrialFishingStats />
-          </TabsContent>
-
-          <TabsContent value="surveillance">
-            <SurveillanceStats />
-          </TabsContent>
-
-          <TabsContent value="economic">
-            <EconomicStats />
-          </TabsContent>
-
-          <TabsContent value="history">
-            <MinisterHistory />
-          </TabsContent>
-        </Tabs>
-      </main>
-    </div>
+      </div>
+    </SidebarProvider>
   );
 };
 
