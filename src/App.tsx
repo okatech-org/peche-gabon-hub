@@ -13,6 +13,7 @@ import Admin from "./pages/Admin";
 import Demo from "./pages/Demo";
 import Captures from "./pages/Captures";
 import MonCompte from "./pages/MonCompte";
+import PecheurRemontees from "./pages/PecheurRemontees";
 import MinisterLayout from "./pages/minister/MinisterLayout";
 import Overview from "./pages/minister/Overview";
 import ArtisanalFishing from "./pages/minister/ArtisanalFishing";
@@ -63,6 +64,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <Captures />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/mes-remontees"
+              element={
+                <ProtectedRoute allowedRoles={['pecheur']}>
+                  <PecheurRemontees />
                 </ProtectedRoute>
               }
             />

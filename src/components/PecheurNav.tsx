@@ -2,7 +2,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
-import { Fish, User, LayoutDashboard, LogOut } from "lucide-react";
+import { Fish, User, LayoutDashboard, LogOut, MessageSquare } from "lucide-react";
 
 export const PecheurNav = () => {
   const navigate = useNavigate();
@@ -12,6 +12,7 @@ export const PecheurNav = () => {
   const navItems = [
     { path: "/dashboard", label: "Tableau de Bord", icon: LayoutDashboard },
     { path: "/captures", label: "Captures", icon: Fish },
+    { path: "/mes-remontees", label: "Mes Remontées", icon: MessageSquare },
     { path: "/mon-compte", label: "Mon Compte", icon: User },
   ];
 

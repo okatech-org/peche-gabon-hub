@@ -31,10 +31,23 @@ const SENTIMENT_OPTIONS = [
   { value: "negatif", label: "Négatif" },
 ];
 
-export function SubmitRemonteeDialog() {
-  const [open, setOpen] = useState(false);
+interface SubmitRemonteeDialogProps {
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  onSuccess?: () => void;
+}
+
+export function SubmitRemonteeDialog({ 
+  open: controlledOpen, 
+  onOpenChange: controlledOnOpenChange,
+  onSuccess 
+}: SubmitRemonteeDialogProps = {}) {
+  const [internalOpen, setInternalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+  
+  const open = controlledOpen !== undefined ? controlledOpen : internalOpen;
+  const setOpen = controlledOnOpenChange || setInternalOpen;
 
   const [formData, setFormData] = useState({
     type_remontee: "",
@@ -83,6 +96,10 @@ export function SubmitRemonteeDialog() {
         description: "Votre remontée a été enregistrée et sera validée prochainement",
       });
 
+      if (onSuccess) {
+        onSuccess();
+      }
+      
       setOpen(false);
       setFormData({
         type_remontee: "",
