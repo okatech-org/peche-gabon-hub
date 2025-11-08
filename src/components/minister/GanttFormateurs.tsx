@@ -4,11 +4,19 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { BarChart3, Calendar, Loader2, AlertCircle } from "lucide-react";
+import { BarChart3, Calendar, Loader2, AlertCircle, Sparkles, TrendingUp, CheckCircle2, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 import { format, startOfMonth, endOfMonth, startOfQuarter, endOfQuarter, startOfYear, endOfYear, eachDayOfInterval, differenceInDays, addMonths } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { Progress } from "@/components/ui/progress";
 
 interface Formation {
   id: string;
@@ -29,6 +37,31 @@ interface Formateur {
   taux_occupation: number;
 }
 
+interface OptimizationSuggestion {
+  formation_id: string;
+  formation_titre: string;
+  action: 'reassign' | 'reschedule' | 'keep';
+  ancien_formateur_id: string | null;
+  nouveau_formateur_id: string | null;
+  ancien_formateur_nom: string;
+  nouveau_formateur_nom: string;
+  ancienne_date_debut: string;
+  ancienne_date_fin: string;
+  nouvelle_date_debut: string;
+  nouvelle_date_fin: string;
+  raison: string;
+  impact_charge: number;
+}
+
+interface OptimizationResult {
+  analyse_globale: string;
+  taux_equilibre_actuel: number;
+  taux_equilibre_optimise: number;
+  suggestions: OptimizationSuggestion[];
+  nb_formations_total: number;
+  nb_formateurs_total: number;
+}
+
 type PeriodType = 'month' | 'quarter' | 'year' | 'custom';
 
 export function GanttFormateurs() {
@@ -39,6 +72,9 @@ export function GanttFormateurs() {
   const [startDate, setStartDate] = useState<Date>(startOfMonth(new Date()));
   const [endDate, setEndDate] = useState<Date>(endOfMonth(new Date()));
   const [conflicts, setConflicts] = useState<Map<string, boolean>>(new Map());
+  const [optimizing, setOptimizing] = useState(false);
+  const [optimizationResult, setOptimizationResult] = useState<OptimizationResult | null>(null);
+  const [showOptimizationDialog, setShowOptimizationDialog] = useState(false);
 
   useEffect(() => {
     updatePeriod();
@@ -181,6 +217,86 @@ export function GanttFormateurs() {
     return 'text-green-500';
   };
 
+  const handleOptimizePlanning = async () => {
+    try {
+      setOptimizing(true);
+      toast.info("Analyse et optimisation en cours...");
+
+      const { data, error } = await supabase.functions.invoke('optimize-planning', {
+        body: {
+          date_debut: format(startDate, "yyyy-MM-dd"),
+          date_fin: format(endDate, "yyyy-MM-dd"),
+        },
+      });
+
+      if (error) throw error;
+
+      if (data.success && data.suggestions) {
+        setOptimizationResult(data);
+        setShowOptimizationDialog(true);
+        toast.success(`${data.suggestions.length} optimisation(s) proposée(s)`);
+      } else {
+        toast.warning("Aucune optimisation nécessaire");
+      }
+    } catch (error) {
+      console.error("Erreur optimisation:", error);
+      toast.error("Erreur lors de l'optimisation");
+    } finally {
+      setOptimizing(false);
+    }
+  };
+
+  const handleApplyOptimization = async (suggestion: OptimizationSuggestion) => {
+    try {
+      const updates: any = {};
+
+      if (suggestion.action === 'reassign' && suggestion.nouveau_formateur_id) {
+        updates.formateur_id = suggestion.nouveau_formateur_id;
+      }
+
+      if (suggestion.action === 'reschedule') {
+        updates.date_debut = suggestion.nouvelle_date_debut;
+        updates.date_fin = suggestion.nouvelle_date_fin;
+      }
+
+      if (Object.keys(updates).length > 0) {
+        const { error } = await supabase
+          .from("formations_planifiees")
+          .update(updates)
+          .eq("id", suggestion.formation_id);
+
+        if (error) throw error;
+
+        toast.success("Optimisation appliquée avec succès");
+        loadData();
+      }
+    } catch (error) {
+      console.error("Erreur application optimisation:", error);
+      toast.error("Erreur lors de l'application");
+    }
+  };
+
+  const handleApplyAllOptimizations = async () => {
+    if (!optimizationResult) return;
+
+    try {
+      toast.info("Application de toutes les optimisations...");
+      
+      for (const suggestion of optimizationResult.suggestions) {
+        if (suggestion.action !== 'keep') {
+          await handleApplyOptimization(suggestion);
+        }
+      }
+
+      setShowOptimizationDialog(false);
+      toast.success("Toutes les optimisations ont été appliquées");
+      loadData();
+    } catch (error) {
+      console.error("Erreur application globale:", error);
+      toast.error("Erreur lors de l'application globale");
+    }
+  };
+
   const renderTimelineGrid = () => {
     const days = eachDayOfInterval({ start: startDate, end: endDate });
     const gridLines = [];
@@ -260,6 +376,20 @@ export function GanttFormateurs() {
 
             <Button size="sm" variant="outline" onClick={() => setCustomMonth(0)}>
               Aujourd'hui
+            </Button>
+
+            <Button
+              size="sm"
+              onClick={handleOptimizePlanning}
+              disabled={optimizing}
+              className="ml-auto"
+            >
+              {optimizing ? (
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              ) : (
+                <Sparkles className="h-4 w-4 mr-2" />
+              )}
+              Optimiser le planning
             </Button>
 
             <div className="ml-auto text-sm text-muted-foreground">
@@ -449,6 +579,144 @@ export function GanttFormateurs() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Dialog d'optimisation */}
+      {optimizationResult && (
+        <Dialog open={showOptimizationDialog} onOpenChange={setShowOptimizationDialog}>
+          <DialogContent className="max-w-5xl max-h-[85vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Sparkles className="h-5 w-5 text-primary" />
+                Optimisation Intelligente du Planning
+              </DialogTitle>
+              <DialogDescription>
+                Analyse par IA pour équilibrer la charge et éviter les conflits
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-6">
+              {/* Analyse globale */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">Analyse Globale</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <p className="text-sm text-muted-foreground">
+                    {optimizationResult.analyse_globale}
+                  </p>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <div className="text-sm font-medium mb-2">Équilibre Actuel</div>
+                      <div className="flex items-center gap-2">
+                        <Progress value={optimizationResult.taux_equilibre_actuel} className="flex-1" />
+                        <span className="text-sm font-bold">{optimizationResult.taux_equilibre_actuel}%</span>
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-sm font-medium mb-2 flex items-center gap-1">
+                        Équilibre Optimisé
+                        <TrendingUp className="h-3 w-3 text-green-500" />
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Progress value={optimizationResult.taux_equilibre_optimise} className="flex-1" />
+                        <span className="text-sm font-bold text-green-600">
+                          {optimizationResult.taux_equilibre_optimise}%
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-2 border-t">
+                    <div className="text-sm text-muted-foreground">
+                      {optimizationResult.nb_formations_total} formations • {optimizationResult.nb_formateurs_total} formateurs
+                    </div>
+                    <Badge variant="secondary">
+                      +{(optimizationResult.taux_equilibre_optimise - optimizationResult.taux_equilibre_actuel).toFixed(1)}% d'amélioration
+                    </Badge>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Suggestions */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold">
+                    Suggestions d'optimisation ({optimizationResult.suggestions.length})
+                  </h3>
+                  <Button onClick={handleApplyAllOptimizations} size="sm">
+                    <CheckCircle2 className="h-4 w-4 mr-2" />
+                    Tout appliquer
+                  </Button>
+                </div>
+
+                {optimizationResult.suggestions.map((suggestion, idx) => (
+                  <Card key={idx} className={suggestion.action === 'keep' ? 'opacity-60' : ''}>
+                    <CardContent className="pt-4">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex-1 space-y-2">
+                          <div className="flex items-center gap-2">
+                            <Badge
+                              variant={
+                                suggestion.action === 'reassign' ? 'default' :
+                                suggestion.action === 'reschedule' ? 'secondary' :
+                                'outline'
+                              }
+                            >
+                              {suggestion.action === 'reassign' ? 'Réassigner' :
+                               suggestion.action === 'reschedule' ? 'Reprogrammer' :
+                               'Conserver'}
+                            </Badge>
+                            <span className="font-medium">{suggestion.formation_titre}</span>
+                            {suggestion.impact_charge !== 0 && (
+                              <Badge variant="outline" className="text-xs">
+                                {suggestion.impact_charge > 0 ? '+' : ''}{suggestion.impact_charge}j
+                              </Badge>
+                            )}
+                          </div>
+
+                          {suggestion.action === 'reassign' && (
+                            <div className="flex items-center gap-2 text-sm">
+                              <span className="text-muted-foreground">{suggestion.ancien_formateur_nom}</span>
+                              <ArrowRight className="h-3 w-3" />
+                              <span className="font-medium text-primary">{suggestion.nouveau_formateur_nom}</span>
+                            </div>
+                          )}
+
+                          {suggestion.action === 'reschedule' && (
+                            <div className="flex items-center gap-2 text-sm">
+                              <span className="text-muted-foreground">
+                                {format(new Date(suggestion.ancienne_date_debut), "dd MMM", { locale: fr })} - {format(new Date(suggestion.ancienne_date_fin), "dd MMM", { locale: fr })}
+                              </span>
+                              <ArrowRight className="h-3 w-3" />
+                              <span className="font-medium text-primary">
+                                {format(new Date(suggestion.nouvelle_date_debut), "dd MMM", { locale: fr })} - {format(new Date(suggestion.nouvelle_date_fin), "dd MMM", { locale: fr })}
+                              </span>
+                            </div>
+                          )}
+
+                          <p className="text-sm text-muted-foreground">{suggestion.raison}</p>
+                        </div>
+
+                        {suggestion.action !== 'keep' && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleApplyOptimization(suggestion)}
+                          >
+                            <CheckCircle2 className="h-4 w-4 mr-1" />
+                            Appliquer
+                          </Button>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }
