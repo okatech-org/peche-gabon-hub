@@ -924,6 +924,21 @@ const SurveillanceMap = () => {
 
       if (dbError) throw dbError;
 
+      // Analyser les alertes automatiquement en arrière-plan
+      supabase.functions.invoke('analyze-rapport-alerts', {
+        body: { rapportId: (await supabase
+          .from('rapports_zones')
+          .select('id')
+          .eq('fichier_path', fileName)
+          .single()).data?.id }
+      }).then(({ data: alertData, error: alertError }) => {
+        if (alertError) {
+          console.error('Error analyzing alerts:', alertError);
+        } else if (alertData?.alertes?.length > 0) {
+          toast.info(`${alertData.alertes.length} alerte(s) détectée(s)`);
+        }
+      });
+
       // Also download immediately
       pdf.save(`${metadata.titre.replace(/\s+/g, '_')}_${timestamp}.pdf`);
       

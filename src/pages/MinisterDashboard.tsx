@@ -22,6 +22,7 @@ import IndustrialFishingStats from "@/components/minister/IndustrialFishingStats
 import SurveillanceStats from "@/components/minister/SurveillanceStats";
 import EconomicStats from "@/components/minister/EconomicStats";
 import MinisterHistory from "@/components/minister/MinisterHistory";
+import AlertesRapportsPanel from "@/components/minister/AlertesRapportsPanel";
 import GlobalFilters from "@/components/minister/GlobalFilters";
 import AlertsPanel from "@/components/minister/AlertsPanel";
 import ExportPDFButton from "@/components/minister/ExportPDFButton";
@@ -331,6 +332,9 @@ const MinisterDashboard = () => {
                 <div className="mb-4">
                   <h2 className="text-2xl font-bold">Historique & Archives</h2>
                   <p className="text-sm text-muted-foreground">Réglementations, notifications et audit</p>
+                </div>
+                <div className="grid gap-6 mb-6">
+                  <AlertesRapportsPanel />
                 </div>
                 <MinisterHistory />
               </div>

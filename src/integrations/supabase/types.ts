@@ -97,6 +97,88 @@ export type Database = {
         }
         Relationships: []
       }
+      alertes_rapports: {
+        Row: {
+          created_at: string
+          id: string
+          indicateur: string
+          notes: string | null
+          rapport_nouveau_id: string
+          rapport_reference_id: string
+          seuil_id: string
+          severite: string
+          statut: string
+          traitee_le: string | null
+          traitee_par: string | null
+          type_variation: string
+          valeur_actuelle: number
+          valeur_precedente: number
+          variation_pourcentage: number
+          vue_le: string | null
+          vue_par: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          indicateur: string
+          notes?: string | null
+          rapport_nouveau_id: string
+          rapport_reference_id: string
+          seuil_id: string
+          severite?: string
+          statut?: string
+          traitee_le?: string | null
+          traitee_par?: string | null
+          type_variation: string
+          valeur_actuelle: number
+          valeur_precedente: number
+          variation_pourcentage: number
+          vue_le?: string | null
+          vue_par?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          indicateur?: string
+          notes?: string | null
+          rapport_nouveau_id?: string
+          rapport_reference_id?: string
+          seuil_id?: string
+          severite?: string
+          statut?: string
+          traitee_le?: string | null
+          traitee_par?: string | null
+          type_variation?: string
+          valeur_actuelle?: number
+          valeur_precedente?: number
+          variation_pourcentage?: number
+          vue_le?: string | null
+          vue_par?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "alertes_rapports_rapport_nouveau_id_fkey"
+            columns: ["rapport_nouveau_id"]
+            isOneToOne: false
+            referencedRelation: "rapports_zones"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "alertes_rapports_rapport_reference_id_fkey"
+            columns: ["rapport_reference_id"]
+            isOneToOne: false
+            referencedRelation: "rapports_zones"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "alertes_rapports_seuil_id_fkey"
+            columns: ["seuil_id"]
+            isOneToOne: false
+            referencedRelation: "seuils_alertes_rapports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       armements: {
         Row: {
           adresse: string | null
@@ -1148,6 +1230,59 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      seuils_alertes_rapports: {
+        Row: {
+          actif: boolean
+          categorie_id: string | null
+          created_at: string
+          created_by: string
+          description: string | null
+          id: string
+          indicateur: string
+          nom: string
+          region: string | null
+          seuil_pourcentage: number
+          type_variation: string
+          updated_at: string
+        }
+        Insert: {
+          actif?: boolean
+          categorie_id?: string | null
+          created_at?: string
+          created_by: string
+          description?: string | null
+          id?: string
+          indicateur: string
+          nom: string
+          region?: string | null
+          seuil_pourcentage?: number
+          type_variation: string
+          updated_at?: string
+        }
+        Update: {
+          actif?: boolean
+          categorie_id?: string | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          id?: string
+          indicateur?: string
+          nom?: string
+          region?: string | null
+          seuil_pourcentage?: number
+          type_variation?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "seuils_alertes_rapports_categorie_id_fkey"
+            columns: ["categorie_id"]
+            isOneToOne: false
+            referencedRelation: "categories_rapports"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       sites: {
         Row: {
