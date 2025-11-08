@@ -14,6 +14,89 @@ export type Database = {
   }
   public: {
     Tables: {
+      alerte_historique: {
+        Row: {
+          created_at: string
+          destinataires: string[]
+          erreur_details: string | null
+          id: string
+          message: string
+          seuil_declenche: number
+          seuil_id: string | null
+          statut: string
+          type_indicateur: string
+          valeur_actuelle: number
+        }
+        Insert: {
+          created_at?: string
+          destinataires: string[]
+          erreur_details?: string | null
+          id?: string
+          message: string
+          seuil_declenche: number
+          seuil_id?: string | null
+          statut?: string
+          type_indicateur: string
+          valeur_actuelle: number
+        }
+        Update: {
+          created_at?: string
+          destinataires?: string[]
+          erreur_details?: string | null
+          id?: string
+          message?: string
+          seuil_declenche?: number
+          seuil_id?: string | null
+          statut?: string
+          type_indicateur?: string
+          valeur_actuelle?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "alerte_historique_seuil_id_fkey"
+            columns: ["seuil_id"]
+            isOneToOne: false
+            referencedRelation: "alerte_seuils"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      alerte_seuils: {
+        Row: {
+          actif: boolean
+          created_at: string
+          description: string | null
+          destinataires: string[]
+          id: string
+          nom: string
+          seuil_valeur: number
+          type_indicateur: string
+          updated_at: string
+        }
+        Insert: {
+          actif?: boolean
+          created_at?: string
+          description?: string | null
+          destinataires?: string[]
+          id?: string
+          nom: string
+          seuil_valeur: number
+          type_indicateur: string
+          updated_at?: string
+        }
+        Update: {
+          actif?: boolean
+          created_at?: string
+          description?: string | null
+          destinataires?: string[]
+          id?: string
+          nom?: string
+          seuil_valeur?: number
+          type_indicateur?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       armements: {
         Row: {
           adresse: string | null
