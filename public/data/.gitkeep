@@ -1,0 +1,31 @@
+# Data Directory
+
+This directory contains CSV data files for the financial dashboard:
+
+## Expected Structure:
+```
+/public/data/
+├── analytics/
+│   ├── finances_quittances_mensuel.csv
+│   ├── quittances_sommes_par_colonne.csv
+│   ├── exportation_resume_numerique.csv
+│   ├── valeur_resume_numerique.csv
+│   ├── demandes_resume_numerique.csv
+│   ├── previsions_scenarios_synthese.csv
+│   └── indicateurs_cles.csv
+└── raw/
+    ├── Autorisation.csv
+    ├── Quittance.csv
+    ├── Estimation_1.csv
+    └── Estimation_2.csv
+```
+
+## Usage:
+These CSV files are loaded by the financial dashboard components to display:
+- Revenue trends (quittances)
+- Export statistics
+- Tax calculations
+- Forecasts and scenarios
+- Key performance indicators
+
+Upload the CSV files from the analytics package to this location.

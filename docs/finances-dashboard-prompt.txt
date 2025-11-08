@@ -1,0 +1,48 @@
+
+Vous êtes Lovable. Construisez une application **Dashboard Finances PÊCHE GABON** à partir des CSV fournis.
+Créez 6 pages principales avec navigation latérale. Donnez un style clair, titres en FR, séparateurs, filtres en haut.
+
+1) **Vue d’ensemble**
+   - KPIs en tuiles (à partir de `analytics/indicateurs_cles.csv`) :
+     - Recettes (quittances) – `recettes_quittances_total`
+     - Exportations – somme globale
+     - Valeur – somme globale
+   - Graphique 1 : **Recettes mensuelles** (barres) depuis `analytics/finances_quittances_mensuel.csv` (X = Mois, Y = Valeur).
+   - Graphique 2 : **Comparatif Exportation / Valeur** (barres groupées) à partir de `exportation_resume_numerique.csv` et `valeur_resume_numerique.csv` (utilisez les colonnes les plus “montant-like”).
+   - Filtres globaux : année (si dispo), type (si dispo).
+
+2) **Quittances**
+   - Tableau interactif de `analytics/finances_quittances_mensuel.csv` (tri, recherche).
+   - Graphique : **courbe** ou **barres** par Mois→Valeur.
+   - Topline : somme totale (et % vs. mois précédent si possible).
+
+3) **Taxes & Remontées**
+   - Utiliser `raw/Autorisation.csv` et `raw/Quittance.csv` si présents ; sinon afficher message “source indisponible”.
+   - Graphiques :
+     - Barres par type d’autorisation (si champ existant) et somme du montant associé.
+     - Camembert : répartition des recettes par catégorie (déduire à partir de colonnes “montant/valeur”).
+
+4) **Prévisions**
+   - Tableau + graphiques depuis `analytics/previsions_scenarios_synthese.csv`.
+   - Si disponibles, afficher cartes (barres) par feuille: `Estimations`, `Données_estimées_2024/2025/2026` (somme_numeriques).
+   - Ajoutez un sélecteur “Année” pour filtrer.
+
+5) **Scénarios**
+   - Source : `raw/Estimation_1.csv` et `raw/Estimation_2.csv` (si présents).
+   - Afficher **deux cartes** “Scénario 1” et “Scénario 2” avec indicateurs sommaires (somme des colonnes numériques).
+   - Graphique comparatif barres : `somme_numeriques` par scénario.
+
+6) **Exportations & Demande**
+   - Tableaux et graphiques à partir de `analytics/exportation_resume_numerique.csv`, `analytics/demandes_resume_numerique.csv`, `analytics/valeur_resume_numerique.csv`.
+   - Barres empilées ou groupées pour comparer familles de montants.
+
+Règles générales :
+- Détectez automatiquement les colonnes **montant** (mots-clés: montant, total, valeur, taxe, redev, tva, prix). Utilisez-les en priorité pour les Y des graphiques.
+- Triez les mois dans l’ordre calendaire (janvier → décembre) si présents.
+- Ajoutez des **filtres** contextuels quand des colonnes qualitatives pertinentes sont détectées (ex. espèce, type bateau, zone).
+- Ajoutez une **export CSV** par page.
+- Rendez les composants responsives (desktop et mobile).
+
+Livrables attendus :
+- Un app fonctionnel avec les 6 pages, navigation latérale, thème clair, titres FR.
+- Chaque page inclut au moins 1 tableau et 1 graphique.
