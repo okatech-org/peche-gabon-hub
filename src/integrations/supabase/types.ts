@@ -73,6 +73,65 @@ export type Database = {
           },
         ]
       }
+      actions_remontees: {
+        Row: {
+          action_type: string
+          budget_alloue: number | null
+          created_at: string
+          date_debut: string | null
+          date_fin_prevue: string | null
+          date_fin_reelle: string | null
+          description: string
+          id: string
+          institution_responsable: string | null
+          remontee_id: string
+          responsable: string | null
+          resultats: string | null
+          statut: string | null
+          updated_at: string
+        }
+        Insert: {
+          action_type: string
+          budget_alloue?: number | null
+          created_at?: string
+          date_debut?: string | null
+          date_fin_prevue?: string | null
+          date_fin_reelle?: string | null
+          description: string
+          id?: string
+          institution_responsable?: string | null
+          remontee_id: string
+          responsable?: string | null
+          resultats?: string | null
+          statut?: string | null
+          updated_at?: string
+        }
+        Update: {
+          action_type?: string
+          budget_alloue?: number | null
+          created_at?: string
+          date_debut?: string | null
+          date_fin_prevue?: string | null
+          date_fin_reelle?: string | null
+          description?: string
+          id?: string
+          institution_responsable?: string | null
+          remontee_id?: string
+          responsable?: string | null
+          resultats?: string | null
+          statut?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "actions_remontees_remontee_id_fkey"
+            columns: ["remontee_id"]
+            isOneToOne: false
+            referencedRelation: "remontees_terrain"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       alerte_historique: {
         Row: {
           created_at: string
@@ -2274,6 +2333,126 @@ export type Database = {
           },
         ]
       }
+      remontees_syntheses: {
+        Row: {
+          created_at: string
+          id: string
+          remontee_id: string
+          synthese_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          remontee_id: string
+          synthese_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          remontee_id?: string
+          synthese_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "remontees_syntheses_remontee_id_fkey"
+            columns: ["remontee_id"]
+            isOneToOne: false
+            referencedRelation: "remontees_terrain"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "remontees_syntheses_synthese_id_fkey"
+            columns: ["synthese_id"]
+            isOneToOne: false
+            referencedRelation: "syntheses_remontees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      remontees_terrain: {
+        Row: {
+          categorie: string | null
+          commentaire_validation: string | null
+          created_at: string
+          date_incident: string | null
+          date_validation: string | null
+          description: string
+          id: string
+          impact_estime: string | null
+          institution_source: string | null
+          localisation: string | null
+          mots_cles: string[] | null
+          nb_personnes_concernees: number | null
+          niveau_priorite: string | null
+          numero_reference: string | null
+          piece_jointe_url: string | null
+          sentiment: string | null
+          soumis_par: string | null
+          source: string | null
+          statut: string | null
+          titre: string
+          type_remontee: string
+          updated_at: string
+          url_source: string | null
+          validation_status: string | null
+          valide_par: string | null
+        }
+        Insert: {
+          categorie?: string | null
+          commentaire_validation?: string | null
+          created_at?: string
+          date_incident?: string | null
+          date_validation?: string | null
+          description: string
+          id?: string
+          impact_estime?: string | null
+          institution_source?: string | null
+          localisation?: string | null
+          mots_cles?: string[] | null
+          nb_personnes_concernees?: number | null
+          niveau_priorite?: string | null
+          numero_reference?: string | null
+          piece_jointe_url?: string | null
+          sentiment?: string | null
+          soumis_par?: string | null
+          source?: string | null
+          statut?: string | null
+          titre: string
+          type_remontee: string
+          updated_at?: string
+          url_source?: string | null
+          validation_status?: string | null
+          valide_par?: string | null
+        }
+        Update: {
+          categorie?: string | null
+          commentaire_validation?: string | null
+          created_at?: string
+          date_incident?: string | null
+          date_validation?: string | null
+          description?: string
+          id?: string
+          impact_estime?: string | null
+          institution_source?: string | null
+          localisation?: string | null
+          mots_cles?: string[] | null
+          nb_personnes_concernees?: number | null
+          niveau_priorite?: string | null
+          numero_reference?: string | null
+          piece_jointe_url?: string | null
+          sentiment?: string | null
+          soumis_par?: string | null
+          source?: string | null
+          statut?: string | null
+          titre?: string
+          type_remontee?: string
+          updated_at?: string
+          url_source?: string | null
+          validation_status?: string | null
+          valide_par?: string | null
+        }
+        Relationships: []
+      }
       repartition_institutionnelle: {
         Row: {
           actif: boolean
@@ -2597,6 +2776,63 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      syntheses_remontees: {
+        Row: {
+          categories: string[] | null
+          created_at: string
+          genere_automatiquement: boolean | null
+          genere_par: string | null
+          id: string
+          nombre_remontees: number | null
+          periode_debut: string
+          periode_fin: string
+          points_cles: Json | null
+          recommandations: Json | null
+          statut: string | null
+          synthese_texte: string | null
+          tendances: Json | null
+          titre: string
+          types_remontees: string[] | null
+          updated_at: string
+        }
+        Insert: {
+          categories?: string[] | null
+          created_at?: string
+          genere_automatiquement?: boolean | null
+          genere_par?: string | null
+          id?: string
+          nombre_remontees?: number | null
+          periode_debut: string
+          periode_fin: string
+          points_cles?: Json | null
+          recommandations?: Json | null
+          statut?: string | null
+          synthese_texte?: string | null
+          tendances?: Json | null
+          titre: string
+          types_remontees?: string[] | null
+          updated_at?: string
+        }
+        Update: {
+          categories?: string[] | null
+          created_at?: string
+          genere_automatiquement?: boolean | null
+          genere_par?: string | null
+          id?: string
+          nombre_remontees?: number | null
+          periode_debut?: string
+          periode_fin?: string
+          points_cles?: Json | null
+          recommandations?: Json | null
+          statut?: string | null
+          synthese_texte?: string | null
+          tendances?: Json | null
+          titre?: string
+          types_remontees?: string[] | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       taxes_calculees: {
         Row: {

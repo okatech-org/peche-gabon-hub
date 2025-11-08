@@ -23,6 +23,7 @@ import InstitutionalFlows from "./pages/minister/InstitutionalFlows";
 import Alerts from "./pages/minister/Alerts";
 import ActionsMinisterielles from "./pages/minister/ActionsMinisterielles";
 import Formations from "./pages/minister/Formations";
+import Remontees from "./pages/minister/Remontees";
 import History from "./pages/minister/History";
 import Settings from "./pages/minister/Settings";
 import PublicDocumentsRegistry from "./pages/PublicDocumentsRegistry";
@@ -96,6 +97,7 @@ function App() {
               <Route path="economy" element={<Economy />} />
               <Route path="institutional-flows" element={<InstitutionalFlows />} />
               <Route path="alerts" element={<Alerts />} />
+              <Route path="remontees" element={<Remontees />} />
               <Route path="actions" element={<ActionsMinisterielles />} />
               <Route path="formations" element={<Formations />} />
               <Route path="history" element={<History />} />

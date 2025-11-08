@@ -12,7 +12,8 @@ import {
   LogOut,
   Building2,
   Settings,
-  GraduationCap
+  GraduationCap,
+  MessageSquare
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -80,6 +81,12 @@ const actionsItems = [
     icon: Bell,
     badge: true,
     description: "Notifications automatiques"
+  },
+  { 
+    title: "Remontées Terrain", 
+    url: "/minister-dashboard/remontees", 
+    icon: MessageSquare,
+    description: "Réclamations, suggestions, articles"
   },
   { 
     title: "Actions Ministérielles", 

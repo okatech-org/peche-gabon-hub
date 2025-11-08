@@ -5,3 +5,6 @@ verify_jwt = true
 
 [functions.generate-ministerial-document]
 verify_jwt = true
+
+[functions.generer-synthese-remontees]
+verify_jwt = true
