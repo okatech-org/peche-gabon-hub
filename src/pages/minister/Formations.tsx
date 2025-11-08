@@ -1,4 +1,7 @@
+import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import { Card } from "@/components/ui/card";
 import { RecommandationsFormation } from "@/components/minister/RecommandationsFormation";
 import { SuiviFormations } from "@/components/minister/SuiviFormations";
 import { BudgetFormations } from "@/components/minister/BudgetFormations";
@@ -18,18 +21,99 @@ import {
   DollarSign, 
   BarChart3,
   CheckSquare,
-  Brain
+  Brain,
+  Search,
+  X
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export default function Formations() {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [activeTab, setActiveTab] = useState("predictions");
+
+  const searchableContent = {
+    predictions: ["prédictions", "ia", "intelligence artificielle", "besoins", "automatique"],
+    validation: ["validation", "approuver", "rejeter", "vérifier", "confirmer"],
+    planning: ["calendrier", "planification", "dates", "programme", "gantt", "timeline"],
+    suivi: ["suivi", "progression", "tracking", "évolution", "comparaison", "régionale"],
+    formateurs: ["formateurs", "instructeurs", "enseignants", "professeurs", "évaluations"],
+    budget: ["budget", "coût", "financement", "dépenses", "montant"],
+    analytics: ["analytiques", "statistiques", "données", "graphiques", "métriques"],
+    recommandations: ["recommandations", "suggestions", "conseils", "préconisations"]
+  };
+
+  const filteredTabs = Object.entries(searchableContent).filter(([tab, keywords]) => {
+    if (!searchQuery) return true;
+    const query = searchQuery.toLowerCase();
+    return keywords.some(keyword => keyword.includes(query)) || 
+           tab.toLowerCase().includes(query);
+  });
+
+  const handleClearSearch = () => {
+    setSearchQuery("");
+  };
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold">Gestion des Formations</h2>
-        <p className="text-sm text-muted-foreground">Planification, suivi et évaluation des formations</p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-bold">Gestion des Formations</h2>
+          <p className="text-sm text-muted-foreground">Planification, suivi et évaluation des formations</p>
+        </div>
       </div>
+
+      {/* Barre de recherche globale */}
+      <Card className="p-4 bg-muted/50">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            type="text"
+            placeholder="Rechercher dans les formations (formateurs, budget, planning, prédictions...)"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10 pr-10 h-12 text-base"
+          />
+          {searchQuery && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleClearSearch}
+              className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 p-0"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
+        {searchQuery && filteredTabs.length > 0 && (
+          <div className="mt-3 flex flex-wrap gap-2">
+            <span className="text-xs text-muted-foreground">Résultats dans:</span>
+            {filteredTabs.map(([tab]) => (
+              <Button
+                key={tab}
+                variant="secondary"
+                size="sm"
+                onClick={() => {
+                  setActiveTab(tab);
+                }}
+                className="h-7 text-xs animate-scale-in"
+              >
+                {tab === "predictions" && "Prédictions IA"}
+                {tab === "validation" && "Validation"}
+                {tab === "planning" && "Planification"}
+                {tab === "suivi" && "Suivi"}
+                {tab === "formateurs" && "Formateurs"}
+                {tab === "budget" && "Budget"}
+                {tab === "analytics" && "Analytiques"}
+                {tab === "recommandations" && "Recommandations"}
+              </Button>
+            ))}
+          </div>
+        )}
+        {searchQuery && filteredTabs.length === 0 && (
+          <p className="mt-3 text-sm text-muted-foreground">Aucun résultat trouvé pour "{searchQuery}"</p>
+        )}
+      </Card>
       
-      <Tabs defaultValue="predictions" className="space-y-4">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
         <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4 gap-2">
           <TabsTrigger value="predictions" className="gap-2">
             <Brain className="h-4 w-4" />
