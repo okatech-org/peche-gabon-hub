@@ -6,9 +6,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SubmitRemonteeDialog } from "@/components/minister/SubmitRemonteeDialog";
+import { RemonteesMap } from "@/components/map/RemonteesMap";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
-import { Loader2, MessageSquare, Clock, CheckCircle, AlertCircle, FileText } from "lucide-react";
+import { Loader2, MessageSquare, Clock, CheckCircle, AlertCircle, FileText, Map } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 
@@ -55,6 +56,7 @@ export default function PecheurRemontees() {
   const { user } = useAuth();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedType, setSelectedType] = useState<string>("all");
+  const [viewMode, setViewMode] = useState<"list" | "map">("list");
 
   const { data: remontees, isLoading, refetch } = useQuery({
     queryKey: ["pecheur-remontees", user?.id],
@@ -136,23 +138,69 @@ export default function PecheurRemontees() {
           </Card>
         </div>
 
-        <div className="flex justify-between items-center mb-6">
-          <Tabs value={selectedType} onValueChange={setSelectedType}>
-            <TabsList>
-              <TabsTrigger value="all">Toutes</TabsTrigger>
-              <TabsTrigger value="reclamation">Réclamations</TabsTrigger>
-              <TabsTrigger value="suggestion">Suggestions</TabsTrigger>
-              <TabsTrigger value="denonciation">Dénonciations</TabsTrigger>
-            </TabsList>
-          </Tabs>
-          <Button onClick={() => setDialogOpen(true)}>
-            <MessageSquare className="h-4 w-4 mr-2" />
-            Nouvelle Remontée
-          </Button>
+        <div className="mb-6 space-y-4">
+          <div className="flex justify-between items-center">
+            <Tabs value={selectedType} onValueChange={setSelectedType}>
+              <TabsList>
+                <TabsTrigger value="all">Toutes</TabsTrigger>
+                <TabsTrigger value="reclamation">Réclamations</TabsTrigger>
+                <TabsTrigger value="suggestion">Suggestions</TabsTrigger>
+                <TabsTrigger value="denonciation">Dénonciations</TabsTrigger>
+              </TabsList>
+            </Tabs>
+            <div className="flex gap-2">
+              <Button
+                variant={viewMode === "list" ? "default" : "outline"}
+                onClick={() => setViewMode("list")}
+              >
+                <MessageSquare className="h-4 w-4 mr-2" />
+                Liste
+              </Button>
+              <Button
+                variant={viewMode === "map" ? "default" : "outline"}
+                onClick={() => setViewMode("map")}
+              >
+                <Map className="h-4 w-4 mr-2" />
+                Carte
+              </Button>
+              <Button onClick={() => setDialogOpen(true)}>
+                <MessageSquare className="h-4 w-4 mr-2" />
+                Nouvelle Remontée
+              </Button>
+            </div>
+          </div>
         </div>
 
-        <div className="space-y-4">
-          {filteredRemontees?.length === 0 ? (
+        {viewMode === "map" ? (
+          <Card className="h-[600px]">
+            <CardContent className="p-0 h-full">
+              {filteredRemontees && filteredRemontees.length > 0 ? (
+                <RemonteesMap 
+                  remontees={filteredRemontees.map(r => ({
+                    id: r.id,
+                    titre: r.titre,
+                    type_remontee: r.type_remontee,
+                    latitude: r.latitude,
+                    longitude: r.longitude,
+                    statut: r.statut,
+                    numero_reference: r.numero_reference,
+                  }))}
+                />
+              ) : (
+                <div className="flex items-center justify-center h-full">
+                  <div className="text-center">
+                    <Map className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                    <p className="text-muted-foreground">
+                      Aucune remontée avec localisation GPS
+                    </p>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="space-y-4">
+            {filteredRemontees?.length === 0 ? (
             <Card>
               <CardContent className="py-12 text-center">
                 <MessageSquare className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
@@ -217,8 +265,9 @@ export default function PecheurRemontees() {
                 </Card>
               );
             })
-          )}
-        </div>
+            )}
+          </div>
+        )}
       </div>
 
       <SubmitRemonteeDialog 

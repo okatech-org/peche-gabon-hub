@@ -7,7 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Loader2 } from "lucide-react";
+import { Plus, Loader2, MapPin } from "lucide-react";
+import { RemonteeLocationPicker } from "@/components/map/RemonteeLocationPicker";
 
 const TYPE_REMONTEE_OPTIONS = [
   { value: "reclamation", label: "Réclamation" },
@@ -44,6 +45,7 @@ export function SubmitRemonteeDialog({
 }: SubmitRemonteeDialogProps = {}) {
   const [internalOpen, setInternalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [showLocationPicker, setShowLocationPicker] = useState(false);
   const { toast } = useToast();
   
   const open = controlledOpen !== undefined ? controlledOpen : internalOpen;
@@ -63,6 +65,8 @@ export function SubmitRemonteeDialog({
     date_incident: "",
     impact_estime: "",
     nb_personnes_concernees: "",
+    latitude: undefined as number | undefined,
+    longitude: undefined as number | undefined,
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -86,6 +90,8 @@ export function SubmitRemonteeDialog({
         mots_cles: formData.mots_cles ? formData.mots_cles.split(",").map(k => k.trim()) : [],
         nb_personnes_concernees: formData.nb_personnes_concernees ? parseInt(formData.nb_personnes_concernees) : null,
         date_incident: formData.date_incident || null,
+        latitude: formData.latitude || null,
+        longitude: formData.longitude || null,
         soumis_par: userData.user.id,
       });
 
@@ -115,6 +121,8 @@ export function SubmitRemonteeDialog({
         date_incident: "",
         impact_estime: "",
         nb_personnes_concernees: "",
+        latitude: undefined,
+        longitude: undefined,
       });
     } catch (error: any) {
       console.error("Error submitting remontee:", error);
@@ -228,12 +236,29 @@ export function SubmitRemonteeDialog({
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="localisation">Localisation</Label>
-              <Input
-                id="localisation"
-                placeholder="Lieu concerné"
-                value={formData.localisation}
-                onChange={(e) => setFormData({ ...formData, localisation: e.target.value })}
-              />
+              <div className="flex gap-2">
+                <Input
+                  id="localisation"
+                  placeholder="Lieu concerné"
+                  value={formData.localisation}
+                  onChange={(e) => setFormData({ ...formData, localisation: e.target.value })}
+                  className="flex-1"
+                />
+                <Button
+                  type="button"
+                  variant={formData.latitude && formData.longitude ? "default" : "outline"}
+                  size="icon"
+                  onClick={() => setShowLocationPicker(true)}
+                  title="Sélectionner sur la carte"
+                >
+                  <MapPin className="h-4 w-4" />
+                </Button>
+              </div>
+              {formData.latitude && formData.longitude && (
+                <p className="text-xs text-muted-foreground">
+                  📍 {formData.latitude.toFixed(4)}, {formData.longitude.toFixed(4)}
+                </p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -322,6 +347,17 @@ export function SubmitRemonteeDialog({
           </div>
         </form>
       </DialogContent>
+      {showLocationPicker && (
+        <RemonteeLocationPicker
+          latitude={formData.latitude}
+          longitude={formData.longitude}
+          onLocationSelect={(lat, lng) => {
+            setFormData({ ...formData, latitude: lat, longitude: lng });
+            setShowLocationPicker(false);
+          }}
+          onClose={() => setShowLocationPicker(false)}
+        />
+      )}
     </Dialog>
   );
 }

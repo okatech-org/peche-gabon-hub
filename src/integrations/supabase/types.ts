@@ -2380,7 +2380,9 @@ export type Database = {
           id: string
           impact_estime: string | null
           institution_source: string | null
+          latitude: number | null
           localisation: string | null
+          longitude: number | null
           mots_cles: string[] | null
           nb_personnes_concernees: number | null
           niveau_priorite: string | null
@@ -2407,7 +2409,9 @@ export type Database = {
           id?: string
           impact_estime?: string | null
           institution_source?: string | null
+          latitude?: number | null
           localisation?: string | null
+          longitude?: number | null
           mots_cles?: string[] | null
           nb_personnes_concernees?: number | null
           niveau_priorite?: string | null
@@ -2434,7 +2438,9 @@ export type Database = {
           id?: string
           impact_estime?: string | null
           institution_source?: string | null
+          latitude?: number | null
           localisation?: string | null
+          longitude?: number | null
           mots_cles?: string[] | null
           nb_personnes_concernees?: number | null
           niveau_priorite?: string | null
