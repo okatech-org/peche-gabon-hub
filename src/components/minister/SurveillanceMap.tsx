@@ -1,20 +1,41 @@
 import { useEffect, useRef, useState } from "react";
 import mapboxgl from "mapbox-gl";
+import MapboxDraw from "@mapbox/mapbox-gl-draw";
+import "@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css";
 import "mapbox-gl/dist/mapbox-gl.css";
+import { point } from "@turf/helpers";
+import booleanPointInPolygon from "@turf/boolean-point-in-polygon";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Loader2, AlertTriangle, Layers } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Loader2, AlertTriangle, Pencil, Download, X, BarChart3 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
+
+interface ZoneStats {
+  totalCaptures: number;
+  nombreSites: number;
+  capturesParProvince: { province: string; kg: number }[];
+  capturesParEspece: { espece: string; kg: number }[];
+  topSites: { nom: string; province: string; kg: number }[];
+  moyenneCPUE: number;
+  periodeAnalyse: string;
+}
 
 const SurveillanceMap = () => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
+  const draw = useRef<MapboxDraw | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showHeatmap, setShowHeatmap] = useState(true);
+  const [drawMode, setDrawMode] = useState(false);
+  const [zoneStats, setZoneStats] = useState<ZoneStats | null>(null);
+  const [showStatsDialog, setShowStatsDialog] = useState(false);
+  const [analyzingZone, setAnalyzingZone] = useState(false);
   const [stats, setStats] = useState({
     sites: 0,
     zonesRestreintes: 0,
@@ -50,13 +71,60 @@ const SurveillanceMap = () => {
       "top-right"
     );
 
+    // Initialize Mapbox Draw
+    draw.current = new MapboxDraw({
+      displayControlsDefault: false,
+      controls: {},
+      styles: [
+        // Styles pour le polygone en cours de dessin
+        {
+          id: "gl-draw-polygon-fill",
+          type: "fill",
+          filter: ["all", ["==", "$type", "Polygon"], ["!=", "mode", "static"]],
+          paint: {
+            "fill-color": "#3b82f6",
+            "fill-opacity": 0.2,
+          },
+        },
+        {
+          id: "gl-draw-polygon-stroke",
+          type: "line",
+          filter: ["all", ["==", "$type", "Polygon"], ["!=", "mode", "static"]],
+          paint: {
+            "line-color": "#3b82f6",
+            "line-width": 2,
+          },
+        },
+        // Points de contrôle
+        {
+          id: "gl-draw-polygon-and-line-vertex-active",
+          type: "circle",
+          filter: ["all", ["==", "meta", "vertex"], ["==", "$type", "Point"]],
+          paint: {
+            "circle-radius": 6,
+            "circle-color": "#3b82f6",
+            "circle-stroke-width": 2,
+            "circle-stroke-color": "#ffffff",
+          },
+        },
+      ],
+    });
+
+    map.current.addControl(draw.current as any);
+
     map.current.on("load", async () => {
       await loadMapData();
       setLoading(false);
     });
 
+    // Écouter les événements de dessin
+    map.current.on("draw.create", handleDrawCreate);
+    map.current.on("draw.update", handleDrawCreate);
+
     // Cleanup
     return () => {
+      map.current?.off("draw.create", handleDrawCreate);
+      map.current?.off("draw.update", handleDrawCreate);
       map.current?.remove();
     };
   }, []);
@@ -473,27 +541,236 @@ const SurveillanceMap = () => {
     }
   }, [showHeatmap]);
 
+  // Toggle draw mode
+  useEffect(() => {
+    if (!draw.current) return;
+
+    if (drawMode) {
+      draw.current.changeMode("draw_polygon");
+      toast.info("Mode dessin activé - Cliquez pour dessiner votre zone");
+    } else {
+      draw.current.changeMode("simple_select");
+      // Supprimer tous les polygones dessinés
+      const features = draw.current.getAll();
+      features.features.forEach((feature) => {
+        draw.current!.delete(feature.id as string);
+      });
+      setZoneStats(null);
+    }
+  }, [drawMode]);
+
+  const handleDrawCreate = async (e: any) => {
+    if (!e.features || e.features.length === 0) return;
+
+    const polygon = e.features[0];
+    setAnalyzingZone(true);
+
+    try {
+      await analyzeZone(polygon);
+      setShowStatsDialog(true);
+      toast.success("Analyse de la zone terminée");
+    } catch (error) {
+      console.error("Erreur lors de l'analyse:", error);
+      toast.error("Erreur lors de l'analyse de la zone");
+    } finally {
+      setAnalyzingZone(false);
+    }
+  };
+
+  const analyzeZone = async (polygon: any) => {
+    try {
+      // Charger toutes les captures avec les détails
+      const currentYear = new Date().getFullYear();
+      const { data: captures } = await supabase
+        .from("captures_pa")
+        .select(`
+          poids_kg,
+          cpue,
+          site:sites!inner(
+            id,
+            nom,
+            latitude,
+            longitude,
+            province
+          ),
+          espece:especes(
+            nom
+          )
+        `)
+        .eq("annee", currentYear)
+        .not("site.latitude", "is", null)
+        .not("site.longitude", "is", null);
+
+      if (!captures || captures.length === 0) {
+        setZoneStats({
+          totalCaptures: 0,
+          nombreSites: 0,
+          capturesParProvince: [],
+          capturesParEspece: [],
+          topSites: [],
+          moyenneCPUE: 0,
+          periodeAnalyse: `${currentYear}`,
+        });
+        return;
+      }
+
+      // Filtrer les captures dans le polygone
+      const capturesInZone = captures.filter((capture: any) => {
+        const pt = point([capture.site.longitude, capture.site.latitude]);
+        return booleanPointInPolygon(pt, polygon);
+      });
+
+      if (capturesInZone.length === 0) {
+        setZoneStats({
+          totalCaptures: 0,
+          nombreSites: 0,
+          capturesParProvince: [],
+          capturesParEspece: [],
+          topSites: [],
+          moyenneCPUE: 0,
+          periodeAnalyse: `${currentYear}`,
+        });
+        return;
+      }
+
+      // Calculer les statistiques
+      const totalCaptures = capturesInZone.reduce((sum, c) => sum + (c.poids_kg || 0), 0);
+      
+      const sitesUniques = new Set(capturesInZone.map((c: any) => c.site.id));
+      
+      // Par province
+      const parProvince = new Map<string, number>();
+      capturesInZone.forEach((c: any) => {
+        const province = c.site.province || "Non renseigné";
+        parProvince.set(province, (parProvince.get(province) || 0) + (c.poids_kg || 0));
+      });
+
+      // Par espèce
+      const parEspece = new Map<string, number>();
+      capturesInZone.forEach((c: any) => {
+        const espece = c.espece?.nom || "Non renseigné";
+        parEspece.set(espece, (parEspece.get(espece) || 0) + (c.poids_kg || 0));
+      });
+
+      // Top sites
+      const parSite = new Map<string, { nom: string; province: string; kg: number }>();
+      capturesInZone.forEach((c: any) => {
+        const siteId = c.site.id;
+        if (!parSite.has(siteId)) {
+          parSite.set(siteId, {
+            nom: c.site.nom,
+            province: c.site.province || "Non renseigné",
+            kg: 0,
+          });
+        }
+        parSite.get(siteId)!.kg += c.poids_kg || 0;
+      });
+
+      // CPUE moyen
+      const cpues = capturesInZone.filter((c: any) => c.cpue).map((c: any) => c.cpue);
+      const moyenneCPUE = cpues.length > 0 ? cpues.reduce((a, b) => a + b, 0) / cpues.length : 0;
+
+      setZoneStats({
+        totalCaptures,
+        nombreSites: sitesUniques.size,
+        capturesParProvince: Array.from(parProvince.entries())
+          .map(([province, kg]) => ({ province, kg }))
+          .sort((a, b) => b.kg - a.kg),
+        capturesParEspece: Array.from(parEspece.entries())
+          .map(([espece, kg]) => ({ espece, kg }))
+          .sort((a, b) => b.kg - a.kg)
+          .slice(0, 10), // Top 10
+        topSites: Array.from(parSite.values())
+          .sort((a, b) => b.kg - a.kg)
+          .slice(0, 10), // Top 10
+        moyenneCPUE: Number(moyenneCPUE.toFixed(2)),
+        periodeAnalyse: `${currentYear}`,
+      });
+    } catch (error) {
+      console.error("Erreur analyse:", error);
+      throw error;
+    }
+  };
+
+  const exportStats = () => {
+    if (!zoneStats) return;
+
+    const csv = [
+      "Statistiques de la Zone Personnalisée",
+      `Période,${zoneStats.periodeAnalyse}`,
+      `Total Captures (kg),${zoneStats.totalCaptures.toFixed(2)}`,
+      `Nombre de Sites,${zoneStats.nombreSites}`,
+      `CPUE Moyen,${zoneStats.moyenneCPUE}`,
+      "",
+      "Captures par Province",
+      "Province,Captures (kg)",
+      ...zoneStats.capturesParProvince.map((p) => `${p.province},${p.kg.toFixed(2)}`),
+      "",
+      "Top 10 Espèces",
+      "Espèce,Captures (kg)",
+      ...zoneStats.capturesParEspece.map((e) => `${e.espece},${e.kg.toFixed(2)}`),
+      "",
+      "Top 10 Sites",
+      "Site,Province,Captures (kg)",
+      ...zoneStats.topSites.map((s) => `${s.nom},${s.province},${s.kg.toFixed(2)}`),
+    ].join("\n");
+
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `stats-zone-${new Date().toISOString().split("T")[0]}.csv`);
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    toast.success("Statistiques exportées en CSV");
+  };
+
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-start justify-between">
-          <div className="flex-1">
-            <CardTitle>Carte des Zones de Surveillance</CardTitle>
-            <CardDescription>
-              Visualisation géographique des sites de débarquement et zones restreintes
-            </CardDescription>
+    <>
+      <Card>
+        <CardHeader>
+          <div className="flex items-start justify-between">
+            <div className="flex-1">
+              <CardTitle>Carte des Zones de Surveillance</CardTitle>
+              <CardDescription>
+                Visualisation géographique des sites de débarquement et zones restreintes
+              </CardDescription>
+            </div>
+            <div className="flex items-center gap-3 ml-4">
+              <Button
+                variant={drawMode ? "default" : "outline"}
+                size="sm"
+                onClick={() => setDrawMode(!drawMode)}
+                className="gap-2"
+              >
+                {drawMode ? (
+                  <>
+                    <X className="h-4 w-4" />
+                    Annuler
+                  </>
+                ) : (
+                  <>
+                    <Pencil className="h-4 w-4" />
+                    Dessiner Zone
+                  </>
+                )}
+              </Button>
+              <div className="flex items-center gap-2">
+                <Switch
+                  id="heatmap-toggle"
+                  checked={showHeatmap}
+                  onCheckedChange={setShowHeatmap}
+                  disabled={drawMode}
+                />
+                <Label htmlFor="heatmap-toggle" className="text-sm cursor-pointer">
+                  Heatmap
+                </Label>
+              </div>
+            </div>
           </div>
-          <div className="flex items-center gap-2 ml-4">
-            <Switch
-              id="heatmap-toggle"
-              checked={showHeatmap}
-              onCheckedChange={setShowHeatmap}
-            />
-            <Label htmlFor="heatmap-toggle" className="text-sm cursor-pointer">
-              Heatmap
-            </Label>
-          </div>
-        </div>
         <div className="flex flex-wrap gap-4 mt-4">
           <div className="flex items-center gap-2">
             <div className="w-5 h-5 rounded-full bg-primary border-2 border-white shadow-sm flex items-center justify-center">
@@ -526,13 +803,21 @@ const SurveillanceMap = () => {
           )}
         </div>
         <div className="space-y-1 mt-3">
-          <p className="text-xs text-muted-foreground">
-            💡 Cliquez sur un cluster pour zoomer et voir les sites individuels
-          </p>
-          {showHeatmap && (
-            <p className="text-xs text-muted-foreground">
-              🔥 La heatmap montre l'activité de pêche : vert (faible) → rouge (forte)
+          {drawMode ? (
+            <p className="text-xs text-primary font-medium">
+              ✏️ Mode dessin actif : Cliquez sur la carte pour créer un polygone
             </p>
+          ) : (
+            <>
+              <p className="text-xs text-muted-foreground">
+                💡 Cliquez sur un cluster pour zoomer et voir les sites individuels
+              </p>
+              {showHeatmap && (
+                <p className="text-xs text-muted-foreground">
+                  🔥 La heatmap montre l'activité de pêche : vert (faible) → rouge (forte)
+                </p>
+              )}
+            </>
           )}
         </div>
       </CardHeader>
@@ -541,6 +826,14 @@ const SurveillanceMap = () => {
           {loading && !error && (
             <div className="absolute inset-0 flex items-center justify-center bg-background/50 z-10 rounded-lg">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          )}
+          {analyzingZone && (
+            <div className="absolute inset-0 flex items-center justify-center bg-background/80 z-20 rounded-lg">
+              <div className="text-center">
+                <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-2" />
+                <p className="text-sm font-medium">Analyse de la zone en cours...</p>
+              </div>
             </div>
           )}
           {error ? (
@@ -560,6 +853,121 @@ const SurveillanceMap = () => {
         </div>
       </CardContent>
     </Card>
+
+    {/* Dialog des statistiques */}
+    <Dialog open={showStatsDialog} onOpenChange={setShowStatsDialog}>
+      <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <BarChart3 className="h-5 w-5" />
+            Statistiques de la Zone Personnalisée
+          </DialogTitle>
+          <DialogDescription>
+            Analyse détaillée des captures dans la zone dessinée (Période: {zoneStats?.periodeAnalyse})
+          </DialogDescription>
+        </DialogHeader>
+
+        {zoneStats && (
+          <div className="space-y-6 py-4">
+            {/* Résumé */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm text-muted-foreground">Total Captures</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-2xl font-bold">{(zoneStats.totalCaptures / 1000).toFixed(2)}T</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm text-muted-foreground">Sites</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-2xl font-bold">{zoneStats.nombreSites}</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm text-muted-foreground">CPUE Moyen</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-2xl font-bold">{zoneStats.moyenneCPUE}</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm text-muted-foreground">Provinces</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-2xl font-bold">{zoneStats.capturesParProvince.length}</p>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Par Province */}
+            {zoneStats.capturesParProvince.length > 0 && (
+              <div>
+                <h3 className="font-semibold mb-3">Captures par Province</h3>
+                <div className="space-y-2">
+                  {zoneStats.capturesParProvince.map((p, i) => (
+                    <div key={i} className="flex items-center justify-between p-2 bg-muted rounded">
+                      <span className="text-sm font-medium">{p.province}</span>
+                      <Badge variant="secondary">{(p.kg / 1000).toFixed(2)}T</Badge>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Top Espèces */}
+            {zoneStats.capturesParEspece.length > 0 && (
+              <div>
+                <h3 className="font-semibold mb-3">Top 10 Espèces</h3>
+                <div className="space-y-2">
+                  {zoneStats.capturesParEspece.map((e, i) => (
+                    <div key={i} className="flex items-center justify-between p-2 bg-muted rounded">
+                      <span className="text-sm">{e.espece}</span>
+                      <Badge variant="outline">{e.kg.toFixed(0)} kg</Badge>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Top Sites */}
+            {zoneStats.topSites.length > 0 && (
+              <div>
+                <h3 className="font-semibold mb-3">Top 10 Sites</h3>
+                <div className="space-y-2">
+                  {zoneStats.topSites.map((s, i) => (
+                    <div key={i} className="flex items-center justify-between p-2 bg-muted rounded">
+                      <div>
+                        <p className="text-sm font-medium">{s.nom}</p>
+                        <p className="text-xs text-muted-foreground">{s.province}</p>
+                      </div>
+                      <Badge>{(s.kg / 1000).toFixed(2)}T</Badge>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Bouton Export */}
+            <div className="flex justify-end gap-2 pt-4 border-t">
+              <Button variant="outline" onClick={() => setShowStatsDialog(false)}>
+                Fermer
+              </Button>
+              <Button onClick={exportStats} className="gap-2">
+                <Download className="h-4 w-4" />
+                Exporter CSV
+              </Button>
+            </div>
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+    </>
   );
 };
 
