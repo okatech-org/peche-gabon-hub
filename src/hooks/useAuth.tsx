@@ -6,7 +6,8 @@ import { toast } from "sonner";
 
 type UserRole = 'pecheur' | 'agent_collecte' | 'gestionnaire_coop' | 'inspecteur' | 
   'direction_provinciale' | 'direction_centrale' | 'admin' | 'armateur_pi' | 
-  'observateur_pi' | 'analyste' | 'ministre';
+  'observateur_pi' | 'analyste' | 'ministre' | 'dgpa' | 'anpa' | 'agasa' | 
+  'dgmm' | 'oprag' | 'dgddi' | 'anpn' | 'corep' | 'partenaire_international';
 
 interface AuthContextType {
   user: User | null;
