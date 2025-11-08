@@ -30,6 +30,7 @@ import { TaxesRemonteesDashboard } from "@/components/admin/TaxesRemonteesDashbo
 import { SuiviObjectifsDashboard } from "@/components/admin/SuiviObjectifsDashboard";
 import { FinancialExportDashboard } from "@/components/admin/FinancialExportDashboard";
 import { FinancialCompleteDashboard } from "@/components/admin/FinancialCompleteDashboard";
+import { DashboardFinancesPeche } from "@/components/admin/DashboardFinancesPeche";
 
 const Admin = () => {
   const { user, roles, signOut } = useAuth();
@@ -95,6 +96,7 @@ const Admin = () => {
               <Route path="/financial-overview" element={<FinancialOverviewDashboard />} />
               <Route path="/finances-complet" element={<FinancialCompleteDashboard />} />
               <Route path="/finances-dashboard" element={<FinancesDashboard />} />
+              <Route path="/finances-peche" element={<DashboardFinancesPeche />} />
               <Route path="/previsions" element={<PrevisionsDashboard />} />
               <Route path="/previsions-history" element={<PrevisionsHistoryDashboard />} />
               <Route path="/scenarios" element={<ScenarioSimulationDashboard />} />

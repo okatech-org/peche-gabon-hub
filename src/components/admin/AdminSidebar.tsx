@@ -69,6 +69,7 @@ const menuItems = [
   {
     group: "Finances",
     items: [
+      { title: "Finances Pêche Gabon", url: "/admin/finances-peche", icon: DollarSign },
       { title: "Dashboard Complet", url: "/admin/finances-complet", icon: BarChart3 },
       { title: "Vue d'Ensemble", url: "/admin/financial-overview", icon: PieChart },
       { title: "Quittances", url: "/admin/quittances", icon: FileText },
