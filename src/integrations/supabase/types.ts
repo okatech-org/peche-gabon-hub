@@ -684,6 +684,60 @@ export type Database = {
           },
         ]
       }
+      documents_ministeriels: {
+        Row: {
+          contenu_genere: string
+          created_at: string
+          created_by: string
+          date_publication: string | null
+          destinataires: string[] | null
+          id: string
+          metadata: Json
+          notes: string | null
+          numero_reference: string
+          objet: string
+          signataires: Json
+          statut: string
+          titre: string
+          type_document: string
+          updated_at: string
+        }
+        Insert: {
+          contenu_genere: string
+          created_at?: string
+          created_by: string
+          date_publication?: string | null
+          destinataires?: string[] | null
+          id?: string
+          metadata?: Json
+          notes?: string | null
+          numero_reference: string
+          objet: string
+          signataires?: Json
+          statut?: string
+          titre: string
+          type_document: string
+          updated_at?: string
+        }
+        Update: {
+          contenu_genere?: string
+          created_at?: string
+          created_by?: string
+          date_publication?: string | null
+          destinataires?: string[] | null
+          id?: string
+          metadata?: Json
+          notes?: string | null
+          numero_reference?: string
+          objet?: string
+          signataires?: Json
+          statut?: string
+          titre?: string
+          type_document?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       engins: {
         Row: {
           created_at: string

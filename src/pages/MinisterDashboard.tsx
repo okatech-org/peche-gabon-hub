@@ -42,6 +42,7 @@ import GlobalFilters from "@/components/minister/GlobalFilters";
 import AlertsPanel from "@/components/minister/AlertsPanel";
 import ExportPDFButton from "@/components/minister/ExportPDFButton";
 import { MinisterSettings } from "@/components/minister/MinisterSettings";
+import { MinisterialDocumentsPanel } from "@/components/minister/MinisterialDocumentsPanel";
 
 interface ExecutiveKPIs {
   productionAnnuelle: number;
@@ -331,6 +332,15 @@ const MinisterDashboard = () => {
                   <p className="text-sm text-muted-foreground">Taxes collectées et répartition aux institutions</p>
                 </div>
                 <RemonteesInstitutionnellesDashboard />
+              </div>
+
+              {/* Section Powers */}
+              <div id="documents">
+                <div className="mb-4">
+                  <h2 className="text-2xl font-bold">Documents Ministériels</h2>
+                  <p className="text-sm text-muted-foreground">Génération automatique de documents officiels avec IA</p>
+                </div>
+                <MinisterialDocumentsPanel />
               </div>
 
               {/* Section Powers */}

@@ -2,3 +2,6 @@ project_id = "lzqvrnuzgfuyxbpyqfxh"
 
 [functions.recommend-formateurs]
 verify_jwt = true
+
+[functions.generate-ministerial-document]
+verify_jwt = true

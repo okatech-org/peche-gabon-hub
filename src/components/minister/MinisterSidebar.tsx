@@ -81,6 +81,12 @@ const actionsItems = [
     description: "Notifications automatiques"
   },
   { 
+    title: "Documents", 
+    url: "#documents", 
+    icon: FileText,
+    description: "Génération documents ministériels"
+  },
+  { 
     title: "Pouvoirs", 
     url: "#powers", 
     icon: Gavel,
