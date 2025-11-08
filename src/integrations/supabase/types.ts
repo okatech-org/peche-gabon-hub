@@ -105,6 +105,7 @@ export type Database = {
           notes: string | null
           rapport_nouveau_id: string
           rapport_reference_id: string
+          recommandations_ia: string | null
           seuil_id: string
           severite: string
           statut: string
@@ -124,6 +125,7 @@ export type Database = {
           notes?: string | null
           rapport_nouveau_id: string
           rapport_reference_id: string
+          recommandations_ia?: string | null
           seuil_id: string
           severite?: string
           statut?: string
@@ -143,6 +145,7 @@ export type Database = {
           notes?: string | null
           rapport_nouveau_id?: string
           rapport_reference_id?: string
+          recommandations_ia?: string | null
           seuil_id?: string
           severite?: string
           statut?: string

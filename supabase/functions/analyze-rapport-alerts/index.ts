@@ -136,6 +136,63 @@ serve(async (req) => {
           severite = 'faible';
         }
 
+        // Générer des recommandations IA
+        let recommandationsIA = null;
+        try {
+          const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
+          if (lovableApiKey) {
+            const prompt = `En tant qu'expert en gestion des ressources halieutiques au Gabon, analysez cette variation détectée et proposez 3-4 actions correctives concrètes :
+
+Indicateur: ${seuil.indicateur}
+Type de variation: ${typeVariation} de ${variationAbsolue.toFixed(1)}%
+Valeur précédente: ${valeurPrecedente.toFixed(2)}
+Valeur actuelle: ${valeurActuelle.toFixed(2)}
+Région: ${rapport.region || 'Non spécifiée'}
+Sévérité: ${severite}
+
+Contexte additionnel:
+${seuil.description || 'Aucune description disponible'}
+
+Proposez des recommandations:
+1. Immédiates (à faire dans les 7 jours)
+2. Court terme (1-3 mois)
+3. Long terme (6-12 mois)
+
+Soyez concis et orienté action.`;
+
+            const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${lovableApiKey}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                model: 'google/gemini-2.5-flash',
+                messages: [
+                  { 
+                    role: 'system', 
+                    content: 'Vous êtes un expert en gestion durable des ressources halieutiques et en politique de pêche au Gabon. Fournissez des recommandations précises, actionnables et adaptées au contexte local.' 
+                  },
+                  { role: 'user', content: prompt }
+                ],
+                temperature: 0.7,
+                max_tokens: 800
+              }),
+            });
+
+            if (aiResponse.ok) {
+              const aiData = await aiResponse.json();
+              recommandationsIA = aiData.choices?.[0]?.message?.content || null;
+              console.log('Recommandations IA générées avec succès');
+            } else {
+              console.error('Erreur API Lovable AI:', aiResponse.status, await aiResponse.text());
+            }
+          }
+        } catch (aiError) {
+          console.error('Erreur lors de la génération des recommandations IA:', aiError);
+          // Continue sans recommandations IA
+        }
+
         // Créer l'alerte
         const { data: alerte, error: alerteError } = await supabaseClient
           .from('alertes_rapports')
@@ -148,7 +205,8 @@ serve(async (req) => {
             valeur_actuelle: valeurActuelle,
             variation_pourcentage: variationPourcentage,
             type_variation: typeVariation,
-            severite: severite
+            severite: severite,
+            recommandations_ia: recommandationsIA
           })
           .select()
           .single();

@@ -20,6 +20,7 @@ interface Alerte {
   type_variation: string;
   severite: string;
   statut: string;
+  recommandations_ia: string | null;
   rapport_nouveau: {
     id: string;
     titre: string;
@@ -362,6 +363,26 @@ const AlertesRapportsPanel = () => {
                   </div>
                 </CardContent>
               </Card>
+
+              {selectedAlerte.recommandations_ia && (
+                <Card className="border-primary/20 bg-primary/5">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm flex items-center gap-2">
+                      <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/10">
+                        🤖
+                      </span>
+                      Recommandations IA
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="prose prose-sm max-w-none dark:prose-invert">
+                      <p className="whitespace-pre-line text-sm leading-relaxed">
+                        {selectedAlerte.recommandations_ia}
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
 
               <div className="flex justify-end gap-2 pt-4 border-t">
                 {selectedAlerte.statut === "nouvelle" || selectedAlerte.statut === "vue" ? (
