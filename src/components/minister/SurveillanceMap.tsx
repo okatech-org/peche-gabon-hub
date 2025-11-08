@@ -4,16 +4,21 @@ import "mapbox-gl/dist/mapbox-gl.css";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, AlertTriangle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Loader2, AlertTriangle, Layers } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 const SurveillanceMap = () => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showHeatmap, setShowHeatmap] = useState(true);
   const [stats, setStats] = useState({
     sites: 0,
     zonesRestreintes: 0,
+    capturesTotal: 0,
   });
 
   useEffect(() => {
@@ -70,6 +75,147 @@ const SurveillanceMap = () => {
         .from("zones_restreintes")
         .select("*")
         .eq("actif", true);
+
+      // Charger les captures avec les coordonnées des sites
+      const currentYear = new Date().getFullYear();
+      const { data: captures } = await supabase
+        .from("captures_pa")
+        .select(`
+          poids_kg,
+          site:sites!inner(
+            id,
+            nom,
+            latitude,
+            longitude,
+            province
+          )
+        `)
+        .eq("annee", currentYear)
+        .not("site.latitude", "is", null)
+        .not("site.longitude", "is", null);
+
+      // Agréger les captures par site pour la heatmap
+      const capturesBySite = new Map<string, {
+        latitude: number;
+        longitude: number;
+        nom: string;
+        province: string;
+        totalKg: number;
+        nbCaptures: number;
+      }>();
+
+      captures?.forEach((capture: any) => {
+        const siteId = capture.site.id;
+        if (!capturesBySite.has(siteId)) {
+          capturesBySite.set(siteId, {
+            latitude: capture.site.latitude,
+            longitude: capture.site.longitude,
+            nom: capture.site.nom,
+            province: capture.site.province || "Non renseigné",
+            totalKg: 0,
+            nbCaptures: 0,
+          });
+        }
+        const siteData = capturesBySite.get(siteId)!;
+        siteData.totalKg += capture.poids_kg || 0;
+        siteData.nbCaptures += 1;
+      });
+
+      const totalCaptures = Array.from(capturesBySite.values()).reduce(
+        (sum, site) => sum + site.totalKg,
+        0
+      );
+
+      // Créer les données GeoJSON pour la heatmap
+      const heatmapData = {
+        type: "FeatureCollection",
+        features: Array.from(capturesBySite.values()).map((site) => ({
+          type: "Feature",
+          properties: {
+            nom: site.nom,
+            province: site.province,
+            totalKg: site.totalKg,
+            nbCaptures: site.nbCaptures,
+            // Poids normalisé pour l'intensité de la heatmap (0-1)
+            weight: site.totalKg / (totalCaptures / capturesBySite.size),
+          },
+          geometry: {
+            type: "Point",
+            coordinates: [site.longitude, site.latitude],
+          },
+        })),
+      };
+
+      // Ajouter la source pour la heatmap
+      if (capturesBySite.size > 0) {
+        map.current!.addSource("captures-heat", {
+          type: "geojson",
+          data: heatmapData as any,
+        });
+
+        // Layer heatmap avec gradient vert → jaune → orange → rouge
+        map.current!.addLayer(
+          {
+            id: "captures-heatmap",
+            type: "heatmap",
+            source: "captures-heat",
+            maxzoom: 15,
+            paint: {
+              // Intensité de la heatmap basée sur le zoom et la densité
+              "heatmap-weight": [
+                "interpolate",
+                ["linear"],
+                ["get", "weight"],
+                0,
+                0,
+                2,
+                1,
+              ],
+              // Intensité augmente avec le zoom
+              "heatmap-intensity": [
+                "interpolate",
+                ["linear"],
+                ["zoom"],
+                0,
+                1,
+                15,
+                3,
+              ],
+              // Gradient de couleurs: vert → jaune → orange → rouge
+              "heatmap-color": [
+                "interpolate",
+                ["linear"],
+                ["heatmap-density"],
+                0,
+                "rgba(0, 0, 0, 0)", // Transparent
+                0.2,
+                "rgb(34, 197, 94)", // Vert (faible activité)
+                0.4,
+                "rgb(234, 179, 8)", // Jaune
+                0.6,
+                "rgb(249, 115, 22)", // Orange
+                0.8,
+                "rgb(239, 68, 68)", // Rouge
+                1,
+                "rgb(185, 28, 28)", // Rouge foncé (forte activité)
+              ],
+              // Rayon de la heatmap augmente avec le zoom
+              "heatmap-radius": [
+                "interpolate",
+                ["linear"],
+                ["zoom"],
+                0,
+                2,
+                15,
+                40,
+              ],
+              // Opacité de la heatmap
+              "heatmap-opacity": ["interpolate", ["linear"], ["zoom"], 7, 0.8, 15, 0.6],
+            },
+          },
+          "waterway-label" // Placer sous les labels pour meilleure lisibilité
+        );
+      }
 
       // Convertir les sites en format GeoJSON pour le clustering
       if (sites && sites.length > 0) {
@@ -308,6 +454,7 @@ const SurveillanceMap = () => {
       setStats({
         sites: sites?.length || 0,
         zonesRestreintes: zones?.length || 0,
+        capturesTotal: totalCaptures,
       });
     } catch (error) {
       console.error("Erreur lors du chargement des données:", error);
@@ -315,13 +462,38 @@ const SurveillanceMap = () => {
     }
   };
 
+  // Toggle heatmap visibility
+  useEffect(() => {
+    if (map.current && map.current.getLayer("captures-heatmap")) {
+      map.current.setLayoutProperty(
+        "captures-heatmap",
+        "visibility",
+        showHeatmap ? "visible" : "none"
+      );
+    }
+  }, [showHeatmap]);
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Carte des Zones de Surveillance</CardTitle>
-        <CardDescription>
-          Visualisation géographique des sites de débarquement et zones restreintes
-        </CardDescription>
+        <div className="flex items-start justify-between">
+          <div className="flex-1">
+            <CardTitle>Carte des Zones de Surveillance</CardTitle>
+            <CardDescription>
+              Visualisation géographique des sites de débarquement et zones restreintes
+            </CardDescription>
+          </div>
+          <div className="flex items-center gap-2 ml-4">
+            <Switch
+              id="heatmap-toggle"
+              checked={showHeatmap}
+              onCheckedChange={setShowHeatmap}
+            />
+            <Label htmlFor="heatmap-toggle" className="text-sm cursor-pointer">
+              Heatmap
+            </Label>
+          </div>
+        </div>
         <div className="flex flex-wrap gap-4 mt-4">
           <div className="flex items-center gap-2">
             <div className="w-5 h-5 rounded-full bg-primary border-2 border-white shadow-sm flex items-center justify-center">
@@ -339,10 +511,30 @@ const SurveillanceMap = () => {
             <div className="w-4 h-4 bg-red-500 opacity-50 border-2 border-red-500 shadow-sm"></div>
             <span className="text-sm">Zones restreintes ({stats.zonesRestreintes})</span>
           </div>
+          {showHeatmap && stats.capturesTotal > 0 && (
+            <div className="flex items-center gap-2">
+              <div className="flex h-4 w-16 rounded overflow-hidden border border-border">
+                <div className="flex-1 bg-green-500"></div>
+                <div className="flex-1 bg-yellow-500"></div>
+                <div className="flex-1 bg-orange-500"></div>
+                <div className="flex-1 bg-red-500"></div>
+              </div>
+              <span className="text-sm">
+                Intensité captures ({(stats.capturesTotal / 1000).toFixed(1)}T)
+              </span>
+            </div>
+          )}
         </div>
-        <p className="text-xs text-muted-foreground mt-3">
-          💡 Cliquez sur un cluster pour zoomer et voir les sites individuels
-        </p>
+        <div className="space-y-1 mt-3">
+          <p className="text-xs text-muted-foreground">
+            💡 Cliquez sur un cluster pour zoomer et voir les sites individuels
+          </p>
+          {showHeatmap && (
+            <p className="text-xs text-muted-foreground">
+              🔥 La heatmap montre l'activité de pêche : vert (faible) → rouge (forte)
+            </p>
+          )}
+        </div>
       </CardHeader>
       <CardContent>
         <div className="relative">
