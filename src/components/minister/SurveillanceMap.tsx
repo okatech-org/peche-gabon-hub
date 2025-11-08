@@ -18,6 +18,7 @@ import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import RapportsZonesHistory from "./RapportsZonesHistory";
+import RapportMetadataDialog, { RapportMetadata } from "./RapportMetadataDialog";
 
 interface ZoneStats {
   totalCaptures: number;
@@ -44,6 +45,8 @@ const SurveillanceMap = () => {
   const [aiRecommendations, setAiRecommendations] = useState<string>("");
   const [showHistory, setShowHistory] = useState(false);
   const [currentPolygon, setCurrentPolygon] = useState<any>(null);
+  const [showMetadataDialog, setShowMetadataDialog] = useState(false);
+  const [pendingMetadata, setPendingMetadata] = useState<RapportMetadata | null>(null);
   const [stats, setStats] = useState({
     sites: 0,
     zonesRestreintes: 0,
@@ -761,8 +764,14 @@ const SurveillanceMap = () => {
     }
   };
 
-  const generatePDFReport = async () => {
+  const generatePDFReport = async (metadata?: RapportMetadata) => {
     if (!zoneStats || !currentPolygon) return;
+
+    // Si pas de metadata fournie, ouvrir le dialog
+    if (!metadata) {
+      setShowMetadataDialog(true);
+      return;
+    }
 
     setIsGeneratingPDF(true);
     toast.info("Génération du rapport PDF en cours...");
@@ -783,12 +792,12 @@ const SurveillanceMap = () => {
       // Header
       pdf.setFontSize(20);
       pdf.setTextColor(0, 102, 204);
-      pdf.text("RAPPORT D'ANALYSE DE ZONE", pageWidth / 2, yPosition, { align: 'center' });
+      pdf.text(metadata.titre.toUpperCase(), pageWidth / 2, yPosition, { align: 'center' });
       yPosition += 10;
 
       pdf.setFontSize(10);
       pdf.setTextColor(100, 100, 100);
-      pdf.text(`Généré le ${new Date().toLocaleDateString('fr-FR')} à ${new Date().toLocaleTimeString('fr-FR')}`, pageWidth / 2, yPosition, { align: 'center' });
+      pdf.text(`Région: ${metadata.region} - Généré le ${new Date().toLocaleDateString('fr-FR')} à ${new Date().toLocaleTimeString('fr-FR')}`, pageWidth / 2, yPosition, { align: 'center' });
       yPosition += 15;
 
       // Capture map
@@ -916,15 +925,22 @@ const SurveillanceMap = () => {
       if (dbError) throw dbError;
 
       // Also download immediately
-      pdf.save(`rapport_zone_${timestamp}.pdf`);
+      pdf.save(`${metadata.titre.replace(/\s+/g, '_')}_${timestamp}.pdf`);
       
       toast.success("Rapport PDF généré et sauvegardé avec succès");
+      setShowMetadataDialog(false);
+      setPendingMetadata(null);
     } catch (error) {
       console.error('Error generating PDF:', error);
       toast.error("Erreur lors de la génération du rapport PDF");
     } finally {
       setIsGeneratingPDF(false);
     }
+  };
+
+  const handleMetadataConfirm = (metadata: RapportMetadata) => {
+    setPendingMetadata(metadata);
+    generatePDFReport(metadata);
   };
 
   return (
@@ -1171,7 +1187,7 @@ const SurveillanceMap = () => {
                 Exporter CSV
               </Button>
               <Button 
-                onClick={generatePDFReport}
+                onClick={() => generatePDFReport()}
                 disabled={isGeneratingPDF}
                 className="gap-2"
               >
@@ -1264,6 +1280,13 @@ const SurveillanceMap = () => {
 
     {/* Historique des rapports */}
     <RapportsZonesHistory open={showHistory} onOpenChange={setShowHistory} />
+
+    {/* Dialog metadata */}
+    <RapportMetadataDialog
+      open={showMetadataDialog}
+      onOpenChange={setShowMetadataDialog}
+      onConfirm={handleMetadataConfirm}
+    />
     </>
   );
 };

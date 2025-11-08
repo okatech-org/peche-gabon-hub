@@ -336,6 +336,33 @@ export type Database = {
           },
         ]
       }
+      categories_rapports: {
+        Row: {
+          couleur: string
+          created_at: string
+          description: string | null
+          icone: string | null
+          id: string
+          nom: string
+        }
+        Insert: {
+          couleur?: string
+          created_at?: string
+          description?: string | null
+          icone?: string | null
+          id?: string
+          nom: string
+        }
+        Update: {
+          couleur?: string
+          created_at?: string
+          description?: string | null
+          icone?: string | null
+          id?: string
+          nom?: string
+        }
+        Relationships: []
+      }
       cooperatives: {
         Row: {
           adresse: string | null
@@ -1026,39 +1053,62 @@ export type Database = {
       }
       rapports_zones: {
         Row: {
+          categorie_id: string | null
           created_at: string
           created_by: string
           fichier_path: string
           id: string
           metadata: Json | null
+          periode_debut: string | null
+          periode_fin: string | null
           recommandations_ia: string | null
+          region: string | null
           statistiques: Json
+          tags: string[]
           titre: string
           zone_geojson: Json
         }
         Insert: {
+          categorie_id?: string | null
           created_at?: string
           created_by: string
           fichier_path: string
           id?: string
           metadata?: Json | null
+          periode_debut?: string | null
+          periode_fin?: string | null
           recommandations_ia?: string | null
+          region?: string | null
           statistiques: Json
+          tags?: string[]
           titre: string
           zone_geojson: Json
         }
         Update: {
+          categorie_id?: string | null
           created_at?: string
           created_by?: string
           fichier_path?: string
           id?: string
           metadata?: Json | null
+          periode_debut?: string | null
+          periode_fin?: string | null
           recommandations_ia?: string | null
+          region?: string | null
           statistiques?: Json
+          tags?: string[]
           titre?: string
           zone_geojson?: Json
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "rapports_zones_categorie_id_fkey"
+            columns: ["categorie_id"]
+            isOneToOne: false
+            referencedRelation: "categories_rapports"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       reglementations: {
         Row: {
