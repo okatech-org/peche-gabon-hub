@@ -10,7 +10,8 @@ import {
   FileText,
   TrendingUp,
   LogOut,
-  Building2
+  Building2,
+  Settings
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -90,6 +91,12 @@ const actionsItems = [
     url: "#history", 
     icon: History,
     description: "Réglementations, notifications"
+  },
+  { 
+    title: "Paramètres", 
+    url: "#settings", 
+    icon: Settings,
+    description: "Configuration et préférences"
   },
 ];
 

@@ -41,6 +41,7 @@ import { ValidationFormations } from "@/components/minister/ValidationFormations
 import GlobalFilters from "@/components/minister/GlobalFilters";
 import AlertsPanel from "@/components/minister/AlertsPanel";
 import ExportPDFButton from "@/components/minister/ExportPDFButton";
+import { MinisterSettings } from "@/components/minister/MinisterSettings";
 
 interface ExecutiveKPIs {
   productionAnnuelle: number;
@@ -375,6 +376,11 @@ const MinisterDashboard = () => {
                   <GanttFormateurs />
                 </div>
                 <MinisterHistory />
+              </div>
+
+              {/* Section Settings */}
+              <div id="settings">
+                <MinisterSettings />
               </div>
             </div>
           </main>
