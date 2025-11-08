@@ -28,6 +28,7 @@ import { AnalysePredictiveActions } from "@/components/minister/AnalysePredictiv
 import { RecommandationsFormation } from "@/components/minister/RecommandationsFormation";
 import { SuiviFormations } from "@/components/minister/SuiviFormations";
 import { BudgetFormations } from "@/components/minister/BudgetFormations";
+import { ComparaisonRegionaleFormations } from "@/components/minister/ComparaisonRegionaleFormations";
 import GlobalFilters from "@/components/minister/GlobalFilters";
 import AlertsPanel from "@/components/minister/AlertsPanel";
 import ExportPDFButton from "@/components/minister/ExportPDFButton";
@@ -345,6 +346,7 @@ const MinisterDashboard = () => {
                   <RecommandationsFormation />
                   <SuiviFormations />
                   <BudgetFormations />
+                  <ComparaisonRegionaleFormations />
                 </div>
                 <MinisterHistory />
               </div>
