@@ -18,13 +18,13 @@ import {
   Filter,
   Eye
 } from "lucide-react";
-import { SubmitRemonteeDialog } from "./SubmitRemonteeDialog";
 import { GenerateSyntheseDialog } from "./GenerateSyntheseDialog";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RemonteeTypeCards } from "./RemonteeTypeCards";
+import { RemonteeTypeDetailDialog } from "./RemonteeTypeDetailDialog";
 
 interface RemonteeStats {
   total: number;
@@ -77,6 +77,8 @@ export function RemonteesTerrainDashboard() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedRemontee, setSelectedRemontee] = useState<Remontee | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+  const [selectedTypeForDetail, setSelectedTypeForDetail] = useState<string>("");
   const { toast } = useToast();
 
   useEffect(() => {
@@ -189,6 +191,15 @@ export function RemonteesTerrainDashboard() {
     return labels[type] || type;
   };
 
+  const handleViewTypeDetails = (typeId: string) => {
+    setSelectedTypeForDetail(typeId);
+    setDetailDialogOpen(true);
+  };
+
+  const getRemonteesByType = (typeId: string) => {
+    return remontees.filter(r => r.type_remontee === typeId);
+  };
+
   if (loading) {
     return <div className="flex items-center justify-center p-8">Chargement...</div>;
   }
@@ -204,8 +215,10 @@ export function RemonteesTerrainDashboard() {
           </p>
         </div>
         <div className="flex gap-2">
-          <GenerateSyntheseDialog remonteeIds={selectedIds} onSuccess={() => setSelectedIds([])} />
-          <SubmitRemonteeDialog />
+          <GenerateSyntheseDialog 
+            remonteeIds={selectedIds.length > 0 ? selectedIds : remontees.map(r => r.id)} 
+            onSuccess={() => setSelectedIds([])} 
+          />
         </div>
       </div>
 
@@ -274,15 +287,21 @@ export function RemonteesTerrainDashboard() {
 
       {/* Cartes de types de remontées */}
       <div className="space-y-3">
-        <div className="flex items-center gap-2">
-          <Filter className="h-5 w-5 text-muted-foreground" />
-          <h3 className="text-lg font-semibold">Filtrer par type</h3>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Sparkles className="h-5 w-5 text-primary" />
+            <h3 className="text-lg font-semibold">Types de remontées</h3>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            Cliquez sur une carte pour filtrer ou survolez pour voir les détails
+          </p>
         </div>
         <RemonteeTypeCards 
           selectedType={filterType}
           onTypeSelect={setFilterType}
           typeCounts={stats.par_type}
           newCounts={stats.nouveaux_par_type}
+          onViewDetails={handleViewTypeDetails}
         />
       </div>
 
@@ -473,6 +492,15 @@ export function RemonteesTerrainDashboard() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Dialog de détails par type */}
+      <RemonteeTypeDetailDialog
+        open={detailDialogOpen}
+        onOpenChange={setDetailDialogOpen}
+        typeId={selectedTypeForDetail}
+        typeLabel={getTypeLabel(selectedTypeForDetail)}
+        remontees={getRemonteesByType(selectedTypeForDetail)}
+      />
     </div>
   );
 }

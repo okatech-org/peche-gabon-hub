@@ -1,5 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { 
   FileText, 
   MessageSquare, 
@@ -7,7 +8,9 @@ import {
   Newspaper,
   Hash,
   ThumbsUp,
-  CheckCircle
+  CheckCircle,
+  Eye,
+  ChevronRight
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -77,9 +80,10 @@ interface RemonteeTypeCardsProps {
   onTypeSelect: (typeId: string) => void;
   typeCounts?: Record<string, number>;
   newCounts?: Record<string, number>;
+  onViewDetails?: (typeId: string) => void;
 }
 
-export function RemonteeTypeCards({ selectedType, onTypeSelect, typeCounts, newCounts }: RemonteeTypeCardsProps) {
+export function RemonteeTypeCards({ selectedType, onTypeSelect, typeCounts, newCounts, onViewDetails }: RemonteeTypeCardsProps) {
   return (
     <div className="grid gap-3 grid-cols-2 md:grid-cols-4 lg:grid-cols-7">
       {remonteeTypes.map((type, index) => {
@@ -97,7 +101,7 @@ export function RemonteeTypeCards({ selectedType, onTypeSelect, typeCounts, newC
           <Card
             key={type.id}
             className={cn(
-              "cursor-pointer transition-all duration-300 border-2 hover:shadow-md animate-fade-in hover:scale-[1.02]",
+              "cursor-pointer transition-all duration-300 border-2 hover:shadow-md animate-fade-in hover:scale-[1.02] group relative",
               isSelected 
                 ? "border-primary shadow-lg scale-105 animate-scale-in" 
                 : "border-transparent hover:border-border",
@@ -105,9 +109,8 @@ export function RemonteeTypeCards({ selectedType, onTypeSelect, typeCounts, newC
               hasNew && !isSelected && "animate-pulse"
             )}
             style={{ animationDelay: `${index * 50}ms` }}
-            onClick={() => onTypeSelect(type.id)}
           >
-            <CardContent className="p-4">
+            <CardContent className="p-4" onClick={() => onTypeSelect(type.id)}>
               <div className="flex flex-col items-center text-center gap-2">
                 <div className={cn(
                   "rounded-full p-3 transition-all duration-300",
@@ -153,6 +156,25 @@ export function RemonteeTypeCards({ selectedType, onTypeSelect, typeCounts, newC
                 )}
               </div>
             </CardContent>
+            
+            {/* Bouton Voir détails - visible au hover */}
+            {count > 0 && onViewDetails && type.id !== "tous" && (
+              <div className="absolute bottom-2 left-0 right-0 px-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="w-full h-7 text-xs"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onViewDetails(type.id);
+                  }}
+                >
+                  <Eye className="h-3 w-3 mr-1" />
+                  Voir détails
+                  <ChevronRight className="h-3 w-3 ml-1" />
+                </Button>
+              </div>
+            )}
           </Card>
         );
       })}
