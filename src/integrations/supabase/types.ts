@@ -494,6 +494,48 @@ export type Database = {
         }
         Relationships: []
       }
+      captures_artisanales_detail: {
+        Row: {
+          created_at: string | null
+          espece_id: string | null
+          id: string
+          nb_individus: number | null
+          poids_kg: number
+          sortie_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          espece_id?: string | null
+          id?: string
+          nb_individus?: number | null
+          poids_kg: number
+          sortie_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          espece_id?: string | null
+          id?: string
+          nb_individus?: number | null
+          poids_kg?: number
+          sortie_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "captures_artisanales_detail_espece_id_fkey"
+            columns: ["espece_id"]
+            isOneToOne: false
+            referencedRelation: "especes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "captures_artisanales_detail_sortie_id_fkey"
+            columns: ["sortie_id"]
+            isOneToOne: false
+            referencedRelation: "sorties_artisanales"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       captures_detail: {
         Row: {
           created_at: string
@@ -532,6 +574,45 @@ export type Database = {
             columns: ["sortie_id"]
             isOneToOne: false
             referencedRelation: "sorties_peche"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      captures_industrielles_detail: {
+        Row: {
+          created_at: string | null
+          espece_id: string | null
+          id: string
+          maree_id: string | null
+          poids_kg: number
+        }
+        Insert: {
+          created_at?: string | null
+          espece_id?: string | null
+          id?: string
+          maree_id?: string | null
+          poids_kg: number
+        }
+        Update: {
+          created_at?: string | null
+          espece_id?: string | null
+          id?: string
+          maree_id?: string | null
+          poids_kg?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "captures_industrielles_detail_espece_id_fkey"
+            columns: ["espece_id"]
+            isOneToOne: false
+            referencedRelation: "especes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "captures_industrielles_detail_maree_id_fkey"
+            columns: ["maree_id"]
+            isOneToOne: false
+            referencedRelation: "marees_industrielles"
             referencedColumns: ["id"]
           },
         ]
@@ -692,6 +773,88 @@ export type Database = {
             columns: ["action_id"]
             isOneToOne: false
             referencedRelation: "actions_correctives"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      controles_surveillance: {
+        Row: {
+          categorie_infraction: string | null
+          created_at: string | null
+          date_controle: string
+          engin_declare: string | null
+          engins_trouves: string | null
+          id: string
+          infraction: boolean | null
+          mission_id: string | null
+          nationalite_proprietaire: string | null
+          navire_id: string | null
+          nb_pecheurs_bord: number | null
+          observations: string | null
+          pirogue_id: string | null
+          proprietaire: string | null
+          saisies: string | null
+          sanctions: string | null
+          type_infraction: string | null
+        }
+        Insert: {
+          categorie_infraction?: string | null
+          created_at?: string | null
+          date_controle: string
+          engin_declare?: string | null
+          engins_trouves?: string | null
+          id?: string
+          infraction?: boolean | null
+          mission_id?: string | null
+          nationalite_proprietaire?: string | null
+          navire_id?: string | null
+          nb_pecheurs_bord?: number | null
+          observations?: string | null
+          pirogue_id?: string | null
+          proprietaire?: string | null
+          saisies?: string | null
+          sanctions?: string | null
+          type_infraction?: string | null
+        }
+        Update: {
+          categorie_infraction?: string | null
+          created_at?: string | null
+          date_controle?: string
+          engin_declare?: string | null
+          engins_trouves?: string | null
+          id?: string
+          infraction?: boolean | null
+          mission_id?: string | null
+          nationalite_proprietaire?: string | null
+          navire_id?: string | null
+          nb_pecheurs_bord?: number | null
+          observations?: string | null
+          pirogue_id?: string | null
+          proprietaire?: string | null
+          saisies?: string | null
+          sanctions?: string | null
+          type_infraction?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "controles_surveillance_mission_id_fkey"
+            columns: ["mission_id"]
+            isOneToOne: false
+            referencedRelation: "missions_surveillance"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "controles_surveillance_navire_id_fkey"
+            columns: ["navire_id"]
+            isOneToOne: false
+            referencedRelation: "navires_industriels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "controles_surveillance_pirogue_id_fkey"
+            columns: ["pirogue_id"]
+            isOneToOne: false
+            referencedRelation: "pirogues"
             referencedColumns: ["id"]
           },
         ]
@@ -1526,6 +1689,107 @@ export type Database = {
           },
         ]
       }
+      marees_industrielles: {
+        Row: {
+          capture_totale_kg: number | null
+          cpue_moyenne: number | null
+          created_at: string | null
+          date_depart: string
+          date_retour: string | null
+          duree_mer_jours: number | null
+          id: string
+          jours_peche: number | null
+          navire_id: string | null
+          nb_traits_chalut: number | null
+          numero_maree: string | null
+          observations: string | null
+          updated_at: string | null
+          zone_peche: string | null
+        }
+        Insert: {
+          capture_totale_kg?: number | null
+          cpue_moyenne?: number | null
+          created_at?: string | null
+          date_depart: string
+          date_retour?: string | null
+          duree_mer_jours?: number | null
+          id?: string
+          jours_peche?: number | null
+          navire_id?: string | null
+          nb_traits_chalut?: number | null
+          numero_maree?: string | null
+          observations?: string | null
+          updated_at?: string | null
+          zone_peche?: string | null
+        }
+        Update: {
+          capture_totale_kg?: number | null
+          cpue_moyenne?: number | null
+          created_at?: string | null
+          date_depart?: string
+          date_retour?: string | null
+          duree_mer_jours?: number | null
+          id?: string
+          jours_peche?: number | null
+          navire_id?: string | null
+          nb_traits_chalut?: number | null
+          numero_maree?: string | null
+          observations?: string | null
+          updated_at?: string | null
+          zone_peche?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marees_industrielles_navire_id_fkey"
+            columns: ["navire_id"]
+            isOneToOne: false
+            referencedRelation: "navires_industriels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      missions_surveillance: {
+        Row: {
+          code_mission: string
+          created_at: string | null
+          date_debut: string
+          date_fin: string | null
+          duree_heures: number | null
+          id: string
+          observations: string | null
+          responsable: string | null
+          type_mission: string | null
+          updated_at: string | null
+          zone_surveillee: string | null
+        }
+        Insert: {
+          code_mission: string
+          created_at?: string | null
+          date_debut: string
+          date_fin?: string | null
+          duree_heures?: number | null
+          id?: string
+          observations?: string | null
+          responsable?: string | null
+          type_mission?: string | null
+          updated_at?: string | null
+          zone_surveillee?: string | null
+        }
+        Update: {
+          code_mission?: string
+          created_at?: string | null
+          date_debut?: string
+          date_fin?: string | null
+          duree_heures?: number | null
+          id?: string
+          observations?: string | null
+          responsable?: string | null
+          type_mission?: string | null
+          updated_at?: string | null
+          zone_surveillee?: string | null
+        }
+        Relationships: []
+      }
       model_performance: {
         Row: {
           bias: number
@@ -1662,6 +1926,86 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "navires_armement_id_fkey"
+            columns: ["armement_id"]
+            isOneToOne: false
+            referencedRelation: "armements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      navires_industriels: {
+        Row: {
+          agrement_sanitaire: boolean | null
+          armement_id: string | null
+          assurance_valide: boolean | null
+          certificat_navigabilite: boolean | null
+          created_at: string | null
+          date_delivrance_licence: string | null
+          id: string
+          immatriculation: string | null
+          montant_licence_euros: number | null
+          nationalite: string | null
+          nom: string
+          ordre_recette: string | null
+          pavillon: string | null
+          port_attache: string | null
+          proprietaire: string | null
+          puissance_moteur: number | null
+          statut: string | null
+          tonnage_brut: number | null
+          type_licence: string | null
+          type_navire: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          agrement_sanitaire?: boolean | null
+          armement_id?: string | null
+          assurance_valide?: boolean | null
+          certificat_navigabilite?: boolean | null
+          created_at?: string | null
+          date_delivrance_licence?: string | null
+          id?: string
+          immatriculation?: string | null
+          montant_licence_euros?: number | null
+          nationalite?: string | null
+          nom: string
+          ordre_recette?: string | null
+          pavillon?: string | null
+          port_attache?: string | null
+          proprietaire?: string | null
+          puissance_moteur?: number | null
+          statut?: string | null
+          tonnage_brut?: number | null
+          type_licence?: string | null
+          type_navire?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          agrement_sanitaire?: boolean | null
+          armement_id?: string | null
+          assurance_valide?: boolean | null
+          certificat_navigabilite?: boolean | null
+          created_at?: string | null
+          date_delivrance_licence?: string | null
+          id?: string
+          immatriculation?: string | null
+          montant_licence_euros?: number | null
+          nationalite?: string | null
+          nom?: string
+          ordre_recette?: string | null
+          pavillon?: string | null
+          port_attache?: string | null
+          proprietaire?: string | null
+          puissance_moteur?: number | null
+          statut?: string | null
+          tonnage_brut?: number | null
+          type_licence?: string | null
+          type_navire?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "navires_industriels_armement_id_fkey"
             columns: ["armement_id"]
             isOneToOne: false
             referencedRelation: "armements"
@@ -1970,6 +2314,47 @@ export type Database = {
           volatilite?: string
         }
         Relationships: []
+      }
+      prix_moyens_unitaires: {
+        Row: {
+          created_at: string | null
+          date_reference: string | null
+          espece_id: string | null
+          id: string
+          prix_moyen_fcfa: number
+          source: string | null
+          unite: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          date_reference?: string | null
+          espece_id?: string | null
+          id?: string
+          prix_moyen_fcfa: number
+          source?: string | null
+          unite?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          date_reference?: string | null
+          espece_id?: string | null
+          id?: string
+          prix_moyen_fcfa?: number
+          source?: string | null
+          unite?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prix_moyens_unitaires_espece_id_fkey"
+            columns: ["espece_id"]
+            isOneToOne: false
+            referencedRelation: "especes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -2693,6 +3078,79 @@ export type Database = {
           },
         ]
       }
+      sorties_artisanales: {
+        Row: {
+          capture_totale_kg: number | null
+          cpue: number | null
+          created_at: string | null
+          date_depart: string
+          date_retour: string | null
+          duree_jours: number | null
+          effort_unite: number | null
+          engin_id: string | null
+          id: string
+          observations: string | null
+          pirogue_id: string | null
+          site_debarquement: string | null
+          updated_at: string | null
+          zone_peche: string | null
+        }
+        Insert: {
+          capture_totale_kg?: number | null
+          cpue?: number | null
+          created_at?: string | null
+          date_depart: string
+          date_retour?: string | null
+          duree_jours?: number | null
+          effort_unite?: number | null
+          engin_id?: string | null
+          id?: string
+          observations?: string | null
+          pirogue_id?: string | null
+          site_debarquement?: string | null
+          updated_at?: string | null
+          zone_peche?: string | null
+        }
+        Update: {
+          capture_totale_kg?: number | null
+          cpue?: number | null
+          created_at?: string | null
+          date_depart?: string
+          date_retour?: string | null
+          duree_jours?: number | null
+          effort_unite?: number | null
+          engin_id?: string | null
+          id?: string
+          observations?: string | null
+          pirogue_id?: string | null
+          site_debarquement?: string | null
+          updated_at?: string | null
+          zone_peche?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sorties_artisanales_engin_id_fkey"
+            columns: ["engin_id"]
+            isOneToOne: false
+            referencedRelation: "engins"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sorties_artisanales_pirogue_id_fkey"
+            columns: ["pirogue_id"]
+            isOneToOne: false
+            referencedRelation: "pirogues"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sorties_artisanales_site_debarquement_fkey"
+            columns: ["site_debarquement"]
+            isOneToOne: false
+            referencedRelation: "sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sorties_peche: {
         Row: {
           annee: number
@@ -2941,6 +3399,62 @@ export type Database = {
         }
         Relationships: []
       }
+      taxes_artisanales: {
+        Row: {
+          annee: number
+          created_at: string | null
+          date_emission: string | null
+          date_paiement: string | null
+          id: string
+          mois: number
+          montant_fcfa: number
+          observations: string | null
+          pirogue_id: string | null
+          reference_quittance: string
+          statut: string | null
+          type_taxe: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          annee: number
+          created_at?: string | null
+          date_emission?: string | null
+          date_paiement?: string | null
+          id?: string
+          mois: number
+          montant_fcfa: number
+          observations?: string | null
+          pirogue_id?: string | null
+          reference_quittance: string
+          statut?: string | null
+          type_taxe?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          annee?: number
+          created_at?: string | null
+          date_emission?: string | null
+          date_paiement?: string | null
+          id?: string
+          mois?: number
+          montant_fcfa?: number
+          observations?: string | null
+          pirogue_id?: string | null
+          reference_quittance?: string
+          statut?: string | null
+          type_taxe?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "taxes_artisanales_pirogue_id_fkey"
+            columns: ["pirogue_id"]
+            isOneToOne: false
+            referencedRelation: "pirogues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       taxes_calculees: {
         Row: {
           bareme_id: string
@@ -2991,6 +3505,56 @@ export type Database = {
             columns: ["capture_id"]
             isOneToOne: false
             referencedRelation: "captures_pa"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      taxes_industrielles: {
+        Row: {
+          annee: number
+          created_at: string | null
+          date_delivrance: string | null
+          id: string
+          montant_euros: number
+          navire_id: string | null
+          observations: string | null
+          ordre_recette: string | null
+          statut_paiement: string | null
+          type_licence: string
+          updated_at: string | null
+        }
+        Insert: {
+          annee: number
+          created_at?: string | null
+          date_delivrance?: string | null
+          id?: string
+          montant_euros: number
+          navire_id?: string | null
+          observations?: string | null
+          ordre_recette?: string | null
+          statut_paiement?: string | null
+          type_licence: string
+          updated_at?: string | null
+        }
+        Update: {
+          annee?: number
+          created_at?: string | null
+          date_delivrance?: string | null
+          id?: string
+          montant_euros?: number
+          navire_id?: string | null
+          observations?: string | null
+          ordre_recette?: string | null
+          statut_paiement?: string | null
+          type_licence?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "taxes_industrielles_navire_id_fkey"
+            columns: ["navire_id"]
+            isOneToOne: false
+            referencedRelation: "navires_industriels"
             referencedColumns: ["id"]
           },
         ]
