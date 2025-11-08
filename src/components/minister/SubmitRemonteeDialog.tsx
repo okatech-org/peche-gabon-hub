@@ -5,10 +5,11 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Loader2, MapPin } from "lucide-react";
-import { RemonteeLocationPicker } from "@/components/map/RemonteeLocationPicker";
+import { Plus, Loader2 } from "lucide-react";
+import { MapLocationPicker } from "@/components/MapLocationPicker";
 
 const TYPE_REMONTEE_OPTIONS = [
   { value: "reclamation", label: "Réclamation" },
@@ -45,7 +46,6 @@ export function SubmitRemonteeDialog({
 }: SubmitRemonteeDialogProps = {}) {
   const [internalOpen, setInternalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [showLocationPicker, setShowLocationPicker] = useState(false);
   const { toast } = useToast();
   
   const open = controlledOpen !== undefined ? controlledOpen : internalOpen;
@@ -65,8 +65,8 @@ export function SubmitRemonteeDialog({
     date_incident: "",
     impact_estime: "",
     nb_personnes_concernees: "",
-    latitude: undefined as number | undefined,
-    longitude: undefined as number | undefined,
+    latitude: null as number | null,
+    longitude: null as number | null,
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -86,12 +86,21 @@ export function SubmitRemonteeDialog({
       }
 
       const { error } = await supabase.from("remontees_terrain").insert({
-        ...formData,
+        type_remontee: formData.type_remontee,
+        titre: formData.titre,
+        description: formData.description,
+        source: formData.source,
+        url_source: formData.url_source,
+        localisation: formData.localisation,
+        niveau_priorite: formData.niveau_priorite,
+        sentiment: formData.sentiment,
+        categorie: formData.categorie,
         mots_cles: formData.mots_cles ? formData.mots_cles.split(",").map(k => k.trim()) : [],
         nb_personnes_concernees: formData.nb_personnes_concernees ? parseInt(formData.nb_personnes_concernees) : null,
         date_incident: formData.date_incident || null,
-        latitude: formData.latitude || null,
-        longitude: formData.longitude || null,
+        impact_estime: formData.impact_estime,
+        latitude: formData.latitude,
+        longitude: formData.longitude,
         soumis_par: userData.user.id,
       });
 
@@ -121,8 +130,8 @@ export function SubmitRemonteeDialog({
         date_incident: "",
         impact_estime: "",
         nb_personnes_concernees: "",
-        latitude: undefined,
-        longitude: undefined,
+        latitude: null,
+        longitude: null,
       });
     } catch (error: any) {
       console.error("Error submitting remontee:", error);
@@ -144,11 +153,18 @@ export function SubmitRemonteeDialog({
           Nouvelle Remontée
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Soumettre une Remontée Terrain</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
+          <Tabs defaultValue="informations" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="informations">Informations</TabsTrigger>
+              <TabsTrigger value="localisation">Localisation</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="informations" className="space-y-4 mt-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="type_remontee">Type de remontée *</Label>
@@ -235,33 +251,6 @@ export function SubmitRemonteeDialog({
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="localisation">Localisation</Label>
-              <div className="flex gap-2">
-                <Input
-                  id="localisation"
-                  placeholder="Lieu concerné"
-                  value={formData.localisation}
-                  onChange={(e) => setFormData({ ...formData, localisation: e.target.value })}
-                  className="flex-1"
-                />
-                <Button
-                  type="button"
-                  variant={formData.latitude && formData.longitude ? "default" : "outline"}
-                  size="icon"
-                  onClick={() => setShowLocationPicker(true)}
-                  title="Sélectionner sur la carte"
-                >
-                  <MapPin className="h-4 w-4" />
-                </Button>
-              </div>
-              {formData.latitude && formData.longitude && (
-                <p className="text-xs text-muted-foreground">
-                  📍 {formData.latitude.toFixed(4)}, {formData.longitude.toFixed(4)}
-                </p>
-              )}
-            </div>
-
-            <div className="space-y-2">
               <Label htmlFor="sentiment">Sentiment</Label>
               <Select
                 value={formData.sentiment}
@@ -279,9 +268,7 @@ export function SubmitRemonteeDialog({
                 </SelectContent>
               </Select>
             </div>
-          </div>
 
-          <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="categorie">Catégorie</Label>
               <Input
@@ -291,7 +278,9 @@ export function SubmitRemonteeDialog({
                 onChange={(e) => setFormData({ ...formData, categorie: e.target.value })}
               />
             </div>
+          </div>
 
+          <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="date_incident">Date de l'incident</Label>
               <Input
@@ -299,18 +288,6 @@ export function SubmitRemonteeDialog({
                 type="date"
                 value={formData.date_incident}
                 onChange={(e) => setFormData({ ...formData, date_incident: e.target.value })}
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="mots_cles">Mots-clés (séparés par des virgules)</Label>
-              <Input
-                id="mots_cles"
-                placeholder="pêche, illégale, pollution..."
-                value={formData.mots_cles}
-                onChange={(e) => setFormData({ ...formData, mots_cles: e.target.value })}
               />
             </div>
 
@@ -326,6 +303,16 @@ export function SubmitRemonteeDialog({
           </div>
 
           <div className="space-y-2">
+            <Label htmlFor="mots_cles">Mots-clés (séparés par des virgules)</Label>
+            <Input
+              id="mots_cles"
+              placeholder="pêche, illégale, pollution..."
+              value={formData.mots_cles}
+              onChange={(e) => setFormData({ ...formData, mots_cles: e.target.value })}
+            />
+          </div>
+
+          <div className="space-y-2">
             <Label htmlFor="impact_estime">Impact estimé</Label>
             <Textarea
               id="impact_estime"
@@ -335,8 +322,33 @@ export function SubmitRemonteeDialog({
               rows={2}
             />
           </div>
+          </TabsContent>
 
-          <div className="flex justify-end gap-2">
+          <TabsContent value="localisation" className="space-y-4 mt-4">
+            <div className="space-y-2">
+              <Label>Localisation géographique</Label>
+              <MapLocationPicker
+                latitude={formData.latitude || undefined}
+                longitude={formData.longitude || undefined}
+                onLocationChange={(lat, lng) => {
+                  setFormData({ ...formData, latitude: lat, longitude: lng });
+                }}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="localisation">Nom du lieu (optionnel)</Label>
+              <Input
+                id="localisation"
+                placeholder="Ex: Port de Libreville, Plage de Cap Esterias..."
+                value={formData.localisation}
+                onChange={(e) => setFormData({ ...formData, localisation: e.target.value })}
+              />
+            </div>
+          </TabsContent>
+          </Tabs>
+
+          <div className="flex justify-end gap-2 pt-4 border-t">
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>
               Annuler
             </Button>
@@ -347,17 +359,6 @@ export function SubmitRemonteeDialog({
           </div>
         </form>
       </DialogContent>
-      {showLocationPicker && (
-        <RemonteeLocationPicker
-          latitude={formData.latitude}
-          longitude={formData.longitude}
-          onLocationSelect={(lat, lng) => {
-            setFormData({ ...formData, latitude: lat, longitude: lng });
-            setShowLocationPicker(false);
-          }}
-          onClose={() => setShowLocationPicker(false)}
-        />
-      )}
     </Dialog>
   );
 }

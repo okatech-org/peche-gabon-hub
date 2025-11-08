@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SubmitRemonteeDialog } from "@/components/minister/SubmitRemonteeDialog";
-import { RemonteesMap } from "@/components/map/RemonteesMap";
+import { RemonteeMap } from "@/components/RemonteeMap";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { Loader2, MessageSquare, Clock, CheckCircle, AlertCircle, FileText, Map } from "lucide-react";
@@ -175,7 +175,7 @@ export default function PecheurRemontees() {
           <Card className="h-[600px]">
             <CardContent className="p-0 h-full">
               {filteredRemontees && filteredRemontees.length > 0 ? (
-                <RemonteesMap 
+                <RemonteeMap 
                   remontees={filteredRemontees.map(r => ({
                     id: r.id,
                     titre: r.titre,
@@ -185,6 +185,7 @@ export default function PecheurRemontees() {
                     statut: r.statut,
                     numero_reference: r.numero_reference,
                   }))}
+                  height="600px"
                 />
               ) : (
                 <div className="flex items-center justify-center h-full">
@@ -199,8 +200,8 @@ export default function PecheurRemontees() {
             </CardContent>
           </Card>
         ) : (
-          <div className="space-y-4">
-            {filteredRemontees?.length === 0 ? (
+            <div className="space-y-4">
+              {filteredRemontees?.length === 0 ? (
             <Card>
               <CardContent className="py-12 text-center">
                 <MessageSquare className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
