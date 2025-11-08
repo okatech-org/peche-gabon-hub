@@ -5,7 +5,11 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
-import { Info, X, Circle, Users, Filter, AlertCircle, Clock, CheckCircle, Zap } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Info, X, Circle, Users, Filter, AlertCircle, Clock, CheckCircle, Zap, Plus, Save, Trash2 } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface Remontee {
   id: string;
@@ -49,14 +53,24 @@ const typeConfig = [
   { value: 'avis_reseaux', label: 'Avis réseaux' }
 ];
 
-const quickFilters = [
+interface CustomFilter {
+  id: string;
+  label: string;
+  statuses: string[];
+  types: string[];
+  color: string;
+  isCustom: true;
+}
+
+const defaultFilters = [
   {
     id: 'all',
     label: 'Tout voir',
     icon: Circle,
     statuses: ['nouveau', 'en_cours', 'traite', 'rejete'],
     types: ['reclamation', 'suggestion', 'denonciation', 'article_presse', 'commentaire_reseaux', 'avis_reseaux'],
-    color: 'bg-primary'
+    color: 'bg-primary',
+    isCustom: false as const
   },
   {
     id: 'urgent',
@@ -64,7 +78,8 @@ const quickFilters = [
     icon: AlertCircle,
     statuses: ['nouveau', 'rejete'],
     types: ['denonciation', 'reclamation'],
-    color: 'bg-red-500'
+    color: 'bg-red-500',
+    isCustom: false as const
   },
   {
     id: 'pending',
@@ -72,7 +87,8 @@ const quickFilters = [
     icon: Clock,
     statuses: ['nouveau', 'en_cours'],
     types: ['reclamation', 'suggestion', 'denonciation', 'article_presse', 'commentaire_reseaux', 'avis_reseaux'],
-    color: 'bg-yellow-500'
+    color: 'bg-yellow-500',
+    isCustom: false as const
   },
   {
     id: 'completed',
@@ -80,7 +96,8 @@ const quickFilters = [
     icon: CheckCircle,
     statuses: ['traite'],
     types: ['reclamation', 'suggestion', 'denonciation', 'article_presse', 'commentaire_reseaux', 'avis_reseaux'],
-    color: 'bg-green-500'
+    color: 'bg-green-500',
+    isCustom: false as const
   },
   {
     id: 'critical',
@@ -88,7 +105,8 @@ const quickFilters = [
     icon: Zap,
     statuses: ['nouveau', 'en_cours'],
     types: ['denonciation'],
-    color: 'bg-orange-500'
+    color: 'bg-orange-500',
+    isCustom: false as const
   }
 ];
 
@@ -101,6 +119,17 @@ export function RemonteeMap({ remontees, onRemonteeClick, height = "500px" }: Re
   const [activeTypes, setActiveTypes] = useState<string[]>([
     'reclamation', 'suggestion', 'denonciation', 'article_presse', 'commentaire_reseaux', 'avis_reseaux'
   ]);
+  
+  // Custom filters state
+  const [customFilters, setCustomFilters] = useState<CustomFilter[]>(() => {
+    const saved = localStorage.getItem('remontee-custom-filters');
+    return saved ? JSON.parse(saved) : [];
+  });
+  const [showCreateFilterDialog, setShowCreateFilterDialog] = useState(false);
+  const [newFilterName, setNewFilterName] = useState('');
+  const [newFilterColor, setNewFilterColor] = useState('bg-blue-500');
+  
+  const quickFilters = [...defaultFilters, ...customFilters];
 
   const toggleStatus = (status: string) => {
     setActiveStatuses(prev => 
@@ -142,6 +171,59 @@ export function RemonteeMap({ remontees, onRemonteeClick, height = "500px" }: Re
       setActiveQuickFilter(filterId);
     }
   };
+
+  const saveCustomFilter = () => {
+    if (!newFilterName.trim()) {
+      toast.error('Veuillez entrer un nom pour le filtre');
+      return;
+    }
+
+    const newFilter: CustomFilter = {
+      id: `custom-${Date.now()}`,
+      label: newFilterName.trim(),
+      statuses: [...activeStatuses],
+      types: [...activeTypes],
+      color: newFilterColor,
+      isCustom: true
+    };
+
+    const updatedFilters = [...customFilters, newFilter];
+    setCustomFilters(updatedFilters);
+    localStorage.setItem('remontee-custom-filters', JSON.stringify(updatedFilters));
+    
+    setShowCreateFilterDialog(false);
+    setNewFilterName('');
+    setNewFilterColor('bg-blue-500');
+    setActiveQuickFilter(newFilter.id);
+    
+    toast.success('Filtre personnalisé créé avec succès');
+  };
+
+  const deleteCustomFilter = (filterId: string) => {
+    const updatedFilters = customFilters.filter(f => f.id !== filterId);
+    setCustomFilters(updatedFilters);
+    localStorage.setItem('remontee-custom-filters', JSON.stringify(updatedFilters));
+    
+    if (activeQuickFilter === filterId) {
+      setActiveQuickFilter('all');
+      applyQuickFilter('all');
+    }
+    
+    toast.success('Filtre personnalisé supprimé');
+  };
+
+  const colorOptions = [
+    { value: 'bg-blue-500', label: 'Bleu' },
+    { value: 'bg-purple-500', label: 'Violet' },
+    { value: 'bg-pink-500', label: 'Rose' },
+    { value: 'bg-indigo-500', label: 'Indigo' },
+    { value: 'bg-teal-500', label: 'Sarcelle' },
+    { value: 'bg-cyan-500', label: 'Cyan' },
+    { value: 'bg-emerald-500', label: 'Émeraude' },
+    { value: 'bg-lime-500', label: 'Citron' },
+    { value: 'bg-amber-500', label: 'Ambre' },
+    { value: 'bg-rose-500', label: 'Rose vif' }
+  ];
 
   useEffect(() => {
     if (!mapContainer.current) return;
@@ -428,7 +510,7 @@ export function RemonteeMap({ remontees, onRemonteeClick, height = "500px" }: Re
               </div>
               <div className="flex flex-wrap gap-1.5">
                 {quickFilters.map(filter => {
-                  const Icon = filter.icon;
+                  const Icon = 'icon' in filter ? filter.icon : Filter;
                   const count = remontees.filter(r => 
                     r.latitude && r.longitude &&
                     filter.statuses.includes(r.statut) &&
@@ -436,22 +518,43 @@ export function RemonteeMap({ remontees, onRemonteeClick, height = "500px" }: Re
                   ).length;
                   
                   return (
-                    <Badge
-                      key={filter.id}
-                      variant={activeQuickFilter === filter.id ? "default" : "outline"}
-                      className={`cursor-pointer transition-all hover:scale-105 ${
-                        activeQuickFilter === filter.id 
-                          ? `${filter.color} text-white hover:opacity-90` 
-                          : 'hover:bg-muted'
-                      }`}
-                      onClick={() => applyQuickFilter(filter.id)}
-                    >
-                      <Icon className="h-3 w-3 mr-1" />
-                      {filter.label}
-                      <span className="ml-1 text-[10px] opacity-80">({count})</span>
-                    </Badge>
+                    <div key={filter.id} className="relative group">
+                      <Badge
+                        variant={activeQuickFilter === filter.id ? "default" : "outline"}
+                        className={`cursor-pointer transition-all hover:scale-105 ${
+                          activeQuickFilter === filter.id 
+                            ? `${filter.color} text-white hover:opacity-90` 
+                            : 'hover:bg-muted'
+                        }`}
+                        onClick={() => applyQuickFilter(filter.id)}
+                      >
+                        <Icon className="h-3 w-3 mr-1" />
+                        {filter.label}
+                        <span className="ml-1 text-[10px] opacity-80">({count})</span>
+                      </Badge>
+                      {filter.isCustom && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            deleteCustomFilter(filter.id);
+                          }}
+                          className="absolute -top-1 -right-1 opacity-0 group-hover:opacity-100 transition-opacity bg-destructive text-destructive-foreground rounded-full p-0.5"
+                          title="Supprimer ce filtre"
+                        >
+                          <X className="h-2.5 w-2.5" />
+                        </button>
+                      )}
+                    </div>
                   );
                 })}
+                <Badge
+                  variant="outline"
+                  className="cursor-pointer transition-all hover:scale-105 hover:bg-primary hover:text-primary-foreground border-dashed"
+                  onClick={() => setShowCreateFilterDialog(true)}
+                >
+                  <Plus className="h-3 w-3 mr-1" />
+                  Créer un filtre
+                </Badge>
               </div>
               <p className="text-muted-foreground italic text-[10px] mt-2">
                 Cliquez sur un badge pour appliquer le filtre
@@ -623,6 +726,72 @@ export function RemonteeMap({ remontees, onRemonteeClick, height = "500px" }: Re
           </CardContent>
         </Card>
       )}
+
+      {/* Create Custom Filter Dialog */}
+      <Dialog open={showCreateFilterDialog} onOpenChange={setShowCreateFilterDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Créer un filtre personnalisé</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="filter-name">Nom du filtre</Label>
+              <Input
+                id="filter-name"
+                placeholder="Ex: Mes remontées prioritaires"
+                value={newFilterName}
+                onChange={(e) => setNewFilterName(e.target.value)}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label>Couleur du badge</Label>
+              <div className="flex flex-wrap gap-2">
+                {colorOptions.map(option => (
+                  <button
+                    key={option.value}
+                    onClick={() => setNewFilterColor(option.value)}
+                    className={`w-8 h-8 rounded-full ${option.value} transition-transform ${
+                      newFilterColor === option.value ? 'ring-2 ring-offset-2 ring-primary scale-110' : 'hover:scale-105'
+                    }`}
+                    title={option.label}
+                  />
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Filtres actuels à sauvegarder</Label>
+              <div className="text-xs text-muted-foreground space-y-1 bg-muted p-3 rounded-md">
+                <div>
+                  <span className="font-semibold">Statuts:</span>{' '}
+                  {activeStatuses.length > 0 
+                    ? statusConfig.filter(s => activeStatuses.includes(s.value)).map(s => s.label).join(', ')
+                    : 'Aucun'}
+                </div>
+                <div>
+                  <span className="font-semibold">Types:</span>{' '}
+                  {activeTypes.length > 0
+                    ? typeConfig.filter(t => activeTypes.includes(t.value)).map(t => t.label).join(', ')
+                    : 'Aucun'}
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground italic">
+                Le filtre sera créé avec la sélection actuelle de statuts et types
+              </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowCreateFilterDialog(false)}>
+              Annuler
+            </Button>
+            <Button onClick={saveCustomFilter}>
+              <Save className="h-4 w-4 mr-2" />
+              Créer le filtre
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
