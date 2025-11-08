@@ -64,6 +64,13 @@ const Dashboard = () => {
     comparaisonCaptures: "",
     comparaisonCPUE: "",
   });
+  const [classementProvince, setClassementProvince] = useState<Array<{
+    rang: number;
+    proprietaireNom: string;
+    captures: number;
+    cpue: number;
+    estUtilisateurActuel: boolean;
+  }>>([]);
 
   // Redirection automatique des admins vers le panel d'administration
   if (roles.includes('admin')) {
@@ -178,13 +185,16 @@ const Dashboard = () => {
       let cpueMoyenProvince = 0;
       let comparaisonCaptures = "";
       let comparaisonCPUE = "";
+      let piroguesProvince: any[] = [];
 
       if (province) {
         // Récupérer toutes les pirogues de la province
-        const { data: piroguesProvince } = await supabase
+        const { data: piroguesProvinceData } = await supabase
           .from("pirogues")
           .select("id, site:sites!inner(province)")
           .eq("site.province", province);
+
+        piroguesProvince = piroguesProvinceData || [];
 
         if (piroguesProvince && piroguesProvince.length > 1) {
           const pirogueIdsProvince = piroguesProvince.map(p => p.id);
@@ -239,6 +249,85 @@ const Dashboard = () => {
               }
             }
           }
+        }
+      }
+
+      // Calculer le classement provincial
+      if (province && piroguesProvince && piroguesProvince.length > 1) {
+        const pirogueIdsProvince = piroguesProvince.map(p => p.id);
+        
+        // Récupérer toutes les captures du mois pour la province avec infos propriétaires
+        const { data: capturesProvinceData } = await supabase
+          .from("captures_pa")
+          .select(`
+            poids_kg, 
+            cpue, 
+            pirogue:pirogues!inner(
+              id,
+              proprietaire:proprietaires(nom, prenom)
+            )
+          `)
+          .in("pirogue.id", pirogueIdsProvince)
+          .eq("mois", currentMonth)
+          .eq("annee", currentYear);
+
+        if (capturesProvinceData && capturesProvinceData.length > 0) {
+          // Grouper par pirogue
+          const statsParPirogue = new Map<string, {
+            proprietaireNom: string;
+            captures: number;
+            cpues: number[];
+          }>();
+
+          capturesProvinceData.forEach((c: any) => {
+            const pirogueId = c.pirogue?.id;
+            if (!pirogueId) return;
+
+            const existing = statsParPirogue.get(pirogueId) || {
+              proprietaireNom: c.pirogue?.proprietaire 
+                ? `${c.pirogue.proprietaire.prenom} ${c.pirogue.proprietaire.nom}`.trim() 
+                : "Non renseigné",
+              captures: 0,
+              cpues: [],
+            };
+
+            existing.captures += c.poids_kg || 0;
+            if (c.cpue) existing.cpues.push(c.cpue);
+            statsParPirogue.set(pirogueId, existing);
+          });
+
+          // Créer le classement
+          const classement = Array.from(statsParPirogue.entries()).map(([pirogueId, stats]) => ({
+            pirogueId,
+            proprietaireNom: stats.proprietaireNom,
+            captures: stats.captures,
+            cpue: stats.cpues.length > 0 
+              ? stats.cpues.reduce((a, b) => a + b, 0) / stats.cpues.length 
+              : 0,
+            estUtilisateurActuel: pirogueIds.includes(pirogueId),
+          }));
+
+          // Trier par captures décroissantes
+          classement.sort((a, b) => b.captures - a.captures);
+
+          // Ajouter les rangs
+          const classementAvecRangs = classement.map((item, index) => ({
+            rang: index + 1,
+            ...item,
+          }));
+
+          // Ne garder que le top 10 + utilisateur actuel s'il n'est pas dans le top 10
+          let classementFinal = classementAvecRangs.slice(0, 10);
+          const utilisateurDansTop10 = classementFinal.some(c => c.estUtilisateurActuel);
+          
+          if (!utilisateurDansTop10) {
+            const utilisateurClassement = classementAvecRangs.find(c => c.estUtilisateurActuel);
+            if (utilisateurClassement) {
+              classementFinal.push(utilisateurClassement);
+            }
+          }
+
+          setClassementProvince(classementFinal);
         }
       }
 
@@ -474,6 +563,59 @@ const Dashboard = () => {
                     </div>
                   )}
                 </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Classement Provincial */}
+        {isPecheur && classementProvince.length > 0 && pecheurStats.province && (
+          <Card className="shadow-card mb-8">
+            <CardHeader>
+              <CardTitle>Classement Province: {pecheurStats.province}</CardTitle>
+              <CardDescription>
+                Top 10 des pêcheurs du mois en cours basé sur les captures
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {classementProvince.map((item) => (
+                  <div
+                    key={item.rang}
+                    className={`flex items-center justify-between p-3 rounded-lg ${
+                      item.estUtilisateurActuel 
+                        ? 'bg-primary/10 border-2 border-primary' 
+                        : 'bg-muted/50'
+                    }`}
+                  >
+                    <div className="flex items-center gap-4 flex-1">
+                      <div className={`flex items-center justify-center w-8 h-8 rounded-full font-bold ${
+                        item.rang === 1 ? 'bg-yellow-500 text-white' :
+                        item.rang === 2 ? 'bg-gray-400 text-white' :
+                        item.rang === 3 ? 'bg-orange-600 text-white' :
+                        'bg-muted text-muted-foreground'
+                      }`}>
+                        {item.rang}
+                      </div>
+                      <div className="flex-1">
+                        <p className={`font-semibold ${item.estUtilisateurActuel ? 'text-primary' : ''}`}>
+                          {item.proprietaireNom}
+                          {item.estUtilisateurActuel && ' (Vous)'}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex gap-6 text-right">
+                      <div>
+                        <p className="text-sm text-muted-foreground">Captures</p>
+                        <p className="text-lg font-bold">{item.captures.toFixed(0)} kg</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">CPUE</p>
+                        <p className="text-lg font-bold">{item.cpue.toFixed(1)}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             </CardContent>
           </Card>
