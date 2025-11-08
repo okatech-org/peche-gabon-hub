@@ -12,6 +12,9 @@ import { Loader2, Download, FileSpreadsheet, FileText, Calendar, Filter, FileChe
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
 import { format } from "date-fns";
+import { ExcelExportButton } from "./ExcelExportButton";
+import { ScheduledExportsManagement } from "./ScheduledExportsManagement";
+import { useCSVData } from "@/hooks/useCSVData";
 
 interface ExportTemplate {
   id: string;
@@ -284,6 +287,7 @@ export const FinancialExportDashboard = () => {
         <TabsList>
           <TabsTrigger value="templates">Templates Prédéfinis</TabsTrigger>
           <TabsTrigger value="custom">Export Personnalisé</TabsTrigger>
+          <TabsTrigger value="scheduled">Exports Planifiés</TabsTrigger>
         </TabsList>
 
         <TabsContent value="templates" className="space-y-6">
@@ -560,6 +564,12 @@ export const FinancialExportDashboard = () => {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="scheduled" className="space-y-4">
+          <ScheduledExportsManagement 
+            financialData={{}}
+          />
         </TabsContent>
       </Tabs>
     </div>

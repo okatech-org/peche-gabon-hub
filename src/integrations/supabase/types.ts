@@ -857,6 +857,107 @@ export type Database = {
         }
         Relationships: []
       }
+      exports_historique: {
+        Row: {
+          erreur_message: string | null
+          genere_at: string | null
+          genere_par: string | null
+          id: string
+          nom_fichier: string
+          nombre_lignes: number | null
+          planification_id: string | null
+          statut: string
+          taille_kb: number | null
+          type_export: string
+        }
+        Insert: {
+          erreur_message?: string | null
+          genere_at?: string | null
+          genere_par?: string | null
+          id?: string
+          nom_fichier: string
+          nombre_lignes?: number | null
+          planification_id?: string | null
+          statut: string
+          taille_kb?: number | null
+          type_export: string
+        }
+        Update: {
+          erreur_message?: string | null
+          genere_at?: string | null
+          genere_par?: string | null
+          id?: string
+          nom_fichier?: string
+          nombre_lignes?: number | null
+          planification_id?: string | null
+          statut?: string
+          taille_kb?: number | null
+          type_export?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exports_historique_planification_id_fkey"
+            columns: ["planification_id"]
+            isOneToOne: false
+            referencedRelation: "exports_planifies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      exports_planifies: {
+        Row: {
+          actif: boolean | null
+          created_at: string | null
+          created_by: string | null
+          dernier_export_at: string | null
+          destinataires: Json | null
+          frequence: string
+          heure_execution: string
+          id: string
+          jour_mois: number | null
+          jour_semaine: number | null
+          nom: string
+          prochain_export_at: string | null
+          sections_incluses: Json | null
+          type_export: string
+          updated_at: string | null
+        }
+        Insert: {
+          actif?: boolean | null
+          created_at?: string | null
+          created_by?: string | null
+          dernier_export_at?: string | null
+          destinataires?: Json | null
+          frequence: string
+          heure_execution?: string
+          id?: string
+          jour_mois?: number | null
+          jour_semaine?: number | null
+          nom: string
+          prochain_export_at?: string | null
+          sections_incluses?: Json | null
+          type_export: string
+          updated_at?: string | null
+        }
+        Update: {
+          actif?: boolean | null
+          created_at?: string | null
+          created_by?: string | null
+          dernier_export_at?: string | null
+          destinataires?: Json | null
+          frequence?: string
+          heure_execution?: string
+          id?: string
+          jour_mois?: number | null
+          jour_semaine?: number | null
+          nom?: string
+          prochain_export_at?: string | null
+          sections_incluses?: Json | null
+          type_export?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       facteurs_externes: {
         Row: {
           actif: boolean
