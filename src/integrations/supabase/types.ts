@@ -507,6 +507,41 @@ export type Database = {
         }
         Relationships: []
       }
+      commentaires_actions: {
+        Row: {
+          action_id: string
+          commentaire: string
+          created_at: string
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          action_id: string
+          commentaire: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          action_id?: string
+          commentaire?: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commentaires_actions_action_id_fkey"
+            columns: ["action_id"]
+            isOneToOne: false
+            referencedRelation: "actions_correctives"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cooperatives: {
         Row: {
           adresse: string | null

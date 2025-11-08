@@ -58,6 +58,19 @@ interface ActionCorrective {
   updated_at: string;
 }
 
+interface Commentaire {
+  id: string;
+  action_id: string;
+  user_id: string;
+  commentaire: string;
+  created_at: string;
+  profiles?: {
+    first_name: string | null;
+    last_name: string | null;
+    email: string | null;
+  };
+}
+
 const AlertesRapportsPanel = () => {
   const [alertes, setAlertes] = useState<Alerte[]>([]);
   const [loading, setLoading] = useState(true);
@@ -73,9 +86,17 @@ const AlertesRapportsPanel = () => {
     notes: ''
   });
   const [editingAction, setEditingAction] = useState<ActionCorrective | null>(null);
+  const [commentaires, setCommentaires] = useState<Record<string, Commentaire[]>>({});
+  const [newComment, setNewComment] = useState<Record<string, string>>({});
+  const [expandedAction, setExpandedAction] = useState<string | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   useEffect(() => {
     loadAlertes();
+    // Charger l'ID utilisateur actuel
+    supabase.auth.getUser().then(({ data }) => {
+      setCurrentUserId(data.user?.id || null);
+    });
   }, []);
 
   useEffect(() => {
@@ -83,6 +104,44 @@ const AlertesRapportsPanel = () => {
       loadActions(selectedAlerte.id);
     }
   }, [selectedAlerte]);
+
+  useEffect(() => {
+    // Setup realtime subscription for comments
+    const channel = supabase
+      .channel('commentaires-actions-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'commentaires_actions'
+        },
+        (payload) => {
+          console.log('Realtime comment update:', payload);
+          
+          if (payload.eventType === 'INSERT' && payload.new) {
+            const newComment = payload.new as any;
+            // Reload comments for this action
+            if (newComment.action_id) {
+              loadCommentaires(newComment.action_id);
+            }
+          } else if (payload.eventType === 'DELETE' && payload.old) {
+            const deletedComment = payload.old as any;
+            if (deletedComment.action_id) {
+              setCommentaires(prev => ({
+                ...prev,
+                [deletedComment.action_id]: (prev[deletedComment.action_id] || []).filter(c => c.id !== deletedComment.id)
+              }));
+            }
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   const loadAlertes = async () => {
     setLoading(true);
@@ -120,6 +179,97 @@ const AlertesRapportsPanel = () => {
     }
   };
 
+  const loadCommentaires = async (actionId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from("commentaires_actions")
+        .select("*")
+        .eq("action_id", actionId)
+        .order("created_at", { ascending: true });
+
+      if (error) throw error;
+      
+      // Charger les profils séparément
+      if (data && data.length > 0) {
+        const userIds = [...new Set(data.map(c => c.user_id))];
+        const { data: profilesData } = await supabase
+          .from("profiles")
+          .select("id, first_name, last_name, email")
+          .in("id", userIds);
+        
+        const profilesMap = new Map(profilesData?.map(p => [p.id, p]) || []);
+        
+        const commentairesWithProfiles = data.map(c => ({
+          ...c,
+          profiles: profilesMap.get(c.user_id) || null
+        }));
+        
+        setCommentaires(prev => ({
+          ...prev,
+          [actionId]: commentairesWithProfiles as Commentaire[]
+        }));
+      } else {
+        setCommentaires(prev => ({
+          ...prev,
+          [actionId]: []
+        }));
+      }
+    } catch (error) {
+      console.error("Error loading commentaires:", error);
+    }
+  };
+
+  const addCommentaire = async (actionId: string) => {
+    const commentText = newComment[actionId]?.trim();
+    if (!commentText) {
+      toast.error("Le commentaire ne peut pas être vide");
+      return;
+    }
+
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      const { error } = await supabase
+        .from("commentaires_actions")
+        .insert({
+          action_id: actionId,
+          user_id: userData.user?.id,
+          commentaire: commentText
+        });
+
+      if (error) throw error;
+
+      toast.success("Commentaire ajouté");
+      setNewComment(prev => ({ ...prev, [actionId]: '' }));
+      // Le realtime va recharger automatiquement
+    } catch (error: any) {
+      console.error("Error adding comment:", error);
+      toast.error("Erreur lors de l'ajout du commentaire");
+    }
+  };
+
+  const deleteCommentaire = async (commentId: string, actionId: string) => {
+    try {
+      const { error } = await supabase
+        .from("commentaires_actions")
+        .delete()
+        .eq("id", commentId);
+
+      if (error) throw error;
+
+      toast.success("Commentaire supprimé");
+    } catch (error: any) {
+      console.error("Error deleting comment:", error);
+      toast.error("Erreur lors de la suppression");
+    }
+  };
+
+  const getUserDisplayName = (comment: Commentaire) => {
+    if (comment.profiles?.first_name && comment.profiles?.last_name) {
+      return `${comment.profiles.first_name} ${comment.profiles.last_name}`;
+    }
+    return comment.profiles?.email || 'Utilisateur';
+  };
+
   const loadActions = async (alerteId: string) => {
     try {
       const { data, error } = await supabase
@@ -130,6 +280,13 @@ const AlertesRapportsPanel = () => {
 
       if (error) throw error;
       setActions((data || []) as ActionCorrective[]);
+      
+      // Charger les commentaires pour chaque action
+      if (data) {
+        for (const action of data) {
+          loadCommentaires(action.id);
+        }
+      }
     } catch (error) {
       console.error("Error loading actions:", error);
     }
@@ -741,6 +898,79 @@ const AlertesRapportsPanel = () => {
                             </Button>
                           </div>
                         </>
+                      )}
+                      
+                      {/* Section Commentaires */}
+                      {!editingAction && (
+                        <div className="border-t pt-3 mt-3">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setExpandedAction(expandedAction === action.id ? null : action.id)}
+                            className="w-full justify-between"
+                          >
+                            <span className="text-xs font-medium">
+                              Commentaires ({(commentaires[action.id] || []).length})
+                            </span>
+                            {expandedAction === action.id ? '▲' : '▼'}
+                          </Button>
+                          
+                          {expandedAction === action.id && (
+                            <div className="mt-3 space-y-3">
+                              {/* Liste des commentaires */}
+                              <div className="space-y-2 max-h-60 overflow-y-auto">
+                                {(commentaires[action.id] || []).map((comment) => (
+                                  <div key={comment.id} className="bg-muted/50 rounded-lg p-3">
+                                    <div className="flex items-start justify-between mb-1">
+                                      <div className="flex items-center gap-2">
+                                        <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center">
+                                          <span className="text-xs font-semibold">
+                                            {getUserDisplayName(comment).charAt(0).toUpperCase()}
+                                          </span>
+                                        </div>
+                                        <div>
+                                          <p className="text-xs font-medium">{getUserDisplayName(comment)}</p>
+                                          <p className="text-xs text-muted-foreground">
+                                            {format(new Date(comment.created_at), "PPP 'à' HH:mm", { locale: fr })}
+                                          </p>
+                                        </div>
+                                      </div>
+                                      {comment.user_id === currentUserId && (
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          className="h-6 w-6 p-0"
+                                          onClick={() => deleteCommentaire(comment.id, action.id)}
+                                        >
+                                          <X className="h-3 w-3" />
+                                        </Button>
+                                      )}
+                                    </div>
+                                    <p className="text-sm whitespace-pre-line">{comment.commentaire}</p>
+                                  </div>
+                                ))}
+                              </div>
+                              
+                              {/* Formulaire nouveau commentaire */}
+                              <div className="flex gap-2">
+                                <Textarea
+                                  value={newComment[action.id] || ''}
+                                  onChange={(e) => setNewComment(prev => ({ ...prev, [action.id]: e.target.value }))}
+                                  placeholder="Ajouter un commentaire..."
+                                  rows={2}
+                                  className="flex-1"
+                                />
+                                <Button
+                                  size="sm"
+                                  onClick={() => addCommentaire(action.id)}
+                                  disabled={!newComment[action.id]?.trim()}
+                                >
+                                  Envoyer
+                                </Button>
+                              </div>
+                            </div>
+                          )}
+                        </div>
                       )}
                     </CardContent>
                   </Card>
