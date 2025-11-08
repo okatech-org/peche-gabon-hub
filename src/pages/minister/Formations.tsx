@@ -24,13 +24,16 @@ import {
   CheckSquare,
   Brain,
   Search,
-  X
+  X,
+  Minimize2,
+  Maximize2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default function Formations() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("predictions");
+  const [compactView, setCompactView] = useState(false);
 
   const searchableContent = {
     predictions: ["prédictions", "ia", "intelligence artificielle", "besoins", "automatique"],
@@ -60,10 +63,28 @@ export default function Formations() {
           <h2 className="text-2xl font-bold">Gestion des Formations</h2>
           <p className="text-sm text-muted-foreground">Planification, suivi et évaluation des formations</p>
         </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setCompactView(!compactView)}
+          className="gap-2 shrink-0"
+        >
+          {compactView ? (
+            <>
+              <Maximize2 className="h-4 w-4" />
+              <span className="hidden sm:inline">Vue normale</span>
+            </>
+          ) : (
+            <>
+              <Minimize2 className="h-4 w-4" />
+              <span className="hidden sm:inline">Vue compacte</span>
+            </>
+          )}
+        </Button>
       </div>
 
       {/* Statistiques en temps réel */}
-      <FormationsStats />
+      <FormationsStats compact={compactView} />
 
       {/* Barre de recherche globale */}
       <Card className="p-4 border-2">

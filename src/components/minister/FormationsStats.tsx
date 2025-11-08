@@ -14,7 +14,11 @@ interface StatsData {
   participantsInscrits: number;
 }
 
-export function FormationsStats() {
+interface FormationsStatsProps {
+  compact?: boolean;
+}
+
+export function FormationsStats({ compact = false }: FormationsStatsProps) {
   const [stats, setStats] = useState<StatsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [previousStats, setPreviousStats] = useState<StatsData | null>(null);
@@ -114,11 +118,11 @@ export function FormationsStats() {
 
   if (loading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 ${compact ? 'gap-2' : 'gap-4'}`}>
         {[1, 2, 3, 4].map((i) => (
           <Card key={i}>
-            <CardContent className="p-6">
-              <Skeleton className="h-20 w-full" />
+            <CardContent className={compact ? "p-3" : "p-6"}>
+              <Skeleton className={compact ? "h-12 w-full" : "h-20 w-full"} />
             </CardContent>
           </Card>
         ))}
@@ -127,6 +131,61 @@ export function FormationsStats() {
   }
 
   if (!stats) return null;
+
+  // Vue compacte - une seule ligne avec toutes les stats
+  if (compact) {
+    return (
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+        <Card className="hover:shadow-md transition-shadow">
+          <CardContent className="p-3 flex items-center gap-3">
+            <div className="rounded-full p-2 bg-primary/10">
+              <GraduationCap className="h-4 w-4 text-primary" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs text-muted-foreground truncate">Formations</p>
+              <p className="text-lg font-bold">{stats.formationsActives}</p>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card className="hover:shadow-md transition-shadow">
+          <CardContent className="p-3 flex items-center gap-3">
+            <div className="rounded-full p-2 bg-blue-100 dark:bg-blue-900/30">
+              <Users className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs text-muted-foreground truncate">Formateurs</p>
+              <p className="text-lg font-bold">{stats.formateursDisponibles}/{stats.formateursTotal}</p>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card className="hover:shadow-md transition-shadow">
+          <CardContent className="p-3 flex items-center gap-3">
+            <div className="rounded-full p-2 bg-green-100 dark:bg-green-900/30">
+              <DollarSign className="h-4 w-4 text-green-600 dark:text-green-400" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs text-muted-foreground truncate">Budget</p>
+              <p className="text-lg font-bold">{(stats.budgetUtilise / 1000000).toFixed(1)}M</p>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card className="hover:shadow-md transition-shadow">
+          <CardContent className="p-3 flex items-center gap-3">
+            <div className="rounded-full p-2 bg-orange-100 dark:bg-orange-900/30">
+              <Calendar className="h-4 w-4 text-orange-600 dark:text-orange-400" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs text-muted-foreground truncate">Participants</p>
+              <p className="text-lg font-bold">{stats.participantsInscrits}</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   const statCards = [
     {
