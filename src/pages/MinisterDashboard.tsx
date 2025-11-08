@@ -35,6 +35,7 @@ import { HistoriqueRecommandations } from "@/components/minister/HistoriqueRecom
 import { CalendrierFormations } from "@/components/minister/CalendrierFormations";
 import { GanttFormateurs } from "@/components/minister/GanttFormateurs";
 import { AnalyticsFormations } from "@/components/minister/AnalyticsFormations";
+import { PredictionsFormations } from "@/components/minister/PredictionsFormations";
 import GlobalFilters from "@/components/minister/GlobalFilters";
 import AlertsPanel from "@/components/minister/AlertsPanel";
 import ExportPDFButton from "@/components/minister/ExportPDFButton";
@@ -357,6 +358,7 @@ const MinisterDashboard = () => {
                   <GestionFormateurs />
                   <RecommandationFormateurs />
                   <HistoriqueRecommandations />
+                  <PredictionsFormations />
                   <AnalyticsFormations />
                   <GanttFormateurs />
                 </div>
