@@ -55,6 +55,7 @@ const menuItems = [
       { title: "Engins de Pêche", url: "/admin/engins", icon: Anchor },
       { title: "Sites & Strates", url: "/admin/sites", icon: Map },
       { title: "Coopératives", url: "/admin/cooperatives", icon: Building2 },
+      { title: "Templates Workflows", url: "/admin/templates", icon: FileText },
     ],
   },
   {

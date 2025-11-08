@@ -14,6 +14,7 @@ import { CooperativesManagement } from "@/components/admin/CooperativesManagemen
 import { ImportManagement } from "@/components/admin/ImportManagement";
 import { EnginsManagement } from "@/components/admin/EnginsManagement";
 import { SitesManagement } from "@/components/admin/SitesManagement";
+import { TemplatesManagement } from "@/components/admin/TemplatesManagement";
 import { PiroguesManagement } from "@/components/admin/PiroguesManagement";
 import { NaviresManagement } from "@/components/admin/NaviresManagement";
 import { LicencesManagement } from "@/components/admin/LicencesManagement";
@@ -84,6 +85,7 @@ const Admin = () => {
               <Route path="/engins" element={<EnginsManagement />} />
               <Route path="/sites" element={<SitesManagement />} />
               <Route path="/cooperatives" element={<CooperativesManagement />} />
+              <Route path="/templates" element={<TemplatesManagement />} />
               <Route path="/pirogues" element={<PiroguesManagement />} />
               <Route path="/navires" element={<NaviresManagement />} />
               <Route path="/licences" element={<LicencesManagement />} />
