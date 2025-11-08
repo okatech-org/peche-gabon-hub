@@ -24,6 +24,7 @@ import EconomicStats from "@/components/minister/EconomicStats";
 import MinisterHistory from "@/components/minister/MinisterHistory";
 import AlertesRapportsPanel from "@/components/minister/AlertesRapportsPanel";
 import { SeuilsAlertesManagement } from "@/components/minister/SeuilsAlertesManagement";
+import { AnalysePredictiveActions } from "@/components/minister/AnalysePredictiveActions";
 import GlobalFilters from "@/components/minister/GlobalFilters";
 import AlertsPanel from "@/components/minister/AlertsPanel";
 import ExportPDFButton from "@/components/minister/ExportPDFButton";
@@ -337,6 +338,7 @@ const MinisterDashboard = () => {
                 <div className="grid gap-6 mb-6">
                   <AlertesRapportsPanel />
                   <SeuilsAlertesManagement />
+                  <AnalysePredictiveActions />
                 </div>
                 <MinisterHistory />
               </div>
