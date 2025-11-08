@@ -93,7 +93,7 @@ export default function Formations() {
       </div>
 
       {/* Statistiques en temps réel */}
-      <FormationsStats compact={compactView} />
+      <FormationsStats key={compactView ? 'compact' : 'normal'} compact={compactView} />
 
       {/* Barre de recherche globale */}
       <Card className="p-4 border-2">

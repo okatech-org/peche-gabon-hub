@@ -135,8 +135,8 @@ export function FormationsStats({ compact = false }: FormationsStatsProps) {
   // Vue compacte - une seule ligne avec toutes les stats
   if (compact) {
     return (
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-        <Card className="hover:shadow-md transition-shadow">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 animate-fade-in">
+        <Card className="hover:shadow-md transition-all duration-200 animate-scale-in">
           <CardContent className="p-3 flex items-center gap-3">
             <div className="rounded-full p-2 bg-primary/10">
               <GraduationCap className="h-4 w-4 text-primary" />
@@ -148,7 +148,7 @@ export function FormationsStats({ compact = false }: FormationsStatsProps) {
           </CardContent>
         </Card>
         
-        <Card className="hover:shadow-md transition-shadow">
+        <Card className="hover:shadow-md transition-all duration-200 animate-scale-in" style={{ animationDelay: '50ms' }}>
           <CardContent className="p-3 flex items-center gap-3">
             <div className="rounded-full p-2 bg-blue-100 dark:bg-blue-900/30">
               <Users className="h-4 w-4 text-blue-600 dark:text-blue-400" />
@@ -160,7 +160,7 @@ export function FormationsStats({ compact = false }: FormationsStatsProps) {
           </CardContent>
         </Card>
         
-        <Card className="hover:shadow-md transition-shadow">
+        <Card className="hover:shadow-md transition-all duration-200 animate-scale-in" style={{ animationDelay: '100ms' }}>
           <CardContent className="p-3 flex items-center gap-3">
             <div className="rounded-full p-2 bg-green-100 dark:bg-green-900/30">
               <DollarSign className="h-4 w-4 text-green-600 dark:text-green-400" />
@@ -172,7 +172,7 @@ export function FormationsStats({ compact = false }: FormationsStatsProps) {
           </CardContent>
         </Card>
         
-        <Card className="hover:shadow-md transition-shadow">
+        <Card className="hover:shadow-md transition-all duration-200 animate-scale-in" style={{ animationDelay: '150ms' }}>
           <CardContent className="p-3 flex items-center gap-3">
             <div className="rounded-full p-2 bg-orange-100 dark:bg-orange-900/30">
               <Calendar className="h-4 w-4 text-orange-600 dark:text-orange-400" />
@@ -223,9 +223,13 @@ export function FormationsStats({ compact = false }: FormationsStatsProps) {
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 animate-fade-in">
       {statCards.map((stat, index) => (
-        <Card key={index} className="hover:shadow-lg transition-shadow animate-fade-in">
+        <Card 
+          key={index} 
+          className="hover:shadow-lg transition-all duration-200 animate-scale-in" 
+          style={{ animationDelay: `${index * 50}ms` }}
+        >
           <CardContent className="p-6">
             <div className="flex items-start justify-between">
               <div className="space-y-1 flex-1">
