@@ -42,6 +42,7 @@ import {
 import { Loader2, Search, Plus, Edit, Trash2, Map, Upload, MapPin } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import { GABON_PROVINCES } from "@/lib/constants";
 
 const formSchema = z.object({
   nom: z.string().trim().min(1, "Nom requis").max(100),
@@ -61,18 +62,6 @@ const formSchema = z.object({
 });
 
 type FormData = z.infer<typeof formSchema>;
-
-const provinces = [
-  "Estuaire",
-  "Haut-Ogooué",
-  "Moyen-Ogooué",
-  "Ngounié",
-  "Nyanga",
-  "Ogooué-Ivindo",
-  "Ogooué-Lolo",
-  "Ogooué-Maritime",
-  "Woleu-Ntem",
-];
 
 export const SitesManagement = () => {
   const [sites, setSites] = useState<any[]>([]);
@@ -266,7 +255,7 @@ export const SitesManagement = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Toutes provinces</SelectItem>
-                  {provinces.map((p) => (
+                  {GABON_PROVINCES.map((p) => (
                     <SelectItem key={p} value={p}>
                       {p}
                     </SelectItem>
@@ -376,7 +365,7 @@ export const SitesManagement = () => {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {provinces.map((p) => (
+                          {GABON_PROVINCES.map((p) => (
                             <SelectItem key={p} value={p}>
                               {p}
                             </SelectItem>

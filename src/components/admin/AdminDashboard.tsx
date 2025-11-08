@@ -4,6 +4,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Users, Fish, FileText, Shield, TrendingUp, Calendar } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
+import { GABON_PROVINCES } from "@/lib/constants";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface KPIData {
   totalUsers: number;
@@ -18,6 +26,7 @@ interface KPIData {
 export const AdminDashboard = () => {
   const [kpiData, setKpiData] = useState<KPIData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [provinceFilter, setProvinceFilter] = useState<string>("all");
 
   useEffect(() => {
     loadKPIs();
@@ -120,9 +129,26 @@ export const AdminDashboard = () => {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-3xl font-bold mb-2">Tableau de Bord Administrateur</h2>
-        <p className="text-muted-foreground">Vue d'ensemble des statistiques système</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-3xl font-bold mb-2">Tableau de Bord Administrateur</h2>
+          <p className="text-muted-foreground">Vue d'ensemble des statistiques système</p>
+        </div>
+        <div className="w-64">
+          <Select value={provinceFilter} onValueChange={setProvinceFilter}>
+            <SelectTrigger>
+              <SelectValue placeholder="Toutes les provinces" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Toutes les provinces</SelectItem>
+              {GABON_PROVINCES.map((p) => (
+                <SelectItem key={p} value={p}>
+                  {p}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">

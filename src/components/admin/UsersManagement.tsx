@@ -25,6 +25,7 @@ import { fr } from "date-fns/locale";
 import { toast } from "sonner";
 import { AddUserDialog } from "./AddUserDialog";
 import { EditUserDialog } from "./EditUserDialog";
+import { GABON_PROVINCES } from "@/lib/constants";
 
 const roleLabels: Record<string, string> = {
   pecheur: "Pêcheur",
@@ -57,6 +58,7 @@ export const UsersManagement = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("all");
+  const [provinceFilter, setProvinceFilter] = useState<string>("all");
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserWithRoles | null>(null);
@@ -130,7 +132,9 @@ export const UsersManagement = () => {
     const matchesRole = roleFilter === "all" || 
       user.user_roles?.some(ur => ur.role === roleFilter);
 
-    return matchesSearch && matchesRole;
+    const matchesProvince = provinceFilter === "all" || user.province === provinceFilter;
+
+    return matchesSearch && matchesRole && matchesProvince;
   });
 
   if (loading) {
@@ -170,7 +174,7 @@ export const UsersManagement = () => {
                 className="pl-10"
               />
             </div>
-            <div className="w-64">
+            <div className="w-56">
               <Select value={roleFilter} onValueChange={setRoleFilter}>
                 <SelectTrigger>
                   <Filter className="mr-2 h-4 w-4" />
@@ -181,6 +185,21 @@ export const UsersManagement = () => {
                   {Object.entries(roleLabels).map(([key, label]) => (
                     <SelectItem key={key} value={key}>
                       {label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="w-48">
+              <Select value={provinceFilter} onValueChange={setProvinceFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Province" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Toutes provinces</SelectItem>
+                  {GABON_PROVINCES.map((p) => (
+                    <SelectItem key={p} value={p}>
+                      {p}
                     </SelectItem>
                   ))}
                 </SelectContent>
