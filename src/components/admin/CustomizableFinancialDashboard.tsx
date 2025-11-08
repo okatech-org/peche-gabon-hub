@@ -15,7 +15,7 @@ import {
 import { 
   GripVertical, Settings, Save, RotateCcw, Plus, 
   TrendingUp, DollarSign, Calendar, FileText, 
-  BarChart3, PieChartIcon, Eye, EyeOff
+  BarChart3, PieChartIcon, Eye, EyeOff, Maximize2, Minimize2
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -38,6 +38,7 @@ interface ChartConfig {
   icon: any;
   visible: boolean;
   order: number;
+  size: 'small' | 'medium' | 'large' | 'full';
 }
 
 interface DashboardLayout {
@@ -54,7 +55,8 @@ const defaultCharts: ChartConfig[] = [
     description: 'Vue d\'ensemble des métriques clés',
     icon: DollarSign,
     visible: true,
-    order: 0
+    order: 0,
+    size: 'full'
   },
   {
     id: 'monthly',
@@ -63,7 +65,8 @@ const defaultCharts: ChartConfig[] = [
     description: 'Montants et transactions par mois',
     icon: TrendingUp,
     visible: true,
-    order: 1
+    order: 1,
+    size: 'large'
   },
   {
     id: 'status',
@@ -72,7 +75,8 @@ const defaultCharts: ChartConfig[] = [
     description: 'Distribution des montants',
     icon: PieChartIcon,
     visible: true,
-    order: 2
+    order: 2,
+    size: 'medium'
   },
   {
     id: 'table',
@@ -81,7 +85,8 @@ const defaultCharts: ChartConfig[] = [
     description: 'Total par table de données',
     icon: BarChart3,
     visible: true,
-    order: 3
+    order: 3,
+    size: 'medium'
   },
   {
     id: 'trends',
@@ -90,7 +95,8 @@ const defaultCharts: ChartConfig[] = [
     description: 'Évolution sur plusieurs années',
     icon: Calendar,
     visible: true,
-    order: 4
+    order: 4,
+    size: 'large'
   }
 ];
 
@@ -98,10 +104,11 @@ interface DraggableChartProps {
   chart: ChartConfig;
   index: number;
   moveChart: (dragIndex: number, hoverIndex: number) => void;
+  onSizeChange: (chartId: string, size: ChartConfig['size']) => void;
   children: React.ReactNode;
 }
 
-const DraggableChart = ({ chart, index, moveChart, children }: DraggableChartProps) => {
+const DraggableChart = ({ chart, index, moveChart, onSizeChange, children }: DraggableChartProps) => {
   const [{ isDragging }, drag, preview] = useDrag({
     type: 'CHART',
     item: { index },
@@ -120,17 +127,59 @@ const DraggableChart = ({ chart, index, moveChart, children }: DraggableChartPro
     },
   });
 
+  const sizeOptions: Array<{ value: ChartConfig['size']; label: string; icon: any }> = [
+    { value: 'small', label: 'Petit', icon: Minimize2 },
+    { value: 'medium', label: 'Moyen', icon: BarChart3 },
+    { value: 'large', label: 'Grand', icon: Maximize2 },
+    { value: 'full', label: 'Pleine largeur', icon: Maximize2 }
+  ];
+
+  const getSizeClass = (size: ChartConfig['size']) => {
+    switch (size) {
+      case 'small':
+        return 'md:col-span-1';
+      case 'medium':
+        return 'md:col-span-1';
+      case 'large':
+        return 'md:col-span-2';
+      case 'full':
+        return 'col-span-full';
+      default:
+        return 'md:col-span-1';
+    }
+  };
+
   return (
     <div
       ref={(node) => preview(drop(node))}
-      className={`transition-opacity ${isDragging ? 'opacity-50' : 'opacity-100'}`}
+      className={`transition-all duration-200 ${isDragging ? 'opacity-50 scale-95' : 'opacity-100'} ${getSizeClass(chart.size)}`}
     >
-      <Card className="relative group">
-        <div
-          ref={drag}
-          className="absolute top-4 right-4 cursor-move opacity-0 group-hover:opacity-100 transition-opacity"
-        >
-          <GripVertical className="h-5 w-5 text-muted-foreground" />
+      <Card className="relative group h-full">
+        <div className="absolute top-4 right-4 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+          <div className="flex items-center gap-1 bg-background/95 border rounded-md p-1 shadow-sm">
+            {sizeOptions.map((option) => {
+              const Icon = option.icon;
+              return (
+                <Button
+                  key={option.value}
+                  variant={chart.size === option.value ? "default" : "ghost"}
+                  size="sm"
+                  className="h-7 w-7 p-0"
+                  onClick={() => onSizeChange(chart.id, option.value)}
+                  title={option.label}
+                >
+                  <Icon className="h-3.5 w-3.5" />
+                </Button>
+              );
+            })}
+          </div>
+          <div
+            ref={drag}
+            className="cursor-move bg-background/95 border rounded-md p-1.5 shadow-sm"
+            title="Déplacer"
+          >
+            <GripVertical className="h-4 w-4 text-muted-foreground" />
+          </div>
         </div>
         {children}
       </Card>
@@ -203,6 +252,13 @@ export const CustomizableFinancialDashboard = ({ data }: CustomizableFinancialDa
     setCharts(charts.map(c => 
       c.id === chartId ? { ...c, visible: !c.visible } : c
     ));
+  };
+
+  const changeChartSize = (chartId: string, size: ChartConfig['size']) => {
+    setCharts(charts.map(c => 
+      c.id === chartId ? { ...c, size } : c
+    ));
+    toast.info(`Taille du graphique mise à jour`);
   };
 
   // Préparer les données pour les graphiques
@@ -317,9 +373,9 @@ export const CustomizableFinancialDashboard = ({ data }: CustomizableFinancialDa
     switch (chart.type) {
       case 'stats':
         return (
-          <DraggableChart key={chart.id} chart={chart} index={index} moveChart={moveChart}>
-            <div className="col-span-full">
-              <div className="grid gap-4 md:grid-cols-3 p-6">
+          <DraggableChart key={chart.id} chart={chart} index={index} moveChart={moveChart} onSizeChange={changeChartSize}>
+            <div className="p-6">
+              <div className="grid gap-4 md:grid-cols-3">
                 <div className="space-y-2">
                   <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
                     <DollarSign className="h-4 w-4" />
@@ -352,7 +408,7 @@ export const CustomizableFinancialDashboard = ({ data }: CustomizableFinancialDa
       case 'monthly':
         if (chartData.monthly.length === 0) return null;
         return (
-          <DraggableChart key={chart.id} chart={chart} index={index} moveChart={moveChart}>
+          <DraggableChart key={chart.id} chart={chart} index={index} moveChart={moveChart} onSizeChange={changeChartSize}>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Icon className="h-4 w-4" />
@@ -389,7 +445,7 @@ export const CustomizableFinancialDashboard = ({ data }: CustomizableFinancialDa
       case 'status':
         if (chartData.byStatus.length === 0) return null;
         return (
-          <DraggableChart key={chart.id} chart={chart} index={index} moveChart={moveChart}>
+          <DraggableChart key={chart.id} chart={chart} index={index} moveChart={moveChart} onSizeChange={changeChartSize}>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Icon className="h-4 w-4" />
@@ -431,7 +487,7 @@ export const CustomizableFinancialDashboard = ({ data }: CustomizableFinancialDa
       case 'table':
         if (chartData.byTable.length === 0) return null;
         return (
-          <DraggableChart key={chart.id} chart={chart} index={index} moveChart={moveChart}>
+          <DraggableChart key={chart.id} chart={chart} index={index} moveChart={moveChart} onSizeChange={changeChartSize}>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Icon className="h-4 w-4" />
@@ -463,7 +519,7 @@ export const CustomizableFinancialDashboard = ({ data }: CustomizableFinancialDa
       case 'trends':
         if (chartData.trends.length === 0) return null;
         return (
-          <DraggableChart key={chart.id} chart={chart} index={index} moveChart={moveChart}>
+          <DraggableChart key={chart.id} chart={chart} index={index} moveChart={moveChart} onSizeChange={changeChartSize}>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Icon className="h-4 w-4" />
@@ -593,8 +649,24 @@ export const CustomizableFinancialDashboard = ({ data }: CustomizableFinancialDa
         )}
 
         <div className="flex items-center gap-2 text-sm text-muted-foreground p-4 bg-muted/30 rounded-lg">
-          <GripVertical className="h-4 w-4" />
-          <span>Survolez un graphique et utilisez l'icône pour le déplacer</span>
+          <div className="flex items-center gap-4 flex-wrap">
+            <div className="flex items-center gap-2">
+              <GripVertical className="h-4 w-4" />
+              <span>Déplacer</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Minimize2 className="h-4 w-4" />
+              <span>Petit</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <BarChart3 className="h-4 w-4" />
+              <span>Moyen</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Maximize2 className="h-4 w-4" />
+              <span>Grand / Pleine largeur</span>
+            </div>
+          </div>
         </div>
       </div>
     </DndProvider>
