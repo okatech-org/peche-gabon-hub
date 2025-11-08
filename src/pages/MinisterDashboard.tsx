@@ -29,6 +29,7 @@ import { RecommandationsFormation } from "@/components/minister/RecommandationsF
 import { SuiviFormations } from "@/components/minister/SuiviFormations";
 import { BudgetFormations } from "@/components/minister/BudgetFormations";
 import { ComparaisonRegionaleFormations } from "@/components/minister/ComparaisonRegionaleFormations";
+import { RemonteesInstitutionnellesDashboard } from "@/components/minister/RemonteesInstitutionnellesDashboard";
 import { GestionFormateurs } from "@/components/minister/GestionFormateurs";
 import { RecommandationFormateurs } from "@/components/minister/RecommandationFormateurs";
 import { HistoriqueRecommandations } from "@/components/minister/HistoriqueRecommandations";
@@ -320,6 +321,15 @@ const MinisterDashboard = () => {
                   <p className="text-sm text-muted-foreground">Exportations, valeur et prix</p>
                 </div>
                 <EconomicStats />
+              </div>
+
+              {/* Section Remontées Institutionnelles */}
+              <div id="remontees">
+                <div className="mb-4">
+                  <h2 className="text-2xl font-bold">Remontées Institutionnelles</h2>
+                  <p className="text-sm text-muted-foreground">Taxes collectées et répartition aux institutions</p>
+                </div>
+                <RemonteesInstitutionnellesDashboard />
               </div>
 
               {/* Section Powers */}

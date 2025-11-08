@@ -9,7 +9,8 @@ import {
   History,
   FileText,
   TrendingUp,
-  LogOut
+  LogOut,
+  Building2
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -61,6 +62,12 @@ const navigationItems = [
     url: "#economic", 
     icon: DollarSign,
     description: "Exportations, valeur, prix"
+  },
+  { 
+    title: "Remontées Finances", 
+    url: "#remontees", 
+    icon: Building2,
+    description: "Taxes et répartition institutionnelle"
   },
 ];
 
