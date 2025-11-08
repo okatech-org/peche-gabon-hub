@@ -13,6 +13,7 @@ import Admin from "./pages/Admin";
 import Demo from "./pages/Demo";
 import Captures from "./pages/Captures";
 import MonCompte from "./pages/MonCompte";
+import MinisterDashboard from "./pages/MinisterDashboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -58,6 +59,14 @@ function App() {
               element={
                 <ProtectedRoute allowedRoles={['admin']}>
                   <Admin />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/minister-dashboard"
+              element={
+                <ProtectedRoute allowedRoles={['ministre']}>
+                  <MinisterDashboard />
                 </ProtectedRoute>
               }
             />

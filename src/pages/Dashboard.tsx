@@ -86,6 +86,12 @@ const Dashboard = () => {
     return null;
   }
 
+  // Redirection automatique du ministre vers son dashboard exécutif
+  if (roles.includes('ministre')) {
+    navigate('/minister-dashboard', { replace: true });
+    return null;
+  }
+
   const primaryRole = roles[0] || 'pecheur';
   const isPecheur = roles.includes('pecheur') && !roles.includes('admin');
 

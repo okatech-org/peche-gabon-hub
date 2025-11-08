@@ -14,6 +14,89 @@ export type Database = {
   }
   public: {
     Tables: {
+      alerte_historique: {
+        Row: {
+          created_at: string
+          destinataires: string[]
+          erreur_details: string | null
+          id: string
+          message: string
+          seuil_declenche: number
+          seuil_id: string | null
+          statut: string
+          type_indicateur: string
+          valeur_actuelle: number
+        }
+        Insert: {
+          created_at?: string
+          destinataires: string[]
+          erreur_details?: string | null
+          id?: string
+          message: string
+          seuil_declenche: number
+          seuil_id?: string | null
+          statut?: string
+          type_indicateur: string
+          valeur_actuelle: number
+        }
+        Update: {
+          created_at?: string
+          destinataires?: string[]
+          erreur_details?: string | null
+          id?: string
+          message?: string
+          seuil_declenche?: number
+          seuil_id?: string | null
+          statut?: string
+          type_indicateur?: string
+          valeur_actuelle?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "alerte_historique_seuil_id_fkey"
+            columns: ["seuil_id"]
+            isOneToOne: false
+            referencedRelation: "alerte_seuils"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      alerte_seuils: {
+        Row: {
+          actif: boolean
+          created_at: string
+          description: string | null
+          destinataires: string[]
+          id: string
+          nom: string
+          seuil_valeur: number
+          type_indicateur: string
+          updated_at: string
+        }
+        Insert: {
+          actif?: boolean
+          created_at?: string
+          description?: string | null
+          destinataires?: string[]
+          id?: string
+          nom: string
+          seuil_valeur: number
+          type_indicateur: string
+          updated_at?: string
+        }
+        Update: {
+          actif?: boolean
+          created_at?: string
+          description?: string | null
+          destinataires?: string[]
+          id?: string
+          nom?: string
+          seuil_valeur?: number
+          type_indicateur?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       armements: {
         Row: {
           adresse: string | null
@@ -83,6 +166,33 @@ export type Database = {
           resource_type?: string
           user_agent?: string | null
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      audit_ministeriel: {
+        Row: {
+          action_type: string
+          created_at: string
+          description: string
+          id: string
+          metadata: Json | null
+          user_id: string
+        }
+        Insert: {
+          action_type: string
+          created_at?: string
+          description: string
+          id?: string
+          metadata?: Json | null
+          user_id: string
+        }
+        Update: {
+          action_type?: string
+          created_at?: string
+          description?: string
+          id?: string
+          metadata?: Json | null
+          user_id?: string
         }
         Relationships: []
       }
@@ -599,6 +709,42 @@ export type Database = {
           },
         ]
       }
+      notifications_nationales: {
+        Row: {
+          audience: string[]
+          created_at: string
+          created_by: string | null
+          document_url: string | null
+          id: string
+          message: string
+          priorite: string
+          titre: string
+          url_ressource: string | null
+        }
+        Insert: {
+          audience?: string[]
+          created_at?: string
+          created_by?: string | null
+          document_url?: string | null
+          id?: string
+          message: string
+          priorite?: string
+          titre: string
+          url_ressource?: string | null
+        }
+        Update: {
+          audience?: string[]
+          created_at?: string
+          created_by?: string | null
+          document_url?: string | null
+          id?: string
+          message?: string
+          priorite?: string
+          titre?: string
+          url_ressource?: string | null
+        }
+        Relationships: []
+      }
       pirogues: {
         Row: {
           annee_construction: number | null
@@ -878,6 +1024,45 @@ export type Database = {
           },
         ]
       }
+      reglementations: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          date_effet: string
+          destination: string[]
+          fichier_url: string | null
+          id: string
+          texte: string
+          titre: string
+          type_document: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          date_effet: string
+          destination?: string[]
+          fichier_url?: string | null
+          id?: string
+          texte: string
+          titre: string
+          type_document: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          date_effet?: string
+          destination?: string[]
+          fichier_url?: string | null
+          id?: string
+          texte?: string
+          titre?: string
+          type_document?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       sites: {
         Row: {
           created_at: string
@@ -1087,6 +1272,48 @@ export type Database = {
         }
         Relationships: []
       }
+      zones_restreintes: {
+        Row: {
+          actif: boolean
+          created_at: string
+          created_by: string | null
+          date_debut: string
+          date_fin: string | null
+          especes_concernees: string[]
+          geometrie: Json
+          id: string
+          nom: string
+          raison: string
+          updated_at: string
+        }
+        Insert: {
+          actif?: boolean
+          created_at?: string
+          created_by?: string | null
+          date_debut: string
+          date_fin?: string | null
+          especes_concernees?: string[]
+          geometrie: Json
+          id?: string
+          nom: string
+          raison: string
+          updated_at?: string
+        }
+        Update: {
+          actif?: boolean
+          created_at?: string
+          created_by?: string | null
+          date_debut?: string
+          date_fin?: string | null
+          especes_concernees?: string[]
+          geometrie?: Json
+          id?: string
+          nom?: string
+          raison?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -1121,6 +1348,10 @@ export type Database = {
           _resource_id?: string
           _resource_type: string
         }
+        Returns: string
+      }
+      log_action_ministerielle: {
+        Args: { _action_type: string; _description: string; _metadata?: Json }
         Returns: string
       }
     }
