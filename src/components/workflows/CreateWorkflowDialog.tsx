@@ -5,10 +5,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Plus } from "lucide-react";
+import { Plus, Sparkles } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { TemplateSelector } from "./TemplateSelector";
 
 interface CreateWorkflowDialogProps {
   institutionEmettrice: string;
@@ -56,6 +58,8 @@ const PRIORITES = [
 export function CreateWorkflowDialog({ institutionEmettrice, onWorkflowCreated }: CreateWorkflowDialogProps) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState<any>(null);
+  const [activeTab, setActiveTab] = useState("templates");
   const { user } = useAuth();
 
   const [formData, setFormData] = useState({
@@ -68,6 +72,26 @@ export function CreateWorkflowDialog({ institutionEmettrice, onWorkflowCreated }
     date_echeance: "",
   });
 
+  const handleSelectTemplate = (template: any) => {
+    setSelectedTemplate(template);
+    
+    // Pré-remplir le formulaire avec les données du template
+    setFormData({
+      institution_destinataire: template.institution_destinataire_defaut?.[0] || "",
+      type_workflow: template.type_workflow,
+      type_donnees: template.type_donnees,
+      objet: template.objet_template,
+      description: template.description_template || "",
+      priorite: template.priorite_defaut,
+      date_echeance: template.delai_traitement_jours 
+        ? new Date(Date.now() + template.delai_traitement_jours * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+        : "",
+    });
+    
+    // Basculer vers l'onglet du formulaire
+    setActiveTab("custom");
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -79,20 +103,30 @@ export function CreateWorkflowDialog({ institutionEmettrice, onWorkflowCreated }
     setLoading(true);
 
     try {
+      const workflowData: any = {
+        institution_emettrice: institutionEmettrice,
+        institution_destinataire: formData.institution_destinataire,
+        emetteur_user_id: user.id,
+        type_workflow: formData.type_workflow,
+        type_donnees: formData.type_donnees,
+        objet: formData.objet,
+        description: formData.description,
+        priorite: formData.priorite,
+        date_echeance: formData.date_echeance || null,
+        statut: "en_attente",
+      };
+
+      // Si créé depuis un template, ajouter l'ID du template dans les métadonnées
+      if (selectedTemplate) {
+        workflowData.donnees_json = {
+          template_id: selectedTemplate.id,
+          template_nom: selectedTemplate.nom,
+        };
+      }
+
       const { error } = await supabase
         .from("workflows_inter_institutionnels")
-        .insert({
-          institution_emettrice: institutionEmettrice,
-          institution_destinataire: formData.institution_destinataire,
-          emetteur_user_id: user.id,
-          type_workflow: formData.type_workflow,
-          type_donnees: formData.type_donnees,
-          objet: formData.objet,
-          description: formData.description,
-          priorite: formData.priorite,
-          date_echeance: formData.date_echeance || null,
-          statut: "en_attente",
-        } as any);
+        .insert(workflowData);
 
       if (error) throw error;
 
@@ -127,15 +161,45 @@ export function CreateWorkflowDialog({ institutionEmettrice, onWorkflowCreated }
           Nouvelle Demande Inter-institutionnelle
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Créer une Demande Inter-institutionnelle</DialogTitle>
           <DialogDescription>
-            Initiez un échange de données ou une demande entre institutions
+            Utilisez un template prédéfini ou créez une demande personnalisée
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="templates" className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4" />
+              Templates Prédéfinis
+            </TabsTrigger>
+            <TabsTrigger value="custom">
+              Demande Personnalisée {selectedTemplate && "✓"}
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="templates" className="space-y-4">
+            <TemplateSelector
+              institutionCode={institutionEmettrice}
+              onSelectTemplate={handleSelectTemplate}
+            />
+          </TabsContent>
+
+          <TabsContent value="custom">
+            {selectedTemplate && (
+              <div className="mb-4 p-3 bg-primary/10 rounded-lg border border-primary/20">
+                <div className="flex items-center gap-2 text-sm">
+                  <Sparkles className="h-4 w-4 text-primary" />
+                  <span className="font-medium">Template: {selectedTemplate.nom}</span>
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Vous pouvez modifier les champs pré-remplis avant de soumettre
+                </p>
+              </div>
+            )}
+            <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="institution_destinataire">Institution Destinataire *</Label>
@@ -254,15 +318,17 @@ export function CreateWorkflowDialog({ institutionEmettrice, onWorkflowCreated }
             />
           </div>
 
-          <div className="flex justify-end gap-2 pt-4">
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
-              Annuler
-            </Button>
-            <Button type="submit" disabled={loading}>
-              {loading ? "Création..." : "Créer la Demande"}
-            </Button>
-          </div>
-        </form>
+              <div className="flex justify-end gap-2 pt-4">
+                <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+                  Annuler
+                </Button>
+                <Button type="submit" disabled={loading}>
+                  {loading ? "Création..." : "Créer la Demande"}
+                </Button>
+              </div>
+            </form>
+          </TabsContent>
+        </Tabs>
       </DialogContent>
     </Dialog>
   );

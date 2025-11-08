@@ -2674,6 +2674,72 @@ export type Database = {
           },
         ]
       }
+      workflow_templates: {
+        Row: {
+          actif: boolean
+          categorie: string
+          champs_requis: Json | null
+          created_at: string
+          created_by: string | null
+          delai_traitement_jours: number | null
+          description: string | null
+          description_template: string | null
+          documents_requis: string[] | null
+          id: string
+          institution_destinataire_defaut: string[] | null
+          institution_emettrice_defaut: string[] | null
+          nom: string
+          objet_template: string
+          priorite_defaut: string
+          type_donnees: string
+          type_workflow: string
+          updated_at: string
+          utilisation_count: number
+        }
+        Insert: {
+          actif?: boolean
+          categorie?: string
+          champs_requis?: Json | null
+          created_at?: string
+          created_by?: string | null
+          delai_traitement_jours?: number | null
+          description?: string | null
+          description_template?: string | null
+          documents_requis?: string[] | null
+          id?: string
+          institution_destinataire_defaut?: string[] | null
+          institution_emettrice_defaut?: string[] | null
+          nom: string
+          objet_template: string
+          priorite_defaut?: string
+          type_donnees: string
+          type_workflow: string
+          updated_at?: string
+          utilisation_count?: number
+        }
+        Update: {
+          actif?: boolean
+          categorie?: string
+          champs_requis?: Json | null
+          created_at?: string
+          created_by?: string | null
+          delai_traitement_jours?: number | null
+          description?: string | null
+          description_template?: string | null
+          documents_requis?: string[] | null
+          id?: string
+          institution_destinataire_defaut?: string[] | null
+          institution_emettrice_defaut?: string[] | null
+          nom?: string
+          objet_template?: string
+          priorite_defaut?: string
+          type_donnees?: string
+          type_workflow?: string
+          updated_at?: string
+          utilisation_count?: number
+        }
+        Relationships: []
+      }
       workflows_inter_institutionnels: {
         Row: {
           created_at: string
