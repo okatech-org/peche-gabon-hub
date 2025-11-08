@@ -11,7 +11,8 @@ import {
   TrendingUp,
   LogOut,
   Building2,
-  Settings
+  Settings,
+  GraduationCap
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -85,6 +86,12 @@ const actionsItems = [
     url: "/minister-dashboard/actions", 
     icon: Gavel,
     description: "Documents, réglementations, notifications"
+  },
+  { 
+    title: "Formations", 
+    url: "/minister-dashboard/formations", 
+    icon: GraduationCap,
+    description: "Planification et suivi des formations"
   },
   { 
     title: "Historique", 
