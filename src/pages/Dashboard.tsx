@@ -11,10 +11,13 @@ import {
   AlertTriangle,
   TrendingUp,
   Activity,
-  LogOut
+  LogOut,
+  Loader2
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { PecheurNav } from "@/components/PecheurNav";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 const roleLabels: Record<string, string> = {
   pecheur: "Pêcheur",
@@ -47,6 +50,15 @@ const roleColors: Record<string, string> = {
 const Dashboard = () => {
   const { user, roles, signOut } = useAuth();
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
+  const [pecheurStats, setPecheurStats] = useState({
+    capturesMois: 0,
+    capturesMoisTrend: "",
+    licenceStatut: "Non renseigné",
+    cpueMoyen: 0,
+    cpueTrend: "",
+    notifications: 0,
+  });
 
   // Redirection automatique des admins vers le panel d'administration
   if (roles.includes('admin')) {
@@ -55,6 +67,118 @@ const Dashboard = () => {
   }
 
   const primaryRole = roles[0] || 'pecheur';
+  const isPecheur = roles.includes('pecheur') && !roles.includes('admin');
+
+  useEffect(() => {
+    if (isPecheur && user) {
+      loadPecheurData();
+    } else {
+      setLoading(false);
+    }
+  }, [isPecheur, user]);
+
+  const loadPecheurData = async () => {
+    if (!user) return;
+
+    try {
+      // Récupérer le propriétaire associé à cet utilisateur
+      const { data: proprietaireData } = await supabase
+        .from("proprietaires")
+        .select("id")
+        .eq("email", user.email)
+        .maybeSingle();
+
+      if (!proprietaireData) {
+        setLoading(false);
+        return;
+      }
+
+      // Récupérer les pirogues du propriétaire
+      const { data: piroguesData } = await supabase
+        .from("pirogues")
+        .select("id")
+        .eq("proprietaire_id", proprietaireData.id);
+
+      if (!piroguesData || piroguesData.length === 0) {
+        setLoading(false);
+        return;
+      }
+
+      const pirogueIds = piroguesData.map(p => p.id);
+      const now = new Date();
+      const currentMonth = now.getMonth() + 1;
+      const currentYear = now.getFullYear();
+      const lastMonth = currentMonth === 1 ? 12 : currentMonth - 1;
+      const lastMonthYear = currentMonth === 1 ? currentYear - 1 : currentYear;
+
+      // Captures du mois en cours
+      const { data: capturesMoisData } = await supabase
+        .from("captures_pa")
+        .select("poids_kg, cpue")
+        .in("pirogue_id", pirogueIds)
+        .eq("mois", currentMonth)
+        .eq("annee", currentYear);
+
+      // Captures du mois dernier
+      const { data: capturesMoisDernierData } = await supabase
+        .from("captures_pa")
+        .select("poids_kg")
+        .in("pirogue_id", pirogueIds)
+        .eq("mois", lastMonth)
+        .eq("annee", lastMonthYear);
+
+      // Calculer les statistiques
+      const capturesMois = capturesMoisData?.reduce((sum, c) => sum + (c.poids_kg || 0), 0) || 0;
+      const capturesMoisDernier = capturesMoisDernierData?.reduce((sum, c) => sum + (c.poids_kg || 0), 0) || 0;
+      
+      let capturesMoisTrend = "";
+      if (capturesMoisDernier > 0) {
+        const diff = ((capturesMois - capturesMoisDernier) / capturesMoisDernier) * 100;
+        capturesMoisTrend = `${diff > 0 ? '+' : ''}${diff.toFixed(0)}%`;
+      }
+
+      // CPUE moyen
+      const cpues = capturesMoisData?.filter(c => c.cpue).map(c => c.cpue) || [];
+      const cpueMoyen = cpues.length > 0 
+        ? cpues.reduce((a, b) => a + b, 0) / cpues.length 
+        : 0;
+
+      // Vérifier le statut de la licence la plus récente
+      const { data: licencesData } = await supabase
+        .from("licences")
+        .select("statut, date_fin")
+        .in("pirogue_id", pirogueIds)
+        .order("date_fin", { ascending: false })
+        .limit(1);
+
+      const licenceStatut = licencesData && licencesData.length > 0 
+        ? licencesData[0].statut === "valide" ? "Valide" : "Expirée"
+        : "Non renseigné";
+
+      // Notifications (quittances en retard + licences expirées)
+      const { data: quittancesRetard } = await supabase
+        .from("quittances")
+        .select("id, licence:licences!inner(pirogue_id)")
+        .in("licence.pirogue_id", pirogueIds)
+        .eq("statut", "en_retard");
+
+      const notifications = (quittancesRetard?.length || 0) + 
+        (licenceStatut === "Expirée" ? 1 : 0);
+
+      setPecheurStats({
+        capturesMois,
+        capturesMoisTrend,
+        licenceStatut,
+        cpueMoyen: Number(cpueMoyen.toFixed(1)),
+        cpueTrend: capturesMoisTrend ? `${capturesMoisTrend.replace(/[+-]/, '')} vs mois dernier` : "",
+        notifications,
+      });
+    } catch (error) {
+      console.error("Erreur lors du chargement des données pêcheur:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const getDashboardContent = () => {
     if (roles.includes('admin')) {
@@ -101,10 +225,30 @@ const Dashboard = () => {
         title: "Mes Activités de Pêche",
         description: "Suivi de vos captures et licences",
         kpis: [
-          { icon: Fish, label: "Captures ce Mois", value: "245kg", trend: "+12%" },
-          { icon: FileText, label: "Licence", value: "Valide", trend: "" },
-          { icon: Activity, label: "CPUE Moyen", value: "8.5", trend: "+5%" },
-          { icon: AlertTriangle, label: "Notifications", value: "2", trend: "" },
+          { 
+            icon: Fish, 
+            label: "Captures ce Mois", 
+            value: loading ? "..." : `${pecheurStats.capturesMois}kg`, 
+            trend: pecheurStats.capturesMoisTrend 
+          },
+          { 
+            icon: FileText, 
+            label: "Licence", 
+            value: loading ? "..." : pecheurStats.licenceStatut, 
+            trend: "" 
+          },
+          { 
+            icon: Activity, 
+            label: "CPUE Moyen", 
+            value: loading ? "..." : pecheurStats.cpueMoyen.toString(), 
+            trend: pecheurStats.cpueTrend 
+          },
+          { 
+            icon: AlertTriangle, 
+            label: "Notifications", 
+            value: loading ? "..." : pecheurStats.notifications.toString(), 
+            trend: "" 
+          },
         ],
       };
     }
@@ -122,7 +266,14 @@ const Dashboard = () => {
   };
 
   const content = getDashboardContent();
-  const isPecheur = roles.includes('pecheur') && !roles.includes('admin');
+
+  if (loading && isPecheur) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-subtle">
