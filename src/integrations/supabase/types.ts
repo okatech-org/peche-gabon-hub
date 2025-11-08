@@ -703,6 +703,161 @@ export type Database = {
         }
         Relationships: []
       }
+      formateurs: {
+        Row: {
+          bio: string | null
+          created_at: string
+          email: string | null
+          id: string
+          nb_formations_donnees: number | null
+          nom: string
+          note_moyenne: number | null
+          prenom: string
+          specialites: string[]
+          statut: string
+          telephone: string | null
+          updated_at: string
+        }
+        Insert: {
+          bio?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          nb_formations_donnees?: number | null
+          nom: string
+          note_moyenne?: number | null
+          prenom: string
+          specialites?: string[]
+          statut?: string
+          telephone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          bio?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          nb_formations_donnees?: number | null
+          nom?: string
+          note_moyenne?: number | null
+          prenom?: string
+          specialites?: string[]
+          statut?: string
+          telephone?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      formateurs_disponibilites: {
+        Row: {
+          created_at: string
+          date_debut: string
+          date_fin: string
+          disponible: boolean
+          formateur_id: string
+          id: string
+          notes: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          date_debut: string
+          date_fin: string
+          disponible?: boolean
+          formateur_id: string
+          id?: string
+          notes?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          date_debut?: string
+          date_fin?: string
+          disponible?: boolean
+          formateur_id?: string
+          id?: string
+          notes?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "formateurs_disponibilites_formateur_id_fkey"
+            columns: ["formateur_id"]
+            isOneToOne: false
+            referencedRelation: "formateurs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      formateurs_evaluations: {
+        Row: {
+          commentaires: string | null
+          created_at: string
+          date_evaluation: string
+          evaluateur_id: string | null
+          formateur_id: string
+          formation_id: string
+          id: string
+          note_communication: number
+          note_expertise: number
+          note_globale: number | null
+          note_organisation: number
+          note_pedagogie: number
+          points_amelioration: string | null
+          points_forts: string | null
+          updated_at: string
+        }
+        Insert: {
+          commentaires?: string | null
+          created_at?: string
+          date_evaluation?: string
+          evaluateur_id?: string | null
+          formateur_id: string
+          formation_id: string
+          id?: string
+          note_communication: number
+          note_expertise: number
+          note_globale?: number | null
+          note_organisation: number
+          note_pedagogie: number
+          points_amelioration?: string | null
+          points_forts?: string | null
+          updated_at?: string
+        }
+        Update: {
+          commentaires?: string | null
+          created_at?: string
+          date_evaluation?: string
+          evaluateur_id?: string | null
+          formateur_id?: string
+          formation_id?: string
+          id?: string
+          note_communication?: number
+          note_expertise?: number
+          note_globale?: number | null
+          note_organisation?: number
+          note_pedagogie?: number
+          points_amelioration?: string | null
+          points_forts?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "formateurs_evaluations_formateur_id_fkey"
+            columns: ["formateur_id"]
+            isOneToOne: false
+            referencedRelation: "formateurs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "formateurs_evaluations_formation_id_fkey"
+            columns: ["formation_id"]
+            isOneToOne: false
+            referencedRelation: "formations_planifiees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       formations_evaluations: {
         Row: {
           amelioration_pct: number | null
@@ -831,6 +986,7 @@ export type Database = {
           date_fin: string
           description: string | null
           formateur: string | null
+          formateur_id: string | null
           id: string
           indicateurs_cibles: string[]
           lieu: string | null
@@ -853,6 +1009,7 @@ export type Database = {
           date_fin: string
           description?: string | null
           formateur?: string | null
+          formateur_id?: string | null
           id?: string
           indicateurs_cibles?: string[]
           lieu?: string | null
@@ -875,6 +1032,7 @@ export type Database = {
           date_fin?: string
           description?: string | null
           formateur?: string | null
+          formateur_id?: string | null
           id?: string
           indicateurs_cibles?: string[]
           lieu?: string | null
@@ -888,7 +1046,15 @@ export type Database = {
           type_formation?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "formations_planifiees_formateur_id_fkey"
+            columns: ["formateur_id"]
+            isOneToOne: false
+            referencedRelation: "formateurs"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       licences: {
         Row: {
