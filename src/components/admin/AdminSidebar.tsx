@@ -90,6 +90,7 @@ const menuItems = [
     group: "Données",
     items: [
       { title: "Import de Données", url: "/admin/import", icon: Upload },
+      { title: "Export Financier", url: "/admin/export-financial", icon: Download },
       { title: "Export de Données", url: "/admin/export", icon: Download },
       { title: "Intégrité des Données", url: "/admin/data-integrity", icon: Database },
     ],
