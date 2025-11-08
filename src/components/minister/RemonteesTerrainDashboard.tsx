@@ -24,6 +24,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
+import { RemonteeTypeCards } from "./RemonteeTypeCards";
 
 interface RemonteeStats {
   total: number;
@@ -264,32 +265,29 @@ export function RemonteesTerrainDashboard() {
         </Card>
       </div>
 
-      {/* Filtres */}
+      {/* Cartes de types de remontées */}
+      <div className="space-y-3">
+        <div className="flex items-center gap-2">
+          <Filter className="h-5 w-5 text-muted-foreground" />
+          <h3 className="text-lg font-semibold">Filtrer par type</h3>
+        </div>
+        <RemonteeTypeCards 
+          selectedType={filterType}
+          onTypeSelect={setFilterType}
+          typeCounts={stats.par_type}
+        />
+      </div>
+
+      {/* Filtres additionnels */}
       <Card>
         <CardContent className="p-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Input
-                placeholder="Rechercher..."
+                placeholder="Rechercher par titre, description, référence..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
-            </div>
-            <div className="space-y-2">
-              <Select value={filterType} onValueChange={setFilterType}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="tous">Tous les types</SelectItem>
-                  <SelectItem value="reclamation">Réclamation</SelectItem>
-                  <SelectItem value="suggestion">Suggestion</SelectItem>
-                  <SelectItem value="denonciation">Dénonciation</SelectItem>
-                  <SelectItem value="article_presse">Article de presse</SelectItem>
-                  <SelectItem value="commentaire_reseau">Commentaire réseau</SelectItem>
-                  <SelectItem value="avis_reseau_social">Avis réseau social</SelectItem>
-                </SelectContent>
-              </Select>
             </div>
             <div className="space-y-2">
               <Select value={filterStatut} onValueChange={setFilterStatut}>
