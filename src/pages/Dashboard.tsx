@@ -71,6 +71,14 @@ const Dashboard = () => {
     cpue: number;
     estUtilisateurActuel: boolean;
   }>>([]);
+  const [historiqueClassement, setHistoriqueClassement] = useState<Array<{
+    mois: number;
+    annee: number;
+    rang: number;
+    totalPecheurs: number;
+    captures: number;
+    cpue: number;
+  }>>([]);
 
   // Redirection automatique des admins vers le panel d'administration
   if (roles.includes('admin')) {
@@ -329,6 +337,94 @@ const Dashboard = () => {
 
           setClassementProvince(classementFinal);
         }
+      }
+
+      // Calculer l'historique des classements (6 derniers mois)
+      const historiqueData: Array<{
+        mois: number;
+        annee: number;
+        rang: number;
+        totalPecheurs: number;
+        captures: number;
+        cpue: number;
+      }> = [];
+
+      if (province && piroguesProvince && piroguesProvince.length > 1) {
+        const pirogueIdsProvince = piroguesProvince.map(p => p.id);
+        
+        // Calculer pour les 6 derniers mois
+        for (let i = 0; i < 6; i++) {
+          let moisCible = currentMonth - i;
+          let anneeCible = currentYear;
+          
+          if (moisCible <= 0) {
+            moisCible += 12;
+            anneeCible -= 1;
+          }
+
+          // Récupérer toutes les captures de ce mois pour la province
+          const { data: capturesMois } = await supabase
+            .from("captures_pa")
+            .select("poids_kg, cpue, pirogue_id")
+            .in("pirogue_id", pirogueIdsProvince)
+            .eq("mois", moisCible)
+            .eq("annee", anneeCible);
+
+          if (capturesMois && capturesMois.length > 0) {
+            // Grouper par pirogue
+            const statsParPirogue = new Map<string, {
+              captures: number;
+              cpues: number[];
+            }>();
+
+            capturesMois.forEach((c: any) => {
+              const existing = statsParPirogue.get(c.pirogue_id) || {
+                captures: 0,
+                cpues: [],
+              };
+              existing.captures += c.poids_kg || 0;
+              if (c.cpue) existing.cpues.push(c.cpue);
+              statsParPirogue.set(c.pirogue_id, existing);
+            });
+
+            // Créer le classement du mois
+            const classementMois = Array.from(statsParPirogue.entries()).map(([pirogueId, stats]) => ({
+              pirogueId,
+              captures: stats.captures,
+              cpue: stats.cpues.length > 0 
+                ? stats.cpues.reduce((a, b) => a + b, 0) / stats.cpues.length 
+                : 0,
+            }));
+
+            // Trier par captures
+            classementMois.sort((a, b) => b.captures - a.captures);
+
+            // Trouver le rang de l'utilisateur actuel
+            const rangUtilisateur = classementMois.findIndex(item => 
+              pirogueIds.includes(item.pirogueId)
+            ) + 1;
+
+            // Capturer les stats de l'utilisateur pour ce mois
+            const statsUtilisateur = classementMois.find(item => 
+              pirogueIds.includes(item.pirogueId)
+            );
+
+            if (rangUtilisateur > 0 && statsUtilisateur) {
+              historiqueData.push({
+                mois: moisCible,
+                annee: anneeCible,
+                rang: rangUtilisateur,
+                totalPecheurs: classementMois.length,
+                captures: statsUtilisateur.captures,
+                cpue: statsUtilisateur.cpue,
+              });
+            }
+          }
+        }
+
+        // Inverser pour avoir l'ordre chronologique
+        historiqueData.reverse();
+        setHistoriqueClassement(historiqueData);
       }
 
       setPecheurStats({
@@ -616,6 +712,83 @@ const Dashboard = () => {
                     </div>
                   </div>
                 ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Historique des Classements Mensuels */}
+        {isPecheur && historiqueClassement.length > 0 && pecheurStats.province && (
+          <Card className="shadow-card mb-8">
+            <CardHeader>
+              <CardTitle>Historique des Classements - {pecheurStats.province}</CardTitle>
+              <CardDescription>
+                Évolution de votre position dans le classement provincial sur les 6 derniers mois
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {historiqueClassement.map((item, index) => {
+                  const moisNom = new Date(item.annee, item.mois - 1).toLocaleDateString('fr-FR', { 
+                    month: 'long', 
+                    year: 'numeric' 
+                  });
+                  
+                  // Calculer la tendance par rapport au mois précédent
+                  let tendance = "";
+                  let tendanceColor = "text-muted-foreground";
+                  if (index > 0) {
+                    const rangPrecedent = historiqueClassement[index - 1].rang;
+                    const diff = rangPrecedent - item.rang;
+                    if (diff > 0) {
+                      tendance = `↑ +${diff}`;
+                      tendanceColor = "text-green-600";
+                    } else if (diff < 0) {
+                      tendance = `↓ ${diff}`;
+                      tendanceColor = "text-red-600";
+                    } else {
+                      tendance = "→ =";
+                      tendanceColor = "text-muted-foreground";
+                    }
+                  }
+
+                  return (
+                    <div
+                      key={`${item.annee}-${item.mois}`}
+                      className="flex items-center justify-between p-4 rounded-lg bg-muted/30 border"
+                    >
+                      <div className="flex items-center gap-4 flex-1">
+                        <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 border-2 border-primary">
+                          <span className="text-lg font-bold text-primary">#{item.rang}</span>
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-semibold capitalize">{moisNom}</p>
+                          <p className="text-sm text-muted-foreground">
+                            Sur {item.totalPecheurs} pêcheurs
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex gap-6 items-center">
+                        <div className="text-right">
+                          <p className="text-sm text-muted-foreground">Captures</p>
+                          <p className="text-lg font-bold">{item.captures.toFixed(0)} kg</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm text-muted-foreground">CPUE</p>
+                          <p className="text-lg font-bold">{item.cpue.toFixed(1)}</p>
+                        </div>
+                        {tendance && (
+                          <div className="text-right min-w-[60px]">
+                            <p className="text-sm text-muted-foreground">Position</p>
+                            <p className={`text-lg font-bold ${tendanceColor}`}>
+                              {tendance}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </CardContent>
           </Card>
