@@ -165,8 +165,8 @@ export function MinisterSidebar() {
                     <NavLink
                       to={item.url}
                       end
-                      className="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors hover:bg-muted"
-                      activeClassName="bg-primary text-primary-foreground font-medium"
+                      className="flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 hover:bg-muted hover:scale-105"
+                      activeClassName="bg-primary text-primary-foreground font-medium shadow-sm animate-scale-in"
                       title={collapsed ? item.title : undefined}
                     >
                       <item.icon className={collapsed ? "h-5 w-5" : "h-4 w-4"} />
@@ -200,8 +200,8 @@ export function MinisterSidebar() {
                     <NavLink
                       to={item.url}
                       end
-                      className="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors hover:bg-muted"
-                      activeClassName="bg-primary text-primary-foreground font-medium"
+                      className="flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 hover:bg-muted hover:scale-105"
+                      activeClassName="bg-primary text-primary-foreground font-medium shadow-sm animate-scale-in"
                       title={collapsed ? item.title : undefined}
                     >
                       <item.icon className={collapsed ? "h-5 w-5" : "h-4 w-4"} />
@@ -210,7 +210,7 @@ export function MinisterSidebar() {
                           <div className="flex items-center gap-2">
                             <span className="font-medium text-sm">{item.title}</span>
                             {item.badge && (
-                              <Badge variant="destructive" className="h-5 text-xs">
+                              <Badge variant="destructive" className="h-5 text-xs animate-pulse">
                                 3
                               </Badge>
                             )}
@@ -221,7 +221,7 @@ export function MinisterSidebar() {
                         </div>
                       )}
                       {collapsed && item.badge && (
-                        <div className="absolute -top-1 -right-1 h-3 w-3 bg-destructive rounded-full" />
+                        <div className="absolute -top-1 -right-1 h-3 w-3 bg-destructive rounded-full animate-pulse" />
                       )}
                     </NavLink>
                   </SidebarMenuButton>

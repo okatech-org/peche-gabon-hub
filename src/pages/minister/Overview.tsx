@@ -138,7 +138,7 @@ export default function Overview() {
     <div className="space-y-6">
       {/* KPIs Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-        <Card className="shadow-card hover:shadow-elevated transition-all">
+        <Card className="shadow-card hover:shadow-elevated transition-all duration-300 animate-fade-in hover:-translate-y-1" style={{ animationDelay: "0s" }}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
               Production Annuelle
@@ -155,7 +155,7 @@ export default function Overview() {
           </CardContent>
         </Card>
 
-        <Card className="shadow-card hover:shadow-elevated transition-all">
+        <Card className="shadow-card hover:shadow-elevated transition-all duration-300 animate-fade-in hover:-translate-y-1" style={{ animationDelay: "0.1s" }}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
               Exportations
@@ -172,7 +172,7 @@ export default function Overview() {
           </CardContent>
         </Card>
 
-        <Card className="shadow-card hover:shadow-elevated transition-all">
+        <Card className="shadow-card hover:shadow-elevated transition-all duration-300 animate-fade-in hover:-translate-y-1" style={{ animationDelay: "0.2s" }}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
               CPUE Moyenne
@@ -189,7 +189,7 @@ export default function Overview() {
           </CardContent>
         </Card>
 
-        <Card className="shadow-card hover:shadow-elevated transition-all">
+        <Card className="shadow-card hover:shadow-elevated transition-all duration-300 animate-fade-in hover:-translate-y-1" style={{ animationDelay: "0.3s" }}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
               Infractions

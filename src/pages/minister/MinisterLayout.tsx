@@ -1,4 +1,4 @@
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { MinisterSidebar } from "@/components/minister/MinisterSidebar";
 import { Badge } from "@/components/ui/badge";
@@ -6,6 +6,7 @@ import ExportPDFButton from "@/components/minister/ExportPDFButton";
 import { useState } from "react";
 
 export default function MinisterLayout() {
+  const location = useLocation();
   const [filters, setFilters] = useState({
     annee: new Date().getFullYear().toString(),
     mois: "tous",
@@ -38,10 +39,15 @@ export default function MinisterLayout() {
             </div>
           </header>
 
-          {/* Main Content - Rendered by child routes */}
+          {/* Main Content - Rendered by child routes with transitions */}
           <main className="flex-1 overflow-auto" id="main-content">
             <div className="container mx-auto px-6 py-6">
-              <Outlet context={{ filters, setFilters }} />
+              <div 
+                key={location.pathname}
+                className="animate-fade-in"
+              >
+                <Outlet context={{ filters, setFilters }} />
+              </div>
             </div>
           </main>
         </div>
