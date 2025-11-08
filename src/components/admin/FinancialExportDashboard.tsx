@@ -16,6 +16,7 @@ import { ExcelExportButton } from "./ExcelExportButton";
 import { ScheduledExportsManagement } from "./ScheduledExportsManagement";
 import { useCSVData } from "@/hooks/useCSVData";
 import { ExportPreviewDialog } from "./ExportPreviewDialog";
+import { CustomizableFinancialDashboard } from "./CustomizableFinancialDashboard";
 
 interface ExportTemplate {
   id: string;
@@ -285,9 +286,10 @@ export const FinancialExportDashboard = () => {
       </div>
 
       <Tabs defaultValue="templates" className="w-full">
-        <TabsList>
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="templates">Templates Prédéfinis</TabsTrigger>
           <TabsTrigger value="custom">Export Personnalisé</TabsTrigger>
+          <TabsTrigger value="dashboard">Tableau de Bord</TabsTrigger>
           <TabsTrigger value="scheduled">Exports Planifiés</TabsTrigger>
         </TabsList>
 
@@ -565,6 +567,24 @@ export const FinancialExportDashboard = () => {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="dashboard" className="space-y-4">
+          {previewData ? (
+            <CustomizableFinancialDashboard data={previewData} />
+          ) : (
+            <Card>
+              <CardContent className="flex flex-col items-center justify-center py-12">
+                <FileText className="h-12 w-12 text-muted-foreground mb-4" />
+                <p className="text-muted-foreground mb-4">
+                  Chargez d'abord des données pour afficher le tableau de bord
+                </p>
+                <Button onClick={handlePreview} disabled={!selectedTemplate}>
+                  Charger les données
+                </Button>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
 
         <TabsContent value="scheduled" className="space-y-4">
