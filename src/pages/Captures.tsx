@@ -7,6 +7,7 @@ import { Plus } from "lucide-react";
 import { DeclarerCaptureDialog } from "@/components/captures/DeclarerCaptureDialog";
 import { ListeCaptures } from "@/components/captures/ListeCaptures";
 import { StatsCaptures } from "@/components/captures/StatsCaptures";
+import { PecheurNav } from "@/components/PecheurNav";
 
 const Captures = () => {
   const { hasRole } = useAuth();
@@ -15,8 +16,12 @@ const Captures = () => {
   const canDeclare = hasRole('pecheur') || hasRole('agent_collecte') || 
                      hasRole('gestionnaire_coop') || hasRole('admin');
 
+  const isPecheur = hasRole('pecheur');
+
   return (
     <div className="min-h-screen bg-background">
+      {isPecheur && <PecheurNav />}
+      
       {/* Header */}
       <div className="border-b bg-card">
         <div className="container mx-auto px-4 py-6">

@@ -12,6 +12,7 @@ import Dashboard from "./pages/Dashboard";
 import Admin from "./pages/Admin";
 import Demo from "./pages/Demo";
 import Captures from "./pages/Captures";
+import MonCompte from "./pages/MonCompte";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -41,6 +42,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <Captures />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/mon-compte"
+              element={
+                <ProtectedRoute allowedRoles={['pecheur']}>
+                  <MonCompte />
                 </ProtectedRoute>
               }
             />
