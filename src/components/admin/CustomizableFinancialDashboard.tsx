@@ -15,7 +15,7 @@ import {
 import { 
   GripVertical, Settings, Save, RotateCcw, Plus, 
   TrendingUp, DollarSign, Calendar, FileText, 
-  BarChart3, PieChartIcon, Eye, EyeOff, Maximize2, Minimize2
+  BarChart3, PieChartIcon, Eye, EyeOff, Maximize2, Minimize2, Copy, X
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -39,6 +39,13 @@ interface ChartConfig {
   visible: boolean;
   order: number;
   size: 'small' | 'medium' | 'large' | 'full';
+  isDuplicate?: boolean;
+  duplicateIndex?: number;
+  filters?: {
+    dateDebut?: string;
+    dateFin?: string;
+    statut?: string;
+  };
 }
 
 interface DashboardLayout {
@@ -105,10 +112,12 @@ interface DraggableChartProps {
   index: number;
   moveChart: (dragIndex: number, hoverIndex: number) => void;
   onSizeChange: (chartId: string, size: ChartConfig['size']) => void;
+  onDuplicate: (chartId: string) => void;
+  onDelete: (chartId: string) => void;
   children: React.ReactNode;
 }
 
-const DraggableChart = ({ chart, index, moveChart, onSizeChange, children }: DraggableChartProps) => {
+const DraggableChart = ({ chart, index, moveChart, onSizeChange, onDuplicate, onDelete, children }: DraggableChartProps) => {
   const [{ isDragging }, drag, preview] = useDrag({
     type: 'CHART',
     item: { index },
@@ -173,6 +182,26 @@ const DraggableChart = ({ chart, index, moveChart, onSizeChange, children }: Dra
               );
             })}
           </div>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-7 w-7 p-0 bg-background/95"
+            onClick={() => onDuplicate(chart.id)}
+            title="Dupliquer ce graphique"
+          >
+            <Copy className="h-3.5 w-3.5" />
+          </Button>
+          {chart.isDuplicate && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-7 w-7 p-0 bg-background/95 text-destructive hover:text-destructive"
+              onClick={() => onDelete(chart.id)}
+              title="Supprimer ce graphique"
+            >
+              <X className="h-3.5 w-3.5" />
+            </Button>
+          )}
           <div
             ref={drag}
             className="cursor-move bg-background/95 border rounded-md p-1.5 shadow-sm"
@@ -181,6 +210,14 @@ const DraggableChart = ({ chart, index, moveChart, onSizeChange, children }: Dra
             <GripVertical className="h-4 w-4 text-muted-foreground" />
           </div>
         </div>
+        {chart.isDuplicate && (
+          <Badge 
+            variant="secondary" 
+            className="absolute top-4 left-4 z-10"
+          >
+            Copie {chart.duplicateIndex}
+          </Badge>
+        )}
         {children}
       </Card>
     </div>
@@ -259,6 +296,48 @@ export const CustomizableFinancialDashboard = ({ data }: CustomizableFinancialDa
       c.id === chartId ? { ...c, size } : c
     ));
     toast.info(`Taille du graphique mise à jour`);
+  };
+
+  const duplicateChart = (chartId: string) => {
+    const chartToDuplicate = charts.find(c => c.id === chartId);
+    if (!chartToDuplicate) return;
+
+    // Trouver le prochain index de duplication pour ce type de graphique
+    const existingDuplicates = charts.filter(
+      c => c.type === chartToDuplicate.type && c.isDuplicate
+    );
+    const nextDuplicateIndex = existingDuplicates.length + 1;
+
+    // Créer un nouvel ID unique
+    const newId = `${chartToDuplicate.type}-duplicate-${Date.now()}`;
+
+    const duplicatedChart: ChartConfig = {
+      ...chartToDuplicate,
+      id: newId,
+      title: `${chartToDuplicate.title} (Copie ${nextDuplicateIndex})`,
+      order: charts.length,
+      isDuplicate: true,
+      duplicateIndex: nextDuplicateIndex,
+      filters: {
+        dateDebut: '',
+        dateFin: '',
+        statut: 'tous'
+      }
+    };
+
+    setCharts([...charts, duplicatedChart]);
+    toast.success(`Graphique dupliqué avec succès`);
+  };
+
+  const deleteChart = (chartId: string) => {
+    const chartToDelete = charts.find(c => c.id === chartId);
+    if (!chartToDelete?.isDuplicate) {
+      toast.error('Seuls les graphiques dupliqués peuvent être supprimés');
+      return;
+    }
+
+    setCharts(charts.filter(c => c.id !== chartId));
+    toast.success('Graphique supprimé');
   };
 
   // Préparer les données pour les graphiques
@@ -373,7 +452,15 @@ export const CustomizableFinancialDashboard = ({ data }: CustomizableFinancialDa
     switch (chart.type) {
       case 'stats':
         return (
-          <DraggableChart key={chart.id} chart={chart} index={index} moveChart={moveChart} onSizeChange={changeChartSize}>
+          <DraggableChart 
+            key={chart.id} 
+            chart={chart} 
+            index={index} 
+            moveChart={moveChart} 
+            onSizeChange={changeChartSize}
+            onDuplicate={duplicateChart}
+            onDelete={deleteChart}
+          >
             <div className="p-6">
               <div className="grid gap-4 md:grid-cols-3">
                 <div className="space-y-2">
@@ -408,7 +495,15 @@ export const CustomizableFinancialDashboard = ({ data }: CustomizableFinancialDa
       case 'monthly':
         if (chartData.monthly.length === 0) return null;
         return (
-          <DraggableChart key={chart.id} chart={chart} index={index} moveChart={moveChart} onSizeChange={changeChartSize}>
+          <DraggableChart 
+            key={chart.id} 
+            chart={chart} 
+            index={index} 
+            moveChart={moveChart} 
+            onSizeChange={changeChartSize}
+            onDuplicate={duplicateChart}
+            onDelete={deleteChart}
+          >
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Icon className="h-4 w-4" />
@@ -445,7 +540,15 @@ export const CustomizableFinancialDashboard = ({ data }: CustomizableFinancialDa
       case 'status':
         if (chartData.byStatus.length === 0) return null;
         return (
-          <DraggableChart key={chart.id} chart={chart} index={index} moveChart={moveChart} onSizeChange={changeChartSize}>
+          <DraggableChart 
+            key={chart.id} 
+            chart={chart} 
+            index={index} 
+            moveChart={moveChart} 
+            onSizeChange={changeChartSize}
+            onDuplicate={duplicateChart}
+            onDelete={deleteChart}
+          >
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Icon className="h-4 w-4" />
@@ -487,7 +590,15 @@ export const CustomizableFinancialDashboard = ({ data }: CustomizableFinancialDa
       case 'table':
         if (chartData.byTable.length === 0) return null;
         return (
-          <DraggableChart key={chart.id} chart={chart} index={index} moveChart={moveChart} onSizeChange={changeChartSize}>
+          <DraggableChart 
+            key={chart.id} 
+            chart={chart} 
+            index={index} 
+            moveChart={moveChart} 
+            onSizeChange={changeChartSize}
+            onDuplicate={duplicateChart}
+            onDelete={deleteChart}
+          >
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Icon className="h-4 w-4" />
@@ -519,7 +630,15 @@ export const CustomizableFinancialDashboard = ({ data }: CustomizableFinancialDa
       case 'trends':
         if (chartData.trends.length === 0) return null;
         return (
-          <DraggableChart key={chart.id} chart={chart} index={index} moveChart={moveChart} onSizeChange={changeChartSize}>
+          <DraggableChart 
+            key={chart.id} 
+            chart={chart} 
+            index={index} 
+            moveChart={moveChart} 
+            onSizeChange={changeChartSize}
+            onDuplicate={duplicateChart}
+            onDelete={deleteChart}
+          >
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Icon className="h-4 w-4" />
@@ -653,6 +772,10 @@ export const CustomizableFinancialDashboard = ({ data }: CustomizableFinancialDa
             <div className="flex items-center gap-2">
               <GripVertical className="h-4 w-4" />
               <span>Déplacer</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Copy className="h-4 w-4" />
+              <span>Dupliquer</span>
             </div>
             <div className="flex items-center gap-2">
               <Minimize2 className="h-4 w-4" />
