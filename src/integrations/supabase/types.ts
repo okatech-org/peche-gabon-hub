@@ -1024,6 +1024,42 @@ export type Database = {
           },
         ]
       }
+      rapports_zones: {
+        Row: {
+          created_at: string
+          created_by: string
+          fichier_path: string
+          id: string
+          metadata: Json | null
+          recommandations_ia: string | null
+          statistiques: Json
+          titre: string
+          zone_geojson: Json
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          fichier_path: string
+          id?: string
+          metadata?: Json | null
+          recommandations_ia?: string | null
+          statistiques: Json
+          titre: string
+          zone_geojson: Json
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          fichier_path?: string
+          id?: string
+          metadata?: Json | null
+          recommandations_ia?: string | null
+          statistiques?: Json
+          titre?: string
+          zone_geojson?: Json
+        }
+        Relationships: []
+      }
       reglementations: {
         Row: {
           created_at: string

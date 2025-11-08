@@ -10,13 +10,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Loader2, AlertTriangle, Pencil, Download, X, BarChart3, FileText } from "lucide-react";
+import { Loader2, AlertTriangle, Pencil, Download, X, BarChart3, FileText, History } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
+import RapportsZonesHistory from "./RapportsZonesHistory";
 
 interface ZoneStats {
   totalCaptures: number;
@@ -41,6 +42,8 @@ const SurveillanceMap = () => {
   const [analyzingZone, setAnalyzingZone] = useState(false);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   const [aiRecommendations, setAiRecommendations] = useState<string>("");
+  const [showHistory, setShowHistory] = useState(false);
+  const [currentPolygon, setCurrentPolygon] = useState<any>(null);
   const [stats, setStats] = useState({
     sites: 0,
     zonesRestreintes: 0,
@@ -568,6 +571,7 @@ const SurveillanceMap = () => {
     if (!e.features || e.features.length === 0) return;
 
     const polygon = e.features[0];
+    setCurrentPolygon(polygon);
     setAnalyzingZone(true);
 
     try {
@@ -758,7 +762,7 @@ const SurveillanceMap = () => {
   };
 
   const generatePDFReport = async () => {
-    if (!zoneStats) return;
+    if (!zoneStats || !currentPolygon) return;
 
     setIsGeneratingPDF(true);
     toast.info("Génération du rapport PDF en cours...");
@@ -873,8 +877,48 @@ const SurveillanceMap = () => {
         pdf.text('MINISTÈRE DE LA PÊCHE - CONFIDENTIEL', pageWidth / 2, pageHeight - 5, { align: 'center' });
       }
 
-      pdf.save(`rapport_zone_${Date.now()}.pdf`);
-      toast.success("Rapport PDF généré avec succès");
+      // Convert PDF to blob for storage
+      const pdfBlob = pdf.output('blob');
+      
+      // Generate unique filename
+      const timestamp = Date.now();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("User not authenticated");
+      
+      const fileName = `${user.id}/${timestamp}_rapport_zone.pdf`;
+
+      // Upload to storage
+      const { error: uploadError } = await supabase.storage
+        .from('rapports-zones')
+        .upload(fileName, pdfBlob, {
+          contentType: 'application/pdf',
+          upsert: false
+        });
+
+      if (uploadError) throw uploadError;
+
+      // Save to database
+      const { error: dbError } = await supabase
+        .from('rapports_zones')
+        .insert([{
+          created_by: user.id,
+          titre: `Rapport Zone - ${new Date().toLocaleDateString('fr-FR')}`,
+          zone_geojson: currentPolygon.geometry as any,
+          statistiques: zoneStats as any,
+          recommandations_ia: recommendations,
+          fichier_path: fileName,
+          metadata: {
+            generated_at: new Date().toISOString(),
+            pdf_pages: pageCount
+          } as any
+        }]);
+
+      if (dbError) throw dbError;
+
+      // Also download immediately
+      pdf.save(`rapport_zone_${timestamp}.pdf`);
+      
+      toast.success("Rapport PDF généré et sauvegardé avec succès");
     } catch (error) {
       console.error('Error generating PDF:', error);
       toast.error("Erreur lors de la génération du rapport PDF");
@@ -895,6 +939,15 @@ const SurveillanceMap = () => {
               </CardDescription>
             </div>
             <div className="flex items-center gap-3 ml-4">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowHistory(true)}
+                className="gap-2"
+              >
+                <History className="h-4 w-4" />
+                Historique
+              </Button>
               <Button
                 variant={drawMode ? "default" : "outline"}
                 size="sm"
@@ -1208,6 +1261,9 @@ const SurveillanceMap = () => {
         )}
       </DialogContent>
     </Dialog>
+
+    {/* Historique des rapports */}
+    <RapportsZonesHistory open={showHistory} onOpenChange={setShowHistory} />
     </>
   );
 };
