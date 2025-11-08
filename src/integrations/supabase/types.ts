@@ -703,6 +703,193 @@ export type Database = {
         }
         Relationships: []
       }
+      formations_evaluations: {
+        Row: {
+          amelioration_pct: number | null
+          created_at: string
+          date_evaluation: string
+          efficacite_apres: number
+          efficacite_avant: number
+          evaluateur_id: string | null
+          formation_id: string
+          id: string
+          indicateurs_impactes: string[]
+          nb_actions_analysees: number
+          notes: string | null
+          periode_apres_debut: string
+          periode_apres_fin: string
+          periode_avant_debut: string
+          periode_avant_fin: string
+          recommandations: string | null
+          updated_at: string
+        }
+        Insert: {
+          amelioration_pct?: number | null
+          created_at?: string
+          date_evaluation: string
+          efficacite_apres: number
+          efficacite_avant: number
+          evaluateur_id?: string | null
+          formation_id: string
+          id?: string
+          indicateurs_impactes?: string[]
+          nb_actions_analysees?: number
+          notes?: string | null
+          periode_apres_debut: string
+          periode_apres_fin: string
+          periode_avant_debut: string
+          periode_avant_fin: string
+          recommandations?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amelioration_pct?: number | null
+          created_at?: string
+          date_evaluation?: string
+          efficacite_apres?: number
+          efficacite_avant?: number
+          evaluateur_id?: string | null
+          formation_id?: string
+          id?: string
+          indicateurs_impactes?: string[]
+          nb_actions_analysees?: number
+          notes?: string | null
+          periode_apres_debut?: string
+          periode_apres_fin?: string
+          periode_avant_debut?: string
+          periode_avant_fin?: string
+          recommandations?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "formations_evaluations_formation_id_fkey"
+            columns: ["formation_id"]
+            isOneToOne: false
+            referencedRelation: "formations_planifiees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      formations_participants: {
+        Row: {
+          commentaires: string | null
+          competences_acquises: string[] | null
+          created_at: string
+          date_completion: string | null
+          date_inscription: string
+          formation_id: string
+          id: string
+          note_satisfaction: number | null
+          statut_participation: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          commentaires?: string | null
+          competences_acquises?: string[] | null
+          created_at?: string
+          date_completion?: string | null
+          date_inscription?: string
+          formation_id: string
+          id?: string
+          note_satisfaction?: number | null
+          statut_participation?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          commentaires?: string | null
+          competences_acquises?: string[] | null
+          created_at?: string
+          date_completion?: string | null
+          date_inscription?: string
+          formation_id?: string
+          id?: string
+          note_satisfaction?: number | null
+          statut_participation?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "formations_participants_formation_id_fkey"
+            columns: ["formation_id"]
+            isOneToOne: false
+            referencedRelation: "formations_planifiees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      formations_planifiees: {
+        Row: {
+          budget_prevu: number | null
+          budget_reel: number | null
+          created_at: string
+          created_by: string | null
+          date_debut: string
+          date_fin: string
+          description: string | null
+          formateur: string | null
+          id: string
+          indicateurs_cibles: string[]
+          lieu: string | null
+          nb_participants_inscrits: number | null
+          nb_participants_max: number | null
+          objectifs: string[]
+          participants_cibles: string[]
+          priorite: string
+          statut: string
+          titre: string
+          type_formation: string
+          updated_at: string
+        }
+        Insert: {
+          budget_prevu?: number | null
+          budget_reel?: number | null
+          created_at?: string
+          created_by?: string | null
+          date_debut: string
+          date_fin: string
+          description?: string | null
+          formateur?: string | null
+          id?: string
+          indicateurs_cibles?: string[]
+          lieu?: string | null
+          nb_participants_inscrits?: number | null
+          nb_participants_max?: number | null
+          objectifs?: string[]
+          participants_cibles?: string[]
+          priorite?: string
+          statut?: string
+          titre: string
+          type_formation: string
+          updated_at?: string
+        }
+        Update: {
+          budget_prevu?: number | null
+          budget_reel?: number | null
+          created_at?: string
+          created_by?: string | null
+          date_debut?: string
+          date_fin?: string
+          description?: string | null
+          formateur?: string | null
+          id?: string
+          indicateurs_cibles?: string[]
+          lieu?: string | null
+          nb_participants_inscrits?: number | null
+          nb_participants_max?: number | null
+          objectifs?: string[]
+          participants_cibles?: string[]
+          priorite?: string
+          statut?: string
+          titre?: string
+          type_formation?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       licences: {
         Row: {
           annee: number
