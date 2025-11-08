@@ -124,7 +124,7 @@ export function PredictionsFormations() {
 
     try {
       setPlanning(true);
-      toast.info("Planification automatique en cours...");
+      toast.info("Soumission des formations pour validation...");
 
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("User not authenticated");
@@ -178,7 +178,7 @@ export function PredictionsFormations() {
           dateFin = addDays(dateDebut, 4);
         }
 
-        // Créer la formation
+        // Soumettre pour validation au lieu de créer directement
         const formationData = {
           titre: `${besoin.type_formation.charAt(0).toUpperCase() + besoin.type_formation.slice(1)} - ${besoin.indicateur}`,
           description: besoin.raison,
@@ -186,26 +186,29 @@ export function PredictionsFormations() {
           date_debut: formatDate(dateDebut, "yyyy-MM-dd"),
           date_fin: formatDate(dateFin, "yyyy-MM-dd"),
           formateur_id: meilleurFormateur.formateur_id,
-          statut: "planifiee",
+          formateur_nom: meilleurFormateur.formateur_nom,
           priorite: besoin.priorite,
+          urgence: besoin.urgence,
+          raison_prediction: besoin.raison,
           objectifs: [
             `Améliorer ${besoin.indicateur}`,
             ...meilleurFormateur.specialites_matching.map((s) => `Formation en ${s}`),
           ],
           participants_cibles: ["pecheur", "agent_collecte", "gestionnaire_coop"],
           indicateurs_cibles: [besoin.indicateur],
-          created_by: user.id,
           nb_participants_max: 20,
+          score_adequation_formateur: meilleurFormateur.score_adequation,
+          score_confiance_prediction: prediction.score_confiance,
+          statut: "en_attente",
+          created_by: user.id,
         };
 
-        const { data: formation, error } = await supabase
-          .from("formations_planifiees")
-          .insert(formationData)
-          .select()
-          .single();
+        const { error } = await supabase
+          .from("formations_validation")
+          .insert(formationData);
 
         if (error) {
-          console.error("Erreur création formation:", error);
+          console.error("Erreur soumission formation:", error);
           continue;
         }
 
@@ -224,10 +227,10 @@ export function PredictionsFormations() {
 
       setFormationsCreees(nouvellesFormations);
       setShowPlanningDialog(true);
-      toast.success(`${nouvellesFormations.length} formation(s) planifiée(s) automatiquement`);
+      toast.success(`${nouvellesFormations.length} formation(s) soumise(s) pour validation`);
     } catch (error) {
       console.error("Erreur planification:", error);
-      toast.error("Erreur lors de la planification automatique");
+      toast.error("Erreur lors de la soumission");
     } finally {
       setPlanning(false);
     }
@@ -464,10 +467,10 @@ export function PredictionsFormations() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <CalendarPlus className="h-5 w-5 text-primary" />
-              Planification Automatique Réussie
+              Formations Soumises pour Validation
             </DialogTitle>
             <DialogDescription>
-              {formationsCreees.length} formation(s) ont été créées et ajoutées au calendrier
+              {formationsCreees.length} formation(s) ont été soumises et attendent l'approbation du ministre
             </DialogDescription>
           </DialogHeader>
 
@@ -506,9 +509,9 @@ export function PredictionsFormations() {
             <Button variant="outline" onClick={() => setShowPlanningDialog(false)}>
               Fermer
             </Button>
-            <Button onClick={() => window.location.reload()}>
-              <Calendar className="h-4 w-4 mr-2" />
-              Voir le calendrier
+            <Button onClick={() => window.location.hash = '#validation'}>
+              <CheckCircle2 className="h-4 w-4 mr-2" />
+              Aller à la validation
             </Button>
           </div>
         </DialogContent>

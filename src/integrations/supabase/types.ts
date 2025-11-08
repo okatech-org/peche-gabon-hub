@@ -1092,6 +1092,98 @@ export type Database = {
           },
         ]
       }
+      formations_validation: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          date_debut: string
+          date_fin: string
+          description: string | null
+          formateur_id: string | null
+          formateur_nom: string
+          id: string
+          indicateurs_cibles: string[]
+          metadata: Json | null
+          nb_participants_max: number | null
+          notes_revision: string | null
+          objectifs: string[]
+          participants_cibles: string[]
+          priorite: string
+          raison_prediction: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          score_adequation_formateur: number
+          score_confiance_prediction: number
+          statut: string
+          titre: string
+          type_formation: string
+          updated_at: string
+          urgence: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          date_debut: string
+          date_fin: string
+          description?: string | null
+          formateur_id?: string | null
+          formateur_nom: string
+          id?: string
+          indicateurs_cibles?: string[]
+          metadata?: Json | null
+          nb_participants_max?: number | null
+          notes_revision?: string | null
+          objectifs?: string[]
+          participants_cibles?: string[]
+          priorite?: string
+          raison_prediction: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          score_adequation_formateur: number
+          score_confiance_prediction: number
+          statut?: string
+          titre: string
+          type_formation: string
+          updated_at?: string
+          urgence?: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          date_debut?: string
+          date_fin?: string
+          description?: string | null
+          formateur_id?: string | null
+          formateur_nom?: string
+          id?: string
+          indicateurs_cibles?: string[]
+          metadata?: Json | null
+          nb_participants_max?: number | null
+          notes_revision?: string | null
+          objectifs?: string[]
+          participants_cibles?: string[]
+          priorite?: string
+          raison_prediction?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          score_adequation_formateur?: number
+          score_confiance_prediction?: number
+          statut?: string
+          titre?: string
+          type_formation?: string
+          updated_at?: string
+          urgence?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "formations_validation_formateur_id_fkey"
+            columns: ["formateur_id"]
+            isOneToOne: false
+            referencedRelation: "formateurs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       licences: {
         Row: {
           annee: number
