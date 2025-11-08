@@ -36,37 +36,37 @@ import { Badge } from "@/components/ui/badge";
 const navigationItems = [
   { 
     title: "Vue d'ensemble", 
-    url: "#overview", 
+    url: "/minister-dashboard", 
     icon: LayoutDashboard,
     description: "KPIs et statistiques globales"
   },
   { 
     title: "Pêche Artisanale", 
-    url: "#artisanal", 
+    url: "/minister-dashboard/artisanal", 
     icon: Anchor,
     description: "Captures, CPUE, licences"
   },
   { 
     title: "Pêche Industrielle", 
-    url: "#industrial", 
+    url: "/minister-dashboard/industrial", 
     icon: Ship,
     description: "Navires, armements, activité"
   },
   { 
     title: "Surveillance", 
-    url: "#surveillance", 
+    url: "/minister-dashboard/surveillance", 
     icon: MapPin,
     description: "Carte, zones, infractions"
   },
   { 
     title: "Économie", 
-    url: "#economic", 
+    url: "/minister-dashboard/economy", 
     icon: DollarSign,
     description: "Exportations, valeur, prix"
   },
   { 
     title: "Remontées Finances", 
-    url: "#remontees", 
+    url: "/minister-dashboard/institutional-flows", 
     icon: Building2,
     description: "Taxes et répartition institutionnelle"
   },
@@ -75,32 +75,32 @@ const navigationItems = [
 const actionsItems = [
   { 
     title: "Alertes", 
-    url: "#alerts", 
+    url: "/minister-dashboard/alerts", 
     icon: Bell,
     badge: true,
     description: "Notifications automatiques"
   },
   { 
     title: "Documents", 
-    url: "#documents", 
+    url: "/minister-dashboard/documents", 
     icon: FileText,
     description: "Génération documents ministériels"
   },
   { 
     title: "Pouvoirs", 
-    url: "#powers", 
+    url: "/minister-dashboard/powers", 
     icon: Gavel,
     description: "Actions ministérielles"
   },
   { 
     title: "Historique", 
-    url: "#history", 
+    url: "/minister-dashboard/history", 
     icon: History,
     description: "Réglementations, notifications"
   },
   { 
     title: "Paramètres", 
-    url: "#settings", 
+    url: "/minister-dashboard/settings", 
     icon: Settings,
     description: "Configuration et préférences"
   },
@@ -110,10 +110,10 @@ export function MinisterSidebar() {
   const { state } = useSidebar();
   const location = useLocation();
   const { user, signOut } = useAuth();
-  const currentHash = location.hash || "#overview";
+  const currentPath = location.pathname;
   const collapsed = state === "collapsed";
 
-  const isActive = (url: string) => currentHash === url;
+  const isActive = (url: string) => currentPath === url;
 
   // Extract user initials for avatar
   const getInitials = () => {
@@ -162,13 +162,11 @@ export function MinisterSidebar() {
               {navigationItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
-                    <a
-                      href={item.url}
-                      className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
-                        isActive(item.url)
-                          ? "bg-primary text-primary-foreground font-medium"
-                          : "hover:bg-muted"
-                      } ${collapsed ? "justify-center" : ""}`}
+                    <NavLink
+                      to={item.url}
+                      end
+                      className="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors hover:bg-muted"
+                      activeClassName="bg-primary text-primary-foreground font-medium"
                       title={collapsed ? item.title : undefined}
                     >
                       <item.icon className={collapsed ? "h-5 w-5" : "h-4 w-4"} />
@@ -180,7 +178,7 @@ export function MinisterSidebar() {
                           </div>
                         </div>
                       )}
-                    </a>
+                    </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
@@ -199,13 +197,11 @@ export function MinisterSidebar() {
               {actionsItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
-                    <a
-                      href={item.url}
-                      className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
-                        isActive(item.url)
-                          ? "bg-primary text-primary-foreground font-medium"
-                          : "hover:bg-muted"
-                      } ${collapsed ? "justify-center" : ""}`}
+                    <NavLink
+                      to={item.url}
+                      end
+                      className="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors hover:bg-muted"
+                      activeClassName="bg-primary text-primary-foreground font-medium"
                       title={collapsed ? item.title : undefined}
                     >
                       <item.icon className={collapsed ? "h-5 w-5" : "h-4 w-4"} />
@@ -227,7 +223,7 @@ export function MinisterSidebar() {
                       {collapsed && item.badge && (
                         <div className="absolute -top-1 -right-1 h-3 w-3 bg-destructive rounded-full" />
                       )}
-                    </a>
+                    </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}

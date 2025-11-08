@@ -13,7 +13,18 @@ import Admin from "./pages/Admin";
 import Demo from "./pages/Demo";
 import Captures from "./pages/Captures";
 import MonCompte from "./pages/MonCompte";
-import MinisterDashboard from "./pages/MinisterDashboard";
+import MinisterLayout from "./pages/minister/MinisterLayout";
+import Overview from "./pages/minister/Overview";
+import ArtisanalFishing from "./pages/minister/ArtisanalFishing";
+import IndustrialFishing from "./pages/minister/IndustrialFishing";
+import Surveillance from "./pages/minister/Surveillance";
+import Economy from "./pages/minister/Economy";
+import InstitutionalFlows from "./pages/minister/InstitutionalFlows";
+import Alerts from "./pages/minister/Alerts";
+import Documents from "./pages/minister/Documents";
+import Powers from "./pages/minister/Powers";
+import History from "./pages/minister/History";
+import Settings from "./pages/minister/Settings";
 import PublicDocumentsRegistry from "./pages/PublicDocumentsRegistry";
 import DGPADashboard from "./pages/DGPADashboard";
 import ANPADashboard from "./pages/ANPADashboard";
@@ -74,10 +85,22 @@ function App() {
               path="/minister-dashboard"
               element={
                 <ProtectedRoute allowedRoles={['ministre']}>
-                  <MinisterDashboard />
+                  <MinisterLayout />
                 </ProtectedRoute>
               }
-            />
+            >
+              <Route index element={<Overview />} />
+              <Route path="artisanal" element={<ArtisanalFishing />} />
+              <Route path="industrial" element={<IndustrialFishing />} />
+              <Route path="surveillance" element={<Surveillance />} />
+              <Route path="economy" element={<Economy />} />
+              <Route path="institutional-flows" element={<InstitutionalFlows />} />
+              <Route path="alerts" element={<Alerts />} />
+              <Route path="documents" element={<Documents />} />
+              <Route path="powers" element={<Powers />} />
+              <Route path="history" element={<History />} />
+              <Route path="settings" element={<Settings />} />
+            </Route>
             <Route
               path="/dgpa-dashboard"
               element={
