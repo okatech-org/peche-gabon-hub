@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, FileText, Download, Calendar, Filter } from "lucide-react";
+import { Search, FileText, Download, Calendar, Filter, Home } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { toast } from "sonner";
@@ -38,6 +39,7 @@ interface Document {
 }
 
 export default function PublicDocumentsRegistry() {
+  const navigate = useNavigate();
   const [documents, setDocuments] = useState<Document[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -132,13 +134,25 @@ ${doc.destinataires && doc.destinataires.length > 0 ? `\nDestinataires:\n${doc.d
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-secondary/10">
       <div className="container mx-auto px-4 py-8">
+        {/* Bouton retour */}
+        <div className="mb-6">
+          <Button
+            variant="outline"
+            onClick={() => navigate("/")}
+            className="gap-2"
+          >
+            <Home className="h-4 w-4" />
+            Retour à l'accueil
+          </Button>
+        </div>
+
         {/* En-tête */}
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold mb-2 text-foreground">
             Registre Public des Documents Ministériels
           </h1>
           <p className="text-muted-foreground text-lg">
-            Transparence Administrative - Ministère de la Pêche et de l'Aquaculture
+            Transparence Administrative - Ministère de la Pêche et de l'Aquaculature
           </p>
         </div>
 
