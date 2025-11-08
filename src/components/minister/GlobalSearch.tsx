@@ -13,10 +13,17 @@ import {
   Gavel,
   History,
   Settings,
-  Building2
+  Building2,
+  Filter,
+  X
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { format } from "date-fns";
+import { fr } from "date-fns/locale";
 
 interface SearchResult {
   id: string;
@@ -26,7 +33,10 @@ interface SearchResult {
   url: string;
   icon: any;
   badge?: string;
+  date?: Date;
 }
+
+type FilterType = "all" | "section" | "document" | "alert";
 
 const sections: SearchResult[] = [
   { 
@@ -126,20 +136,26 @@ export function GlobalSearch() {
   const [results, setResults] = useState<SearchResult[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [documents, setDocuments] = useState<SearchResult[]>([]);
+  const [alerts, setAlerts] = useState<SearchResult[]>([]);
+  const [filterType, setFilterType] = useState<FilterType>("all");
+  const [startDate, setStartDate] = useState<Date | undefined>();
+  const [endDate, setEndDate] = useState<Date | undefined>();
+  const [showFilters, setShowFilters] = useState(false);
   const navigate = useNavigate();
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Load documents on mount
+  // Load documents and alerts on mount
   useEffect(() => {
     loadDocuments();
+    loadAlerts();
   }, []);
 
   const loadDocuments = async () => {
     try {
       const { data, error } = await supabase
         .from("documents_ministeriels")
-        .select("id, titre, numero_reference, type_document")
+        .select("id, titre, numero_reference, type_document, created_at")
         .order("created_at", { ascending: false })
         .limit(20);
 
@@ -152,7 +168,8 @@ export function GlobalSearch() {
         description: doc.numero_reference,
         url: "/minister-dashboard/documents",
         icon: FileText,
-        badge: doc.type_document
+        badge: doc.type_document,
+        date: new Date(doc.created_at)
       }));
 
       setDocuments(docResults);
@@ -161,7 +178,34 @@ export function GlobalSearch() {
     }
   };
 
-  // Search logic
+  const loadAlerts = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("alertes_rapports")
+        .select("id, indicateur, type_variation, severite, created_at, statut")
+        .order("created_at", { ascending: false })
+        .limit(20);
+
+      if (error) throw error;
+
+      const alertResults: SearchResult[] = (data || []).map(alert => ({
+        id: alert.id,
+        type: "alert" as const,
+        title: alert.indicateur,
+        description: `${alert.type_variation} - ${alert.statut}`,
+        url: "/minister-dashboard/alerts",
+        icon: Bell,
+        badge: alert.severite,
+        date: new Date(alert.created_at)
+      }));
+
+      setAlerts(alertResults);
+    } catch (error) {
+      console.error("Error loading alerts:", error);
+    }
+  };
+
+  // Search logic with filters
   useEffect(() => {
     if (!query.trim()) {
       setResults([]);
@@ -170,22 +214,53 @@ export function GlobalSearch() {
     }
 
     const searchTerm = query.toLowerCase();
+    let allResults: SearchResult[] = [];
     
-    // Search in sections
-    const sectionResults = sections.filter(section =>
-      section.title.toLowerCase().includes(searchTerm) ||
-      section.description.toLowerCase().includes(searchTerm)
-    );
+    // Filter by type
+    if (filterType === "all" || filterType === "section") {
+      const sectionResults = sections.filter(section =>
+        section.title.toLowerCase().includes(searchTerm) ||
+        section.description.toLowerCase().includes(searchTerm)
+      );
+      allResults.push(...sectionResults);
+    }
 
-    // Search in documents
-    const documentResults = documents.filter(doc =>
-      doc.title.toLowerCase().includes(searchTerm) ||
-      doc.description.toLowerCase().includes(searchTerm)
-    );
+    if (filterType === "all" || filterType === "document") {
+      const documentResults = documents.filter(doc =>
+        doc.title.toLowerCase().includes(searchTerm) ||
+        doc.description.toLowerCase().includes(searchTerm)
+      );
+      allResults.push(...documentResults);
+    }
 
-    setResults([...sectionResults, ...documentResults].slice(0, 8));
+    if (filterType === "all" || filterType === "alert") {
+      const alertResults = alerts.filter(alert =>
+        alert.title.toLowerCase().includes(searchTerm) ||
+        alert.description.toLowerCase().includes(searchTerm)
+      );
+      allResults.push(...alertResults);
+    }
+
+    // Filter by date range
+    if (startDate || endDate) {
+      allResults = allResults.filter(result => {
+        if (!result.date) return result.type === "section"; // Keep sections as they don't have dates
+        const resultDate = result.date;
+        
+        if (startDate && endDate) {
+          return resultDate >= startDate && resultDate <= endDate;
+        } else if (startDate) {
+          return resultDate >= startDate;
+        } else if (endDate) {
+          return resultDate <= endDate;
+        }
+        return true;
+      });
+    }
+
+    setResults(allResults.slice(0, 8));
     setSelectedIndex(0);
-  }, [query, documents]);
+  }, [query, documents, alerts, filterType, startDate, endDate]);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -251,27 +326,130 @@ export function GlobalSearch() {
         return <Badge variant="secondary" className="text-xs">Section</Badge>;
       case "document":
         return <Badge variant="outline" className="text-xs">Document</Badge>;
+      case "alert":
+        return <Badge variant="destructive" className="text-xs">Alerte</Badge>;
       default:
         return null;
     }
   };
 
+  const clearFilters = () => {
+    setFilterType("all");
+    setStartDate(undefined);
+    setEndDate(undefined);
+  };
+
+  const hasActiveFilters = filterType !== "all" || startDate || endDate;
+
   return (
     <div className="relative w-full max-w-md">
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input
-          ref={inputRef}
-          type="text"
-          placeholder="Rechercher... (⌘K)"
-          value={query}
-          onChange={(e) => {
-            setQuery(e.target.value);
-            setIsOpen(true);
-          }}
-          onFocus={() => setIsOpen(true)}
-          className="pl-9 pr-4 bg-muted/50 border-muted-foreground/20 focus:bg-background"
-        />
+      <div className="relative flex gap-2">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            ref={inputRef}
+            type="text"
+            placeholder="Rechercher... (⌘K)"
+            value={query}
+            onChange={(e) => {
+              setQuery(e.target.value);
+              setIsOpen(true);
+            }}
+            onFocus={() => setIsOpen(true)}
+            className="pl-9 pr-4 bg-muted/50 border-muted-foreground/20 focus:bg-background"
+          />
+        </div>
+        
+        <Popover open={showFilters} onOpenChange={setShowFilters}>
+          <PopoverTrigger asChild>
+            <Button 
+              variant="outline" 
+              size="icon"
+              className={`relative ${hasActiveFilters ? 'border-primary' : ''}`}
+            >
+              <Filter className="h-4 w-4" />
+              {hasActiveFilters && (
+                <span className="absolute -top-1 -right-1 h-2 w-2 bg-primary rounded-full" />
+              )}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-80" align="end">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h4 className="font-medium text-sm">Filtres avancés</h4>
+                {hasActiveFilters && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={clearFilters}
+                    className="h-auto py-1 px-2 text-xs"
+                  >
+                    <X className="h-3 w-3 mr-1" />
+                    Effacer
+                  </Button>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-medium text-muted-foreground">Type</label>
+                <div className="flex flex-wrap gap-2">
+                  {(["all", "section", "document", "alert"] as FilterType[]).map((type) => (
+                    <Button
+                      key={type}
+                      variant={filterType === type ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setFilterType(type)}
+                      className="text-xs"
+                    >
+                      {type === "all" ? "Tous" : type === "section" ? "Sections" : type === "document" ? "Documents" : "Alertes"}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-medium text-muted-foreground">Période</label>
+                <div className="grid gap-2">
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" size="sm" className="justify-start text-left font-normal">
+                        <span className="text-xs">
+                          {startDate ? format(startDate, "d MMM yyyy", { locale: fr }) : "Date de début"}
+                        </span>
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={startDate}
+                        onSelect={setStartDate}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" size="sm" className="justify-start text-left font-normal">
+                        <span className="text-xs">
+                          {endDate ? format(endDate, "d MMM yyyy", { locale: fr }) : "Date de fin"}
+                        </span>
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={endDate}
+                        onSelect={setEndDate}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              </div>
+            </div>
+          </PopoverContent>
+        </Popover>
       </div>
 
       {/* Dropdown Results */}
