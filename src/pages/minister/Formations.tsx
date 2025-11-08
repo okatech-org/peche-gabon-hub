@@ -66,30 +66,30 @@ export default function Formations() {
       <FormationsStats />
 
       {/* Barre de recherche globale */}
-      <Card className="p-4 bg-muted/50">
+      <Card className="p-4 border-2">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
           <Input
             type="text"
             placeholder="Rechercher dans les formations (formateurs, budget, planning, prédictions...)"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 pr-10 h-12 text-base"
+            className="pl-11 pr-10 h-12 text-base border-0 bg-transparent focus-visible:ring-0"
           />
           {searchQuery && (
             <Button
               variant="ghost"
               size="sm"
               onClick={handleClearSearch}
-              className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 p-0"
+              className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 p-0 hover:bg-muted"
             >
               <X className="h-4 w-4" />
             </Button>
           )}
         </div>
         {searchQuery && filteredTabs.length > 0 && (
-          <div className="mt-3 flex flex-wrap gap-2">
-            <span className="text-xs text-muted-foreground">Résultats dans:</span>
+          <div className="mt-4 pt-4 border-t flex flex-wrap gap-2">
+            <span className="text-sm font-medium text-muted-foreground">Résultats dans:</span>
             {filteredTabs.map(([tab]) => (
               <Button
                 key={tab}
@@ -97,8 +97,9 @@ export default function Formations() {
                 size="sm"
                 onClick={() => {
                   setActiveTab(tab);
+                  setSearchQuery("");
                 }}
-                className="h-7 text-xs animate-scale-in"
+                className="h-8 text-xs animate-scale-in hover-scale"
               >
                 {tab === "predictions" && "Prédictions IA"}
                 {tab === "validation" && "Validation"}
@@ -113,45 +114,51 @@ export default function Formations() {
           </div>
         )}
         {searchQuery && filteredTabs.length === 0 && (
-          <p className="mt-3 text-sm text-muted-foreground">Aucun résultat trouvé pour "{searchQuery}"</p>
+          <p className="mt-4 pt-4 border-t text-sm text-muted-foreground">
+            Aucun résultat trouvé pour "<span className="font-medium">{searchQuery}</span>"
+          </p>
         )}
       </Card>
       
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4 gap-2">
-          <TabsTrigger value="predictions" className="gap-2">
-            <Brain className="h-4 w-4" />
-            <span className="hidden sm:inline">Prédictions IA</span>
-          </TabsTrigger>
-          <TabsTrigger value="validation" className="gap-2">
-            <CheckSquare className="h-4 w-4" />
-            <span className="hidden sm:inline">Validation</span>
-          </TabsTrigger>
-          <TabsTrigger value="planning" className="gap-2">
-            <Calendar className="h-4 w-4" />
-            <span className="hidden sm:inline">Planification</span>
-          </TabsTrigger>
-          <TabsTrigger value="suivi" className="gap-2">
-            <TrendingUp className="h-4 w-4" />
-            <span className="hidden sm:inline">Suivi</span>
-          </TabsTrigger>
-          <TabsTrigger value="formateurs" className="gap-2">
-            <Users className="h-4 w-4" />
-            <span className="hidden sm:inline">Formateurs</span>
-          </TabsTrigger>
-          <TabsTrigger value="budget" className="gap-2">
-            <DollarSign className="h-4 w-4" />
-            <span className="hidden sm:inline">Budget</span>
-          </TabsTrigger>
-          <TabsTrigger value="analytics" className="gap-2">
-            <BarChart3 className="h-4 w-4" />
-            <span className="hidden sm:inline">Analytiques</span>
-          </TabsTrigger>
-          <TabsTrigger value="recommandations" className="gap-2">
-            <GraduationCap className="h-4 w-4" />
-            <span className="hidden sm:inline">Recommandations</span>
-          </TabsTrigger>
-        </TabsList>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <div className="relative">
+          <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent">
+            <TabsList className="inline-flex w-auto min-w-full h-auto p-1 gap-1 bg-muted/50">
+              <TabsTrigger value="predictions" className="gap-2 whitespace-nowrap px-4 py-2.5">
+                <Brain className="h-4 w-4 shrink-0" />
+                <span>Prédictions IA</span>
+              </TabsTrigger>
+              <TabsTrigger value="validation" className="gap-2 whitespace-nowrap px-4 py-2.5">
+                <CheckSquare className="h-4 w-4 shrink-0" />
+                <span>Validation</span>
+              </TabsTrigger>
+              <TabsTrigger value="planning" className="gap-2 whitespace-nowrap px-4 py-2.5">
+                <Calendar className="h-4 w-4 shrink-0" />
+                <span>Planification</span>
+              </TabsTrigger>
+              <TabsTrigger value="suivi" className="gap-2 whitespace-nowrap px-4 py-2.5">
+                <TrendingUp className="h-4 w-4 shrink-0" />
+                <span>Suivi</span>
+              </TabsTrigger>
+              <TabsTrigger value="formateurs" className="gap-2 whitespace-nowrap px-4 py-2.5">
+                <Users className="h-4 w-4 shrink-0" />
+                <span>Formateurs</span>
+              </TabsTrigger>
+              <TabsTrigger value="budget" className="gap-2 whitespace-nowrap px-4 py-2.5">
+                <DollarSign className="h-4 w-4 shrink-0" />
+                <span>Budget</span>
+              </TabsTrigger>
+              <TabsTrigger value="analytics" className="gap-2 whitespace-nowrap px-4 py-2.5">
+                <BarChart3 className="h-4 w-4 shrink-0" />
+                <span>Analytiques</span>
+              </TabsTrigger>
+              <TabsTrigger value="recommandations" className="gap-2 whitespace-nowrap px-4 py-2.5">
+                <GraduationCap className="h-4 w-4 shrink-0" />
+                <span>Recommandations</span>
+              </TabsTrigger>
+            </TabsList>
+          </div>
+        </div>
 
         <TabsContent value="predictions" className="space-y-4">
           <PredictionsFormations />
