@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { SeuilsAlertesManagement } from "@/components/minister/SeuilsAlertesManagement";
 import { 
   User, 
   Bell, 
@@ -54,14 +55,6 @@ export function MinisterSettings() {
     }
   });
 
-  // Seuils d'alerte
-  const [alertThresholds, setAlertThresholds] = useState({
-    cpueMin: 15,
-    captureDropPercent: 20,
-    infractionMax: 50,
-    exportDropPercent: 15
-  });
-
   // Préférences d'affichage
   const [displayPrefs, setDisplayPrefs] = useState({
     theme: "system",
@@ -97,18 +90,6 @@ export function MinisterSettings() {
       toast.success("Préférences de notification enregistrées");
     } catch (error) {
       toast.error("Erreur lors de l'enregistrement");
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleSaveThresholds = async () => {
-    setSaving(true);
-    try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      toast.success("Seuils d'alerte mis à jour");
-    } catch (error) {
-      toast.error("Erreur lors de la mise à jour");
     } finally {
       setSaving(false);
     }
@@ -410,66 +391,7 @@ export function MinisterSettings() {
 
         {/* Seuils d'Alerte */}
         <TabsContent value="thresholds" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Seuils d'Alerte Personnalisés</CardTitle>
-              <CardDescription>Définissez vos propres seuils de déclenchement</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label htmlFor="cpueMin">CPUE Minimum (kg/sortie)</Label>
-                  <Input
-                    id="cpueMin"
-                    type="number"
-                    value={alertThresholds.cpueMin}
-                    onChange={(e) => setAlertThresholds({...alertThresholds, cpueMin: parseFloat(e.target.value)})}
-                  />
-                  <p className="text-xs text-muted-foreground">Alerte si CPUE descend sous ce seuil</p>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="captureDropPercent">Chute de Capture (%)</Label>
-                  <Input
-                    id="captureDropPercent"
-                    type="number"
-                    value={alertThresholds.captureDropPercent}
-                    onChange={(e) => setAlertThresholds({...alertThresholds, captureDropPercent: parseFloat(e.target.value)})}
-                  />
-                  <p className="text-xs text-muted-foreground">Alerte si baisse supérieure à ce pourcentage</p>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="infractionMax">Infractions Maximum (par mois)</Label>
-                  <Input
-                    id="infractionMax"
-                    type="number"
-                    value={alertThresholds.infractionMax}
-                    onChange={(e) => setAlertThresholds({...alertThresholds, infractionMax: parseInt(e.target.value)})}
-                  />
-                  <p className="text-xs text-muted-foreground">Alerte si dépassement de ce nombre</p>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="exportDropPercent">Chute d'Exportations (%)</Label>
-                  <Input
-                    id="exportDropPercent"
-                    type="number"
-                    value={alertThresholds.exportDropPercent}
-                    onChange={(e) => setAlertThresholds({...alertThresholds, exportDropPercent: parseFloat(e.target.value)})}
-                  />
-                  <p className="text-xs text-muted-foreground">Alerte si baisse supérieure à ce pourcentage</p>
-                </div>
-              </div>
-
-              <div className="flex justify-end">
-                <Button onClick={handleSaveThresholds} disabled={saving}>
-                  <Save className="h-4 w-4 mr-2" />
-                  {saving ? "Enregistrement..." : "Enregistrer"}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+          <SeuilsAlertesManagement />
         </TabsContent>
 
         {/* Affichage */}
