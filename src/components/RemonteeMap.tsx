@@ -73,6 +73,22 @@ export function RemonteeMap({ remontees, onRemonteeClick, height = "500px" }: Re
     );
   };
 
+  const selectAllStatuses = () => {
+    setActiveStatuses(statusConfig.map(s => s.value));
+  };
+
+  const selectNoStatuses = () => {
+    setActiveStatuses([]);
+  };
+
+  const selectAllTypes = () => {
+    setActiveTypes(typeConfig.map(t => t.value));
+  };
+
+  const selectNoTypes = () => {
+    setActiveTypes([]);
+  };
+
   useEffect(() => {
     if (!mapContainer.current) return;
 
@@ -353,14 +369,29 @@ export function RemonteeMap({ remontees, onRemonteeClick, height = "500px" }: Re
           <CardContent className="space-y-4 text-xs">
             {/* Status Filters */}
             <div className="space-y-2">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2 font-semibold text-foreground">
                   <Circle className="h-3.5 w-3.5" />
                   <span>Statut des remontées</span>
                 </div>
-                <span className="text-[10px] text-muted-foreground">
-                  {activeStatuses.length}/{statusConfig.length}
-                </span>
+                <div className="flex items-center gap-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-5 px-2 text-[10px] hover:bg-primary/10"
+                    onClick={selectAllStatuses}
+                  >
+                    Tout
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-5 px-2 text-[10px] hover:bg-destructive/10"
+                    onClick={selectNoStatuses}
+                  >
+                    Aucun
+                  </Button>
+                </div>
               </div>
               <div className="space-y-2 pl-5">
                 {statusConfig.map(status => (
@@ -393,14 +424,29 @@ export function RemonteeMap({ remontees, onRemonteeClick, height = "500px" }: Re
 
             {/* Type Filters */}
             <div className="space-y-2 pt-2 border-t">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2 font-semibold text-foreground">
                   <Filter className="h-3.5 w-3.5" />
                   <span>Type de remontée</span>
                 </div>
-                <span className="text-[10px] text-muted-foreground">
-                  {activeTypes.length}/{typeConfig.length}
-                </span>
+                <div className="flex items-center gap-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-5 px-2 text-[10px] hover:bg-primary/10"
+                    onClick={selectAllTypes}
+                  >
+                    Tout
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-5 px-2 text-[10px] hover:bg-destructive/10"
+                    onClick={selectNoTypes}
+                  >
+                    Aucun
+                  </Button>
+                </div>
               </div>
               <div className="space-y-2 pl-5">
                 {typeConfig.map(type => (
