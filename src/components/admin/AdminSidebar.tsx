@@ -27,6 +27,7 @@ import {
   History,
   Lightbulb,
   Wind,
+  PieChart,
 } from "lucide-react";
 
 const menuItems = [
@@ -64,6 +65,7 @@ const menuItems = [
   {
     group: "Finances",
     items: [
+      { title: "Vue d'Ensemble", url: "/admin/financial-overview", icon: PieChart },
       { title: "Quittances", url: "/admin/quittances", icon: FileText },
       { title: "Tableau de Bord", url: "/admin/finances-dashboard", icon: LayoutDashboard },
       { title: "Prévisions", url: "/admin/previsions", icon: TrendingUp },

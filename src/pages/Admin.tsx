@@ -23,6 +23,7 @@ import { PrevisionsDashboard } from "@/components/admin/PrevisionsDashboard";
 import { PrevisionsHistoryDashboard } from "@/components/admin/PrevisionsHistoryDashboard";
 import { ScenarioSimulationDashboard } from "@/components/admin/ScenarioSimulationDashboard";
 import { FacteursExternesDashboard } from "@/components/admin/FacteursExternesDashboard";
+import { FinancialOverviewDashboard } from "@/components/admin/FinancialOverviewDashboard";
 
 const Admin = () => {
   const { user, roles, signOut } = useAuth();
@@ -84,6 +85,7 @@ const Admin = () => {
               <Route path="/navires" element={<NaviresManagement />} />
               <Route path="/licences" element={<LicencesManagement />} />
               <Route path="/quittances" element={<QuittancesManagement />} />
+              <Route path="/financial-overview" element={<FinancialOverviewDashboard />} />
               <Route path="/finances-dashboard" element={<FinancesDashboard />} />
               <Route path="/previsions" element={<PrevisionsDashboard />} />
               <Route path="/previsions-history" element={<PrevisionsHistoryDashboard />} />
