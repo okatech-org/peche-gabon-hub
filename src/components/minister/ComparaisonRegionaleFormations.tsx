@@ -1,11 +1,17 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from "recharts";
-import { Loader2, TrendingUp, TrendingDown, DollarSign, Target, Award } from "lucide-react";
+import { Loader2, TrendingUp, TrendingDown, DollarSign, Target, Award, Download } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { GABON_PROVINCES } from "@/lib/constants";
+import { toast } from "sonner";
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
+import { format } from "date-fns";
+import { fr } from "date-fns/locale";
 
 interface ProvinceStats {
   province: string;
@@ -22,6 +28,8 @@ interface ProvinceStats {
 export function ComparaisonRegionaleFormations() {
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<ProvinceStats[]>([]);
+  const [exporting, setExporting] = useState(false);
+  const chartsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     loadStats();
@@ -140,6 +148,215 @@ export function ComparaisonRegionaleFormations() {
     }).format(value) + " FCFA";
   };
 
+  const generateRecommendations = () => {
+    const recommendations: string[] = [];
+
+    if (stats.length === 0) return recommendations;
+
+    // Analyse ROI
+    const moyenneROI = stats.reduce((sum, s) => sum + s.roi_moyen, 0) / stats.length;
+    const provincesROIFaible = stats.filter((s) => s.roi_moyen < moyenneROI * 0.7);
+    if (provincesROIFaible.length > 0) {
+      recommendations.push(
+        `ROI insuffisant : ${provincesROIFaible.map((p) => p.province).join(", ")} présentent un ROI inférieur à 70% de la moyenne nationale. Recommandation : Analyser les méthodes de formation et adapter le contenu.`
+      );
+    }
+
+    // Analyse efficacité
+    const moyenneEfficacite = stats.reduce((sum, s) => sum + s.efficacite_moyenne, 0) / stats.length;
+    const provincesEfficaciteFaible = stats.filter((s) => s.efficacite_moyenne < moyenneEfficacite * 0.8);
+    if (provincesEfficaciteFaible.length > 0) {
+      recommendations.push(
+        `Efficacité limitée : ${provincesEfficaciteFaible.map((p) => p.province).join(", ")} ont une efficacité inférieure à 80% de la moyenne. Recommandation : Renforcer l'accompagnement post-formation et le suivi des participants.`
+      );
+    }
+
+    // Analyse budget
+    const provincesDepassement = stats.filter((s) => s.variance > s.budget_prevu * 0.15);
+    if (provincesDepassement.length > 0) {
+      recommendations.push(
+        `Dépassements budgétaires : ${provincesDepassement.map((p) => p.province).join(", ")} ont dépassé leur budget de plus de 15%. Recommandation : Améliorer la planification et le contrôle budgétaire.`
+      );
+    }
+
+    // Analyse coût par participant
+    const moyenneCout = stats.reduce((sum, s) => sum + s.cout_par_participant, 0) / stats.length;
+    const provincesCoutEleve = stats.filter((s) => s.cout_par_participant > moyenneCout * 1.3);
+    if (provincesCoutEleve.length > 0) {
+      recommendations.push(
+        `Coûts élevés : ${provincesCoutEleve.map((p) => p.province).join(", ")} ont un coût par participant 30% supérieur à la moyenne. Recommandation : Optimiser la logistique et mutualiser les ressources.`
+      );
+    }
+
+    // Recommandations générales
+    const meilleureProvince = stats[0];
+    if (meilleureProvince) {
+      recommendations.push(
+        `Bonne pratique : ${meilleureProvince.province} affiche les meilleurs résultats (ROI: ${formatCurrency(meilleureProvince.roi_moyen)}). Recommandation : Organiser un partage d'expérience inter-régional pour diffuser les pratiques efficaces.`
+      );
+    }
+
+    return recommendations;
+  };
+
+  const exportToPDF = async () => {
+    try {
+      setExporting(true);
+      toast.info("Génération du PDF en cours...");
+
+      const pdf = new jsPDF("p", "mm", "a4");
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      let yPosition = 20;
+
+      // En-tête
+      pdf.setFontSize(18);
+      pdf.setFont("helvetica", "bold");
+      pdf.text("Rapport de Comparaison Inter-Régionale", pageWidth / 2, yPosition, {
+        align: "center",
+      });
+      yPosition += 10;
+
+      pdf.setFontSize(10);
+      pdf.setFont("helvetica", "normal");
+      pdf.text(
+        `Généré le ${format(new Date(), "dd MMMM yyyy à HH:mm", { locale: fr })}`,
+        pageWidth / 2,
+        yPosition,
+        { align: "center" }
+      );
+      yPosition += 15;
+
+      // Indicateurs clés
+      pdf.setFontSize(14);
+      pdf.setFont("helvetica", "bold");
+      pdf.text("Indicateurs Clés", 15, yPosition);
+      yPosition += 8;
+
+      pdf.setFontSize(10);
+      pdf.setFont("helvetica", "normal");
+
+      if (meilleurROI) {
+        pdf.text(`• Meilleur ROI : ${meilleurROI.province} - ${formatCurrency(meilleurROI.roi_moyen)}`, 20, yPosition);
+        yPosition += 6;
+      }
+      if (plusEfficace) {
+        pdf.text(`• Plus Efficace : ${plusEfficace.province} - ${plusEfficace.efficacite_moyenne.toFixed(1)}% d'amélioration`, 20, yPosition);
+        yPosition += 6;
+      }
+      if (plusEconomique) {
+        pdf.text(`• Plus Économique : ${plusEconomique.province} - ${formatCurrency(plusEconomique.cout_par_participant)}/participant`, 20, yPosition);
+        yPosition += 10;
+      }
+
+      // Capture des graphiques
+      if (chartsRef.current) {
+        const canvas = await html2canvas(chartsRef.current, {
+          scale: 2,
+          logging: false,
+          useCORS: true,
+        });
+        const imgData = canvas.toDataURL("image/png");
+        const imgWidth = pageWidth - 30;
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+        // Vérifier si on a besoin d'une nouvelle page
+        if (yPosition + imgHeight > pageHeight - 20) {
+          pdf.addPage();
+          yPosition = 20;
+        }
+
+        pdf.addImage(imgData, "PNG", 15, yPosition, imgWidth, imgHeight);
+        yPosition += imgHeight + 10;
+      }
+
+      // Tableau détaillé
+      if (yPosition + 60 > pageHeight - 20) {
+        pdf.addPage();
+        yPosition = 20;
+      }
+
+      pdf.setFontSize(14);
+      pdf.setFont("helvetica", "bold");
+      pdf.text("Tableau Détaillé par Province", 15, yPosition);
+      yPosition += 8;
+
+      pdf.setFontSize(8);
+      pdf.setFont("helvetica", "bold");
+      const headers = ["Province", "Form.", "Part.", "Budget Prévu", "Budget Réel", "ROI", "Efficacité"];
+      const colWidths = [35, 15, 15, 30, 30, 30, 25];
+      let xPos = 15;
+
+      headers.forEach((header, i) => {
+        pdf.text(header, xPos, yPosition);
+        xPos += colWidths[i];
+      });
+      yPosition += 5;
+
+      pdf.setFont("helvetica", "normal");
+      stats.slice(0, 15).forEach((stat) => {
+        if (yPosition > pageHeight - 20) {
+          pdf.addPage();
+          yPosition = 20;
+        }
+
+        xPos = 15;
+        const row = [
+          stat.province.substring(0, 15),
+          stat.nb_formations.toString(),
+          stat.nb_participants.toString(),
+          formatCurrency(stat.budget_prevu).substring(0, 12),
+          formatCurrency(stat.budget_reel).substring(0, 12),
+          formatCurrency(stat.roi_moyen).substring(0, 12),
+          `${stat.efficacite_moyenne.toFixed(1)}%`,
+        ];
+
+        row.forEach((cell, i) => {
+          pdf.text(cell, xPos, yPosition);
+          xPos += colWidths[i];
+        });
+        yPosition += 5;
+      });
+
+      // Recommandations
+      const recommendations = generateRecommendations();
+      if (recommendations.length > 0) {
+        pdf.addPage();
+        yPosition = 20;
+
+        pdf.setFontSize(14);
+        pdf.setFont("helvetica", "bold");
+        pdf.text("Recommandations Stratégiques", 15, yPosition);
+        yPosition += 10;
+
+        pdf.setFontSize(9);
+        pdf.setFont("helvetica", "normal");
+
+        recommendations.forEach((rec, index) => {
+          const lines = pdf.splitTextToSize(`${index + 1}. ${rec}`, pageWidth - 30);
+          lines.forEach((line: string) => {
+            if (yPosition > pageHeight - 20) {
+              pdf.addPage();
+              yPosition = 20;
+            }
+            pdf.text(line, 15, yPosition);
+            yPosition += 5;
+          });
+          yPosition += 3;
+        });
+      }
+
+      // Sauvegarde
+      pdf.save(`comparaison-regionale-formations-${format(new Date(), "yyyy-MM-dd")}.pdf`);
+      toast.success("PDF exporté avec succès");
+    } catch (error) {
+      console.error("Erreur export PDF:", error);
+      toast.error("Erreur lors de l'export PDF");
+    } finally {
+      setExporting(false);
+    }
+  };
+
   const chartData = stats.map((s) => ({
     province: s.province,
     "Budget Prévu": s.budget_prevu,
@@ -177,6 +394,23 @@ export function ComparaisonRegionaleFormations() {
 
   return (
     <div className="space-y-6">
+      {/* Bouton Export */}
+      <div className="flex justify-end">
+        <Button onClick={exportToPDF} disabled={exporting || stats.length === 0}>
+          {exporting ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Génération...
+            </>
+          ) : (
+            <>
+              <Download className="mr-2 h-4 w-4" />
+              Exporter en PDF
+            </>
+          )}
+        </Button>
+      </div>
+
       {/* Indicateurs Clés */}
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
@@ -260,6 +494,7 @@ export function ComparaisonRegionaleFormations() {
           <CardTitle>Comparaison Inter-Régionale</CardTitle>
         </CardHeader>
         <CardContent>
+          <div ref={chartsRef}>
           <Tabs defaultValue="budget" className="space-y-4">
             <TabsList>
               <TabsTrigger value="budget">Budgets</TabsTrigger>
@@ -364,6 +599,7 @@ export function ComparaisonRegionaleFormations() {
               </ResponsiveContainer>
             </TabsContent>
           </Tabs>
+          </div>
         </CardContent>
       </Card>
 
