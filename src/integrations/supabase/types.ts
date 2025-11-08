@@ -340,6 +340,65 @@ export type Database = {
         }
         Relationships: []
       }
+      bareme_taxes: {
+        Row: {
+          actif: boolean
+          created_at: string
+          date_debut: string
+          date_fin: string | null
+          description: string | null
+          espece_id: string | null
+          id: string
+          montant_fixe_kg: number | null
+          nom: string
+          seuil_max_kg: number | null
+          seuil_min_kg: number | null
+          taux_pourcentage: number | null
+          type_taxe: string
+          updated_at: string
+        }
+        Insert: {
+          actif?: boolean
+          created_at?: string
+          date_debut: string
+          date_fin?: string | null
+          description?: string | null
+          espece_id?: string | null
+          id?: string
+          montant_fixe_kg?: number | null
+          nom: string
+          seuil_max_kg?: number | null
+          seuil_min_kg?: number | null
+          taux_pourcentage?: number | null
+          type_taxe: string
+          updated_at?: string
+        }
+        Update: {
+          actif?: boolean
+          created_at?: string
+          date_debut?: string
+          date_fin?: string | null
+          description?: string | null
+          espece_id?: string | null
+          id?: string
+          montant_fixe_kg?: number | null
+          nom?: string
+          seuil_max_kg?: number | null
+          seuil_min_kg?: number | null
+          taux_pourcentage?: number | null
+          type_taxe?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bareme_taxes_espece_id_fkey"
+            columns: ["espece_id"]
+            isOneToOne: false
+            referencedRelation: "especes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       calendrier_presence: {
         Row: {
           created_at: string
@@ -1432,6 +1491,53 @@ export type Database = {
         }
         Relationships: []
       }
+      objectifs_peche: {
+        Row: {
+          annee: number
+          created_at: string
+          date_attribution_pirogue: string
+          id: string
+          notes: string | null
+          objectif_kg_annuel: number
+          objectif_kg_mensuel: number
+          pirogue_id: string
+          statut: string
+          updated_at: string
+        }
+        Insert: {
+          annee: number
+          created_at?: string
+          date_attribution_pirogue: string
+          id?: string
+          notes?: string | null
+          objectif_kg_annuel: number
+          objectif_kg_mensuel: number
+          pirogue_id: string
+          statut?: string
+          updated_at?: string
+        }
+        Update: {
+          annee?: number
+          created_at?: string
+          date_attribution_pirogue?: string
+          id?: string
+          notes?: string | null
+          objectif_kg_annuel?: number
+          objectif_kg_mensuel?: number
+          pirogue_id?: string
+          statut?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "objectifs_peche_pirogue_id_fkey"
+            columns: ["pirogue_id"]
+            isOneToOne: false
+            referencedRelation: "pirogues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pirogues: {
         Row: {
           annee_construction: number | null
@@ -1974,6 +2080,102 @@ export type Database = {
         }
         Relationships: []
       }
+      remontees_effectives: {
+        Row: {
+          created_at: string
+          date_virement: string | null
+          id: string
+          institution_id: string
+          montant_remonte: number
+          periode_annee: number
+          periode_mois: number
+          pourcentage_applique: number
+          reference_virement: string | null
+          statut_virement: string
+          taxe_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          date_virement?: string | null
+          id?: string
+          institution_id: string
+          montant_remonte: number
+          periode_annee: number
+          periode_mois: number
+          pourcentage_applique: number
+          reference_virement?: string | null
+          statut_virement?: string
+          taxe_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          date_virement?: string | null
+          id?: string
+          institution_id?: string
+          montant_remonte?: number
+          periode_annee?: number
+          periode_mois?: number
+          pourcentage_applique?: number
+          reference_virement?: string | null
+          statut_virement?: string
+          taxe_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "remontees_effectives_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "repartition_institutionnelle"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "remontees_effectives_taxe_id_fkey"
+            columns: ["taxe_id"]
+            isOneToOne: false
+            referencedRelation: "taxes_calculees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      repartition_institutionnelle: {
+        Row: {
+          actif: boolean
+          compte_bancaire: string | null
+          created_at: string
+          id: string
+          nom_institution: string
+          pourcentage_taxes: number
+          responsable: string | null
+          type_institution: string
+          updated_at: string
+        }
+        Insert: {
+          actif?: boolean
+          compte_bancaire?: string | null
+          created_at?: string
+          id?: string
+          nom_institution: string
+          pourcentage_taxes: number
+          responsable?: string | null
+          type_institution: string
+          updated_at?: string
+        }
+        Update: {
+          actif?: boolean
+          compte_bancaire?: string | null
+          created_at?: string
+          id?: string
+          nom_institution?: string
+          pourcentage_taxes?: number
+          responsable?: string | null
+          type_institution?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       seuils_alertes_rapports: {
         Row: {
           actif: boolean
@@ -2214,6 +2416,107 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      suivi_objectifs: {
+        Row: {
+          annee: number
+          created_at: string
+          id: string
+          mois: number
+          nb_sorties: number
+          objectif_id: string
+          poids_objectif_kg: number
+          poids_realise_kg: number
+          taux_realisation_pct: number | null
+          updated_at: string
+        }
+        Insert: {
+          annee: number
+          created_at?: string
+          id?: string
+          mois: number
+          nb_sorties?: number
+          objectif_id: string
+          poids_objectif_kg: number
+          poids_realise_kg?: number
+          taux_realisation_pct?: number | null
+          updated_at?: string
+        }
+        Update: {
+          annee?: number
+          created_at?: string
+          id?: string
+          mois?: number
+          nb_sorties?: number
+          objectif_id?: string
+          poids_objectif_kg?: number
+          poids_realise_kg?: number
+          taux_realisation_pct?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "suivi_objectifs_objectif_id_fkey"
+            columns: ["objectif_id"]
+            isOneToOne: false
+            referencedRelation: "objectifs_peche"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      taxes_calculees: {
+        Row: {
+          bareme_id: string
+          capture_id: string
+          created_at: string
+          date_paiement: string | null
+          id: string
+          montant_taxe: number
+          poids_taxable_kg: number
+          reference_paiement: string | null
+          statut_paiement: string
+          updated_at: string
+        }
+        Insert: {
+          bareme_id: string
+          capture_id: string
+          created_at?: string
+          date_paiement?: string | null
+          id?: string
+          montant_taxe: number
+          poids_taxable_kg: number
+          reference_paiement?: string | null
+          statut_paiement?: string
+          updated_at?: string
+        }
+        Update: {
+          bareme_id?: string
+          capture_id?: string
+          created_at?: string
+          date_paiement?: string | null
+          id?: string
+          montant_taxe?: number
+          poids_taxable_kg?: number
+          reference_paiement?: string | null
+          statut_paiement?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "taxes_calculees_bareme_id_fkey"
+            columns: ["bareme_id"]
+            isOneToOne: false
+            referencedRelation: "bareme_taxes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "taxes_calculees_capture_id_fkey"
+            columns: ["capture_id"]
+            isOneToOne: false
+            referencedRelation: "captures_pa"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {

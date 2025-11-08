@@ -28,6 +28,9 @@ import {
   Lightbulb,
   Wind,
   PieChart,
+  Target,
+  DollarSign,
+  BarChart3,
 } from "lucide-react";
 
 const menuItems = [
@@ -68,10 +71,18 @@ const menuItems = [
       { title: "Vue d'Ensemble", url: "/admin/financial-overview", icon: PieChart },
       { title: "Quittances", url: "/admin/quittances", icon: FileText },
       { title: "Tableau de Bord", url: "/admin/finances-dashboard", icon: LayoutDashboard },
+      { title: "Taxes & Remontées", url: "/admin/taxes-remontees", icon: DollarSign },
       { title: "Prévisions", url: "/admin/previsions", icon: TrendingUp },
       { title: "Historique Prévisions", url: "/admin/previsions-history", icon: History },
       { title: "Simulation Scénarios", url: "/admin/scenarios", icon: Lightbulb },
       { title: "Facteurs Externes", url: "/admin/facteurs-externes", icon: Wind },
+    ],
+  },
+  {
+    group: "Objectifs de Pêche",
+    items: [
+      { title: "Gestion Objectifs", url: "/admin/objectifs-peche", icon: Target },
+      { title: "Suivi Performance", url: "/admin/suivi-objectifs", icon: BarChart3 },
     ],
   },
   {
