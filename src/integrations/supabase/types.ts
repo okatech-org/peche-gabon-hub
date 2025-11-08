@@ -2539,6 +2539,213 @@ export type Database = {
         }
         Relationships: []
       }
+      workflow_commentaires: {
+        Row: {
+          auteur_institution: string
+          auteur_user_id: string | null
+          commentaire: string
+          created_at: string
+          est_interne: boolean | null
+          id: string
+          updated_at: string
+          workflow_id: string
+        }
+        Insert: {
+          auteur_institution: string
+          auteur_user_id?: string | null
+          commentaire: string
+          created_at?: string
+          est_interne?: boolean | null
+          id?: string
+          updated_at?: string
+          workflow_id: string
+        }
+        Update: {
+          auteur_institution?: string
+          auteur_user_id?: string | null
+          commentaire?: string
+          created_at?: string
+          est_interne?: boolean | null
+          id?: string
+          updated_at?: string
+          workflow_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workflow_commentaires_workflow_id_fkey"
+            columns: ["workflow_id"]
+            isOneToOne: false
+            referencedRelation: "workflows_inter_institutionnels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workflow_documents: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          nom_fichier: string
+          taille_bytes: number | null
+          type_fichier: string
+          uploaded_at: string
+          uploaded_by: string | null
+          url_fichier: string
+          workflow_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          nom_fichier: string
+          taille_bytes?: number | null
+          type_fichier: string
+          uploaded_at?: string
+          uploaded_by?: string | null
+          url_fichier: string
+          workflow_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          nom_fichier?: string
+          taille_bytes?: number | null
+          type_fichier?: string
+          uploaded_at?: string
+          uploaded_by?: string | null
+          url_fichier?: string
+          workflow_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workflow_documents_workflow_id_fkey"
+            columns: ["workflow_id"]
+            isOneToOne: false
+            referencedRelation: "workflows_inter_institutionnels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workflow_historique: {
+        Row: {
+          action: string
+          ancien_statut: string | null
+          created_at: string
+          description_action: string
+          details: Json | null
+          effectue_par: string | null
+          effectue_par_institution: string | null
+          id: string
+          nouveau_statut: string | null
+          workflow_id: string
+        }
+        Insert: {
+          action: string
+          ancien_statut?: string | null
+          created_at?: string
+          description_action: string
+          details?: Json | null
+          effectue_par?: string | null
+          effectue_par_institution?: string | null
+          id?: string
+          nouveau_statut?: string | null
+          workflow_id: string
+        }
+        Update: {
+          action?: string
+          ancien_statut?: string | null
+          created_at?: string
+          description_action?: string
+          details?: Json | null
+          effectue_par?: string | null
+          effectue_par_institution?: string | null
+          id?: string
+          nouveau_statut?: string | null
+          workflow_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workflow_historique_workflow_id_fkey"
+            columns: ["workflow_id"]
+            isOneToOne: false
+            referencedRelation: "workflows_inter_institutionnels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workflows_inter_institutionnels: {
+        Row: {
+          created_at: string
+          date_cloture: string | null
+          date_creation: string
+          date_echeance: string | null
+          date_traitement: string | null
+          description: string | null
+          destinataire_user_id: string | null
+          donnees_json: Json | null
+          emetteur_user_id: string | null
+          id: string
+          institution_destinataire: string
+          institution_emettrice: string
+          metadata: Json | null
+          numero_reference: string
+          objet: string
+          priorite: string
+          statut: string
+          tags: string[] | null
+          type_donnees: string
+          type_workflow: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          date_cloture?: string | null
+          date_creation?: string
+          date_echeance?: string | null
+          date_traitement?: string | null
+          description?: string | null
+          destinataire_user_id?: string | null
+          donnees_json?: Json | null
+          emetteur_user_id?: string | null
+          id?: string
+          institution_destinataire: string
+          institution_emettrice: string
+          metadata?: Json | null
+          numero_reference: string
+          objet: string
+          priorite?: string
+          statut?: string
+          tags?: string[] | null
+          type_donnees: string
+          type_workflow: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          date_cloture?: string | null
+          date_creation?: string
+          date_echeance?: string | null
+          date_traitement?: string | null
+          description?: string | null
+          destinataire_user_id?: string | null
+          donnees_json?: Json | null
+          emetteur_user_id?: string | null
+          id?: string
+          institution_destinataire?: string
+          institution_emettrice?: string
+          metadata?: Json | null
+          numero_reference?: string
+          objet?: string
+          priorite?: string
+          statut?: string
+          tags?: string[] | null
+          type_donnees?: string
+          type_workflow?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       zones_restreintes: {
         Row: {
           actif: boolean
@@ -2625,6 +2832,7 @@ export type Database = {
         Args: { _action_type: string; _description: string; _metadata?: Json }
         Returns: string
       }
+      user_institution: { Args: never; Returns: string }
     }
     Enums: {
       app_role:

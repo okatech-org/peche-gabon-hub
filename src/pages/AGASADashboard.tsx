@@ -1,7 +1,9 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Shield, CheckCircle, AlertTriangle, XCircle, Activity } from "lucide-react";
+import { Shield, CheckCircle, AlertTriangle, XCircle, Activity, Network } from "lucide-react";
 import { useState } from "react";
+import { CreateWorkflowDialog } from "@/components/workflows/CreateWorkflowDialog";
+import { WorkflowsList } from "@/components/workflows/WorkflowsList";
 
 export default function AGASADashboard() {
   const [stats] = useState({
@@ -10,6 +12,7 @@ export default function AGASADashboard() {
     nonConformes: 3,
     tauxConformite: 96.7,
   });
+  const [workflowRefresh, setWorkflowRefresh] = useState(0);
 
   return (
     <div className="min-h-screen bg-background p-6">
@@ -83,6 +86,7 @@ export default function AGASADashboard() {
           <TabsList>
             <TabsTrigger value="overview">Vue d'ensemble</TabsTrigger>
             <TabsTrigger value="controles">Contrôles</TabsTrigger>
+            <TabsTrigger value="workflows">Workflows Inter-institutionnels</TabsTrigger>
             <TabsTrigger value="certifications">Certifications</TabsTrigger>
           </TabsList>
 
@@ -167,6 +171,34 @@ export default function AGASADashboard() {
                 <p className="text-muted-foreground">
                   Module de gestion des contrôles sanitaires en développement
                 </p>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="workflows" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="flex items-center gap-2">
+                      <Network className="h-5 w-5" />
+                      Échanges Inter-institutionnels
+                    </CardTitle>
+                    <CardDescription>
+                      Coordination sanitaire avec DGPA, DGMM, etc.
+                    </CardDescription>
+                  </div>
+                  <CreateWorkflowDialog
+                    institutionEmettrice="agasa"
+                    onWorkflowCreated={() => setWorkflowRefresh(prev => prev + 1)}
+                  />
+                </div>
+              </CardHeader>
+              <CardContent>
+                <WorkflowsList 
+                  institutionCode="agasa"
+                  refreshTrigger={workflowRefresh}
+                />
               </CardContent>
             </Card>
           </TabsContent>

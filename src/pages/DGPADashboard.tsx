@@ -1,9 +1,11 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FileText, TrendingUp, AlertCircle, CheckCircle, Clock } from "lucide-react";
+import { FileText, TrendingUp, AlertCircle, CheckCircle, Clock, Network } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from "recharts";
+import { CreateWorkflowDialog } from "@/components/workflows/CreateWorkflowDialog";
+import { WorkflowsList } from "@/components/workflows/WorkflowsList";
 
 export default function DGPADashboard() {
   const [stats, setStats] = useState({
@@ -14,6 +16,7 @@ export default function DGPADashboard() {
     tauxConformite: 0,
   });
   const [loading, setLoading] = useState(true);
+  const [workflowRefresh, setWorkflowRefresh] = useState(0);
 
   useEffect(() => {
     loadStats();
@@ -135,6 +138,7 @@ export default function DGPADashboard() {
           <TabsList>
             <TabsTrigger value="overview">Vue d'ensemble</TabsTrigger>
             <TabsTrigger value="licences">Gestion Licences</TabsTrigger>
+            <TabsTrigger value="workflows">Workflows Inter-institutionnels</TabsTrigger>
             <TabsTrigger value="conformite">Conformité</TabsTrigger>
           </TabsList>
 
@@ -217,6 +221,34 @@ export default function DGPADashboard() {
                 <p className="text-muted-foreground">
                   Module de gestion détaillée des licences en développement
                 </p>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="workflows" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="flex items-center gap-2">
+                      <Network className="h-5 w-5" />
+                      Échanges Inter-institutionnels
+                    </CardTitle>
+                    <CardDescription>
+                      Coordination et traçabilité avec AGASA, ANPA, OPRAG, etc.
+                    </CardDescription>
+                  </div>
+                  <CreateWorkflowDialog
+                    institutionEmettrice="dgpa"
+                    onWorkflowCreated={() => setWorkflowRefresh(prev => prev + 1)}
+                  />
+                </div>
+              </CardHeader>
+              <CardContent>
+                <WorkflowsList 
+                  institutionCode="dgpa"
+                  refreshTrigger={workflowRefresh}
+                />
               </CardContent>
             </Card>
           </TabsContent>
