@@ -16,7 +16,9 @@ import {
   XCircle,
   Sparkles,
   Filter,
-  Eye
+  Eye,
+  Map,
+  List
 } from "lucide-react";
 import { GenerateSyntheseDialog } from "./GenerateSyntheseDialog";
 import { Input } from "@/components/ui/input";
@@ -26,6 +28,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { RemonteeTypeCards } from "./RemonteeTypeCards";
 import { RemonteeTypeDetailDialog } from "./RemonteeTypeDetailDialog";
 import { RemonteesSyntheseGlobale } from "./RemonteesSyntheseGlobale";
+import { RemonteesMap } from "./RemonteesMap";
 
 interface RemonteeStats {
   total: number;
@@ -80,6 +83,7 @@ export function RemonteesTerrainDashboard() {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [selectedTypeForDetail, setSelectedTypeForDetail] = useState<string>("");
+  const [viewMode, setViewMode] = useState<"list" | "map">("list");
   const { toast } = useToast();
 
   useEffect(() => {
@@ -304,9 +308,31 @@ export function RemonteesTerrainDashboard() {
             <Sparkles className="h-5 w-5 text-primary" />
             <h3 className="text-lg font-semibold">Types de remontées</h3>
           </div>
-          <p className="text-sm text-muted-foreground">
-            Cliquez sur une carte pour filtrer ou survolez pour voir les détails
-          </p>
+          <div className="flex items-center gap-2">
+            <p className="text-sm text-muted-foreground">
+              Cliquez sur une carte pour filtrer ou survolez pour voir les détails
+            </p>
+            <div className="flex items-center gap-1 bg-muted rounded-lg p-1">
+              <Button
+                variant={viewMode === "list" ? "secondary" : "ghost"}
+                size="sm"
+                onClick={() => setViewMode("list")}
+                className="h-8"
+              >
+                <List className="h-4 w-4 mr-1" />
+                Liste
+              </Button>
+              <Button
+                variant={viewMode === "map" ? "secondary" : "ghost"}
+                size="sm"
+                onClick={() => setViewMode("map")}
+                className="h-8"
+              >
+                <Map className="h-4 w-4 mr-1" />
+                Carte
+              </Button>
+            </div>
+          </div>
         </div>
         <RemonteeTypeCards 
           selectedType={filterType}
@@ -317,43 +343,51 @@ export function RemonteesTerrainDashboard() {
         />
       </div>
 
-      {/* Filtres additionnels */}
-      <Card>
-        <CardContent className="p-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Input
-                placeholder="Rechercher par titre, description, référence..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Select value={filterStatut} onValueChange={setFilterStatut}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Statut" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="tous">Tous les statuts</SelectItem>
-                  <SelectItem value="nouveau">Nouveau</SelectItem>
-                  <SelectItem value="en_analyse">En analyse</SelectItem>
-                  <SelectItem value="en_traitement">En traitement</SelectItem>
-                  <SelectItem value="resolu">Résolu</SelectItem>
-                  <SelectItem value="rejete">Rejeté</SelectItem>
-                  <SelectItem value="archive">Archivé</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Vue Liste ou Carte */}
+      {viewMode === "map" ? (
+        <RemonteesMap
+          remontees={filteredRemontees}
+          onRemonteeSelect={(remontee) => setSelectedRemontee(remontee)}
+        />
+      ) : (
+        <>
+          {/* Filtres additionnels */}
+          <Card>
+            <CardContent className="p-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Input
+                    placeholder="Rechercher par titre, description, référence..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Select value={filterStatut} onValueChange={setFilterStatut}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Statut" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="tous">Tous les statuts</SelectItem>
+                      <SelectItem value="nouveau">Nouveau</SelectItem>
+                      <SelectItem value="en_analyse">En analyse</SelectItem>
+                      <SelectItem value="en_traitement">En traitement</SelectItem>
+                      <SelectItem value="resolu">Résolu</SelectItem>
+                      <SelectItem value="rejete">Rejeté</SelectItem>
+                      <SelectItem value="archive">Archivé</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
-      {/* Liste des remontées */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Liste des Remontées ({filteredRemontees.length})</CardTitle>
-        </CardHeader>
-        <CardContent>
+          {/* Liste des remontées */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Liste des Remontées ({filteredRemontees.length})</CardTitle>
+            </CardHeader>
+            <CardContent>
           <div className="space-y-3">
             {filteredRemontees.map((remontee) => (
               <Card key={remontee.id} className="hover:shadow-md transition-shadow">
@@ -423,6 +457,8 @@ export function RemonteesTerrainDashboard() {
           </div>
         </CardContent>
       </Card>
+        </>
+      )}
 
       {/* Dialog de détails */}
       <Dialog open={!!selectedRemontee} onOpenChange={() => setSelectedRemontee(null)}>
