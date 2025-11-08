@@ -1642,6 +1642,171 @@ export type Database = {
           },
         ]
       }
+      recommandations_formateurs: {
+        Row: {
+          adequation_experience: number
+          adequation_performance: number
+          adequation_specialites: number
+          choisi: boolean | null
+          choisi_par: string | null
+          created_at: string
+          date_choix: string | null
+          formateur_id: string
+          id: string
+          justification: string
+          points_attention: string[] | null
+          points_forts: string[]
+          raison_non_choix: string | null
+          rang: number
+          recommandation_id: string
+          score: number
+        }
+        Insert: {
+          adequation_experience: number
+          adequation_performance: number
+          adequation_specialites: number
+          choisi?: boolean | null
+          choisi_par?: string | null
+          created_at?: string
+          date_choix?: string | null
+          formateur_id: string
+          id?: string
+          justification: string
+          points_attention?: string[] | null
+          points_forts?: string[]
+          raison_non_choix?: string | null
+          rang: number
+          recommandation_id: string
+          score: number
+        }
+        Update: {
+          adequation_experience?: number
+          adequation_performance?: number
+          adequation_specialites?: number
+          choisi?: boolean | null
+          choisi_par?: string | null
+          created_at?: string
+          date_choix?: string | null
+          formateur_id?: string
+          id?: string
+          justification?: string
+          points_attention?: string[] | null
+          points_forts?: string[]
+          raison_non_choix?: string | null
+          rang?: number
+          recommandation_id?: string
+          score?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recommandations_formateurs_formateur_id_fkey"
+            columns: ["formateur_id"]
+            isOneToOne: false
+            referencedRelation: "formateurs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recommandations_formateurs_recommandation_id_fkey"
+            columns: ["recommandation_id"]
+            isOneToOne: false
+            referencedRelation: "recommandations_historique"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      recommandations_historique: {
+        Row: {
+          analyse_globale: string | null
+          created_at: string
+          date_debut: string
+          date_fin: string
+          demandeur_id: string
+          id: string
+          lieu: string | null
+          nombre_participants: number | null
+          specialites_requises: string[]
+          total_formateurs_analyses: number
+          type_formation: string
+        }
+        Insert: {
+          analyse_globale?: string | null
+          created_at?: string
+          date_debut: string
+          date_fin: string
+          demandeur_id: string
+          id?: string
+          lieu?: string | null
+          nombre_participants?: number | null
+          specialites_requises: string[]
+          total_formateurs_analyses?: number
+          type_formation: string
+        }
+        Update: {
+          analyse_globale?: string | null
+          created_at?: string
+          date_debut?: string
+          date_fin?: string
+          demandeur_id?: string
+          id?: string
+          lieu?: string | null
+          nombre_participants?: number | null
+          specialites_requises?: string[]
+          total_formateurs_analyses?: number
+          type_formation?: string
+        }
+        Relationships: []
+      }
+      recommandations_metriques: {
+        Row: {
+          created_at: string
+          formateurs_plus_choisis: Json | null
+          formateurs_plus_recommandes: Json | null
+          id: string
+          periode_debut: string
+          periode_fin: string
+          rang_moyen_choisi: number | null
+          recommandations_suivies: number
+          score_moyen_choisis: number | null
+          score_moyen_non_choisis: number | null
+          specialites_plus_demandees: string[] | null
+          taux_precision: number | null
+          total_recommandations: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          formateurs_plus_choisis?: Json | null
+          formateurs_plus_recommandes?: Json | null
+          id?: string
+          periode_debut: string
+          periode_fin: string
+          rang_moyen_choisi?: number | null
+          recommandations_suivies?: number
+          score_moyen_choisis?: number | null
+          score_moyen_non_choisis?: number | null
+          specialites_plus_demandees?: string[] | null
+          taux_precision?: number | null
+          total_recommandations?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          formateurs_plus_choisis?: Json | null
+          formateurs_plus_recommandes?: Json | null
+          id?: string
+          periode_debut?: string
+          periode_fin?: string
+          rang_moyen_choisi?: number | null
+          recommandations_suivies?: number
+          score_moyen_choisis?: number | null
+          score_moyen_non_choisis?: number | null
+          specialites_plus_demandees?: string[] | null
+          taux_precision?: number | null
+          total_recommandations?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       reglementations: {
         Row: {
           created_at: string
@@ -1996,6 +2161,10 @@ export type Database = {
           user_role: Database["public"]["Enums"]["app_role"]
         }
         Returns: undefined
+      }
+      calculer_metriques_precision: {
+        Args: { p_date_debut: string; p_date_fin: string }
+        Returns: Json
       }
       est_dans_fenetre_paiement: {
         Args: { p_date_echeance: string }

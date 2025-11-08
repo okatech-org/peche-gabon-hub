@@ -236,6 +236,66 @@ Analyse chaque formateur et retourne les 3 meilleurs avec:
       };
     });
 
+    // Sauvegarder dans l'historique
+    const authHeader = req.headers.get("Authorization");
+    let userId = null;
+    if (authHeader) {
+      const token = authHeader.replace("Bearer ", "");
+      const { data: { user } } = await supabase.auth.getUser(token);
+      userId = user?.id;
+    }
+
+    if (userId) {
+      console.log("Sauvegarde de l'historique de recommandation pour user:", userId);
+
+      // Créer l'entrée d'historique
+      const { data: historiqueData, error: historiqueError } = await supabase
+        .from("recommandations_historique")
+        .insert({
+          demandeur_id: userId,
+          type_formation: typeFormation,
+          specialites_requises: specialitesRequises,
+          date_debut: dateDebut,
+          date_fin: dateFin,
+          lieu: lieu,
+          nombre_participants: nombreParticipants,
+          total_formateurs_analyses: formateursDisponibles.length,
+          analyse_globale: recommendations.analyse_globale,
+        })
+        .select()
+        .single();
+
+      if (historiqueError) {
+        console.error("Erreur sauvegarde historique:", historiqueError);
+      } else if (historiqueData) {
+        console.log("Historique créé:", historiqueData.id);
+
+        // Sauvegarder les formateurs recommandés
+        const formateursToInsert = enrichedRecommendations.map((rec: any, index: number) => ({
+          recommandation_id: historiqueData.id,
+          formateur_id: rec.formateur_id,
+          rang: index + 1,
+          score: rec.score,
+          justification: rec.justification,
+          points_forts: rec.points_forts,
+          points_attention: rec.points_attention || [],
+          adequation_specialites: rec.adequation_specialites,
+          adequation_experience: rec.adequation_experience,
+          adequation_performance: rec.adequation_performance,
+        }));
+
+        const { error: formateursError } = await supabase
+          .from("recommandations_formateurs")
+          .insert(formateursToInsert);
+
+        if (formateursError) {
+          console.error("Erreur sauvegarde formateurs recommandés:", formateursError);
+        } else {
+          console.log(`${formateursToInsert.length} formateurs recommandés sauvegardés`);
+        }
+      }
+    }
+
     return new Response(
       JSON.stringify({
         recommendations: enrichedRecommendations,
