@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
+import { FormationsStats } from "@/components/minister/FormationsStats";
 import { RecommandationsFormation } from "@/components/minister/RecommandationsFormation";
 import { SuiviFormations } from "@/components/minister/SuiviFormations";
 import { BudgetFormations } from "@/components/minister/BudgetFormations";
@@ -60,6 +61,9 @@ export default function Formations() {
           <p className="text-sm text-muted-foreground">Planification, suivi et évaluation des formations</p>
         </div>
       </div>
+
+      {/* Statistiques en temps réel */}
+      <FormationsStats />
 
       {/* Barre de recherche globale */}
       <Card className="p-4 bg-muted/50">
