@@ -14,11 +14,14 @@ import {
   ArrowRight,
   MessageSquare,
   History,
-  FileText
+  FileText,
+  Paperclip
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
 import { useAuth } from "@/hooks/useAuth";
+import { WorkflowDocumentUpload } from "./WorkflowDocumentUpload";
+import { WorkflowDocumentsList } from "./WorkflowDocumentsList";
 
 interface WorkflowDetailDialogProps {
   workflowId: string;
@@ -57,6 +60,7 @@ export function WorkflowDetailDialog({
   const [commentaires, setCommentaires] = useState<any[]>([]);
   const [newComment, setNewComment] = useState("");
   const [loading, setLoading] = useState(true);
+  const [documentRefresh, setDocumentRefresh] = useState(0);
   const { user } = useAuth();
 
   useEffect(() => {
@@ -272,6 +276,26 @@ export function WorkflowDetailDialog({
                   </div>
                 ))}
               </div>
+            </div>
+
+            <Separator />
+
+            {/* Documents attachés */}
+            <div className="space-y-3">
+              <h4 className="font-semibold flex items-center gap-2">
+                <Paperclip className="h-4 w-4" />
+                Documents Attachés
+              </h4>
+              
+              <WorkflowDocumentsList 
+                workflowId={workflowId}
+                refreshTrigger={documentRefresh}
+              />
+              
+              <WorkflowDocumentUpload
+                workflowId={workflowId}
+                onUploadComplete={() => setDocumentRefresh(prev => prev + 1)}
+              />
             </div>
 
             <Separator />
