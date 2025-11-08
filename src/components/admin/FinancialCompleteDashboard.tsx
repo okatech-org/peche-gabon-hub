@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import { Download, BarChart3, Receipt, TrendingUp, FileSpreadsheet, Layers, Activity, Bell } from "lucide-react";
+import { BarChart3, Receipt, TrendingUp, FileSpreadsheet, Layers, Activity, Bell, Download } from "lucide-react";
+import { ExcelExportButton } from "./ExcelExportButton";
+import { useCSVData } from "@/hooks/useCSVData";
 import { FinancialOverviewDashboard } from "./FinancialOverviewDashboard";
 import { FinancesDashboard } from "./FinancesDashboard";
 import { TaxesRemonteesDashboard } from "./TaxesRemonteesDashboard";
@@ -15,9 +16,40 @@ import { SmartAlertsManagement } from "./SmartAlertsManagement";
 export function FinancialCompleteDashboard() {
   const [activeTab, setActiveTab] = useState("overview");
 
-  const exportToCSV = () => {
-    // TODO: Implémenter l'export CSV global
-    console.log("Export CSV pour l'onglet:", activeTab);
+  // Load all CSV data for export
+  const { data: indicateurs } = useCSVData('/data/analytics/indicateurs_cles.csv');
+  const { data: quittances } = useCSVData('/data/analytics/finances_quittances_mensuel.csv');
+  const { data: exportations } = useCSVData('/data/analytics/exportation_resume_numerique.csv');
+  const { data: previsions } = useCSVData('/data/analytics/previsions_scenarios_synthese.csv');
+  const { data: demandes } = useCSVData('/data/analytics/demandes_resume_numerique.csv');
+
+  // Prepare KPIs data
+  const kpis = indicateurs.map((row: any) => ({
+    label: String(row.kpi || '').replace(/_/g, ' ').replace(/total/g, '').trim(),
+    value: Number(row.valeur) || 0,
+  }));
+
+  // Prepare monthly data
+  const monthlyData = quittances.map((row: any) => ({
+    mois: String(row.Mois || ''),
+    valeur: Number(row.Valeur) || 0,
+  }));
+
+  // Prepare previsions data
+  const previsionsData = previsions.map((row: any) => ({
+    feuille: String(row.feuille || ''),
+    somme: Number(row.somme_numeriques) || 0,
+  }));
+
+  const exportData = {
+    kpis,
+    monthlyData,
+    previsionsData,
+    rawData: {
+      quittances,
+      exportations,
+      demandes,
+    }
   };
 
   return (
@@ -30,10 +62,11 @@ export function FinancialCompleteDashboard() {
             Suivi complet des finances, taxes, prévisions et exportations
           </p>
         </div>
-        <Button onClick={exportToCSV} variant="outline" className="gap-2">
-          <Download className="h-4 w-4" />
-          Exporter CSV
-        </Button>
+        <ExcelExportButton 
+          data={exportData}
+          filename={`dashboard_finances_${new Date().toISOString().split('T')[0]}.xlsx`}
+          variant="default"
+        />
       </div>
 
       {/* Navigation par onglets */}
