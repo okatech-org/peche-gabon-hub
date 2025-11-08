@@ -2,6 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 
 const ArtisanalFishingStats = () => {
   const [loading, setLoading] = useState(true);
@@ -11,6 +12,7 @@ const ArtisanalFishingStats = () => {
     tauxRenouvellementLicences: 0,
     tauxPaiementTaxes: 0,
   });
+  const [chartData, setChartData] = useState<any[]>([]);
 
   useEffect(() => {
     loadStats();
@@ -71,6 +73,33 @@ const ArtisanalFishingStats = () => {
         ? (quittancesPayees / totalQuittances) * 100
         : 0;
 
+      // Données pour le graphique (12 derniers mois)
+      const monthlyData = [];
+      for (let i = 11; i >= 0; i--) {
+        const date = new Date();
+        date.setMonth(date.getMonth() - i);
+        const mois = date.getMonth() + 1;
+        const annee = date.getFullYear();
+
+        const { data: capturesMois } = await supabase
+          .from("captures_pa")
+          .select("poids_kg, cpue")
+          .eq("mois", mois)
+          .eq("annee", annee);
+
+        const totalMois = (capturesMois?.reduce((sum, c) => sum + (c.poids_kg || 0), 0) || 0) / 1000;
+        const cpueMois = capturesMois && capturesMois.length > 0
+          ? capturesMois.reduce((sum, c) => sum + (c.cpue || 0), 0) / capturesMois.length
+          : 0;
+
+        monthlyData.push({
+          mois: date.toLocaleDateString("fr-FR", { month: "short", year: "2-digit" }),
+          captures: Number(totalMois.toFixed(1)),
+          cpue: Number(cpueMois.toFixed(1)),
+        });
+      }
+
+      setChartData(monthlyData);
       setStats({
         capturesPA,
         cpueMoyenne: Number(cpueMoyenne.toFixed(1)),
@@ -138,11 +167,22 @@ const ArtisanalFishingStats = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle>Répartition par Province</CardTitle>
-          <CardDescription>Captures PA par région</CardDescription>
+          <CardTitle>Évolution des Captures PA</CardTitle>
+          <CardDescription>12 derniers mois</CardDescription>
         </CardHeader>
         <CardContent>
-          <p className="text-muted-foreground">Graphique en développement</p>
+          <ResponsiveContainer width="100%" height={300}>
+            <LineChart data={chartData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="mois" />
+              <YAxis yAxisId="left" label={{ value: "Tonnes", angle: -90, position: "insideLeft" }} />
+              <YAxis yAxisId="right" orientation="right" label={{ value: "CPUE", angle: 90, position: "insideRight" }} />
+              <Tooltip />
+              <Legend />
+              <Line yAxisId="left" type="monotone" dataKey="captures" stroke="hsl(var(--primary))" strokeWidth={2} name="Captures (T)" />
+              <Line yAxisId="right" type="monotone" dataKey="cpue" stroke="hsl(var(--accent))" strokeWidth={2} name="CPUE" />
+            </LineChart>
+          </ResponsiveContainer>
         </CardContent>
       </Card>
     </div>

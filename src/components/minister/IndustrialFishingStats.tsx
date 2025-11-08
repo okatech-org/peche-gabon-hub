@@ -2,6 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 
 const IndustrialFishingStats = () => {
   const [loading, setLoading] = useState(true);
@@ -91,10 +92,26 @@ const IndustrialFishingStats = () => {
       <Card>
         <CardHeader>
           <CardTitle>Activité Mensuelle</CardTitle>
-          <CardDescription>Volume capturé par la flotte industrielle</CardDescription>
+          <CardDescription>Données simulées - Volume capturé par la flotte industrielle</CardDescription>
         </CardHeader>
         <CardContent>
-          <p className="text-muted-foreground">Graphique en développement</p>
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={[
+              { mois: "Jan", volume: 45 },
+              { mois: "Fév", volume: 52 },
+              { mois: "Mar", volume: 48 },
+              { mois: "Avr", volume: 61 },
+              { mois: "Mai", volume: 55 },
+              { mois: "Jun", volume: 67 },
+            ]}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="mois" />
+              <YAxis label={{ value: "Tonnes", angle: -90, position: "insideLeft" }} />
+              <Tooltip />
+              <Legend />
+              <Bar dataKey="volume" fill="hsl(var(--primary))" name="Captures (T)" />
+            </BarChart>
+          </ResponsiveContainer>
         </CardContent>
       </Card>
     </div>
