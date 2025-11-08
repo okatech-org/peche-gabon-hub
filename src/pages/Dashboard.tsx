@@ -14,6 +14,7 @@ import {
   LogOut
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { PecheurNav } from "@/components/PecheurNav";
 
 const roleLabels: Record<string, string> = {
   pecheur: "Pêcheur",
@@ -121,45 +122,49 @@ const Dashboard = () => {
   };
 
   const content = getDashboardContent();
+  const isPecheur = roles.includes('pecheur') && !roles.includes('admin');
 
   return (
     <div className="min-h-screen bg-gradient-subtle">
-      {/* Header */}
-      <header className="border-b bg-card shadow-card">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Fish className="h-8 w-8 text-primary" />
-            <div>
-              <h1 className="text-2xl font-bold">PÊCHE GABON</h1>
-              <p className="text-sm text-muted-foreground">
-                {user?.email}
-              </p>
+      {isPecheur ? (
+        <PecheurNav />
+      ) : (
+        <header className="border-b bg-card shadow-card">
+          <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Fish className="h-8 w-8 text-primary" />
+              <div>
+                <h1 className="text-2xl font-bold">PÊCHE GABON</h1>
+                <p className="text-sm text-muted-foreground">
+                  {user?.email}
+                </p>
+              </div>
             </div>
-          </div>
-          <div className="flex items-center gap-4">
-            <div className="flex flex-wrap gap-2">
-              {roles.map((role) => (
-                <Badge key={role} variant="secondary" className={roleColors[role]}>
-                  {roleLabels[role]}
-                </Badge>
-              ))}
-            </div>
-            {roles.includes('admin') && (
-              <Button
-                variant="outline"
-                onClick={() => navigate("/admin")}
-              >
-                <Shield className="h-4 w-4 mr-2" />
-                Admin
+            <div className="flex items-center gap-4">
+              <div className="flex flex-wrap gap-2">
+                {roles.map((role) => (
+                  <Badge key={role} variant="secondary" className={roleColors[role]}>
+                    {roleLabels[role]}
+                  </Badge>
+                ))}
+              </div>
+              {roles.includes('admin') && (
+                <Button
+                  variant="outline"
+                  onClick={() => navigate("/admin")}
+                >
+                  <Shield className="h-4 w-4 mr-2" />
+                  Admin
+                </Button>
+              )}
+              <Button variant="outline" onClick={signOut}>
+                <LogOut className="h-4 w-4 mr-2" />
+                Déconnexion
               </Button>
-            )}
-            <Button variant="outline" onClick={signOut}>
-              <LogOut className="h-4 w-4 mr-2" />
-              Déconnexion
-            </Button>
+            </div>
           </div>
-        </div>
-      </header>
+        </header>
+      )}
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
