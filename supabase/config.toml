@@ -1,1 +1,4 @@
 project_id = "lzqvrnuzgfuyxbpyqfxh"
+
+[functions.recommend-formateurs]
+verify_jwt = true
