@@ -54,6 +54,29 @@ interface TendanceInstitution {
   }>;
 }
 
+interface PrevisionMensuelle {
+  mois: number;
+  montant_prevu: number;
+  montant_min: number;
+  montant_max: number;
+  confiance_pct: number;
+  par_institution: Array<{
+    institution: string;
+    montant_prevu: number;
+  }>;
+}
+
+interface Previsions {
+  annee_prevue: number;
+  previsions_mensuelles: PrevisionMensuelle[];
+  analyse: {
+    tendance_generale: string;
+    croissance_prevue_pct: number;
+    facteurs_cles: string[];
+    niveau_confiance_global: string;
+  };
+}
+
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
 const MOIS_NOMS = ["Jan", "Fév", "Mar", "Avr", "Mai", "Jun", "Jul", "Aoû", "Sep", "Oct", "Nov", "Déc"];
 
@@ -68,6 +91,8 @@ export function RemonteesInstitutionnellesDashboard() {
   const [totalRemontees, setTotalRemontees] = useState(0);
   const [exporting, setExporting] = useState(false);
   const [yearsRange, setYearsRange] = useState<number[]>([]);
+  const [previsions, setPrevisions] = useState<Previsions | null>(null);
+  const [loadingPrevisions, setLoadingPrevisions] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -256,6 +281,48 @@ export function RemonteesInstitutionnellesDashboard() {
       setTendancesInstitutions(tendances);
     } catch (error) {
       console.error("Erreur lors du chargement des tendances:", error);
+    }
+  };
+
+  const genererPrevisions = async () => {
+    try {
+      setLoadingPrevisions(true);
+
+      // Charger la répartition institutionnelle
+      const { data: institutions, error: instError } = await supabase
+        .from("repartition_institutionnelle")
+        .select("*")
+        .eq("actif", true);
+
+      if (instError) throw instError;
+
+      const { data, error } = await supabase.functions.invoke("prevoir-remontees", {
+        body: {
+          donneesHistoriques: comparaisonAnnuelle,
+          institutions: institutions?.map((i) => ({
+            nom: i.nom_institution,
+            pourcentage: i.pourcentage_taxes,
+          })),
+        },
+      });
+
+      if (error) {
+        if (error.message?.includes("429")) {
+          toast.error("Trop de requêtes, veuillez réessayer dans quelques instants");
+        } else if (error.message?.includes("402")) {
+          toast.error("Crédits insuffisants, veuillez recharger votre compte");
+        } else {
+          toast.error("Erreur lors de la génération des prévisions");
+        }
+        throw error;
+      }
+
+      setPrevisions(data);
+      toast.success("Prévisions générées avec succès");
+    } catch (error) {
+      console.error("Erreur prévisions:", error);
+    } finally {
+      setLoadingPrevisions(false);
     }
   };
 
@@ -471,7 +538,7 @@ export function RemonteesInstitutionnellesDashboard() {
       <Card>
         <CardContent className="pt-6">
           <Tabs defaultValue="repartition" className="w-full">
-            <TabsList className="grid w-full grid-cols-5">
+            <TabsList className="grid w-full grid-cols-6">
               <TabsTrigger value="repartition">
                 <PieChart className="h-4 w-4 mr-2" />
                 Répartition
@@ -487,6 +554,10 @@ export function RemonteesInstitutionnellesDashboard() {
               <TabsTrigger value="tendances">
                 <LineChartIcon className="h-4 w-4 mr-2" />
                 Tendances
+              </TabsTrigger>
+              <TabsTrigger value="previsions">
+                <TrendingUp className="h-4 w-4 mr-2" />
+                Prévisions
               </TabsTrigger>
               <TabsTrigger value="details">Détails</TabsTrigger>
             </TabsList>
@@ -764,6 +835,216 @@ export function RemonteesInstitutionnellesDashboard() {
                     })}
                   </TableBody>
                 </Table>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="previsions" className="space-y-4">
+              <div className="space-y-6">
+                {!previsions ? (
+                  <Card>
+                    <CardContent className="flex flex-col items-center justify-center p-12 space-y-4">
+                      <TrendingUp className="h-16 w-16 text-muted-foreground" />
+                      <div className="text-center space-y-2">
+                        <h3 className="text-lg font-semibold">Générer des Prévisions IA</h3>
+                        <p className="text-sm text-muted-foreground max-w-md">
+                          Utilisez l'intelligence artificielle pour prédire les remontées de l'année prochaine
+                          basées sur les tendances historiques avec intervalle de confiance.
+                        </p>
+                      </div>
+                      <Button
+                        onClick={genererPrevisions}
+                        disabled={loadingPrevisions || comparaisonAnnuelle.length < 3}
+                        size="lg"
+                      >
+                        {loadingPrevisions ? (
+                          <>
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            Génération en cours...
+                          </>
+                        ) : (
+                          <>
+                            <TrendingUp className="h-4 w-4 mr-2" />
+                            Générer les Prévisions
+                          </>
+                        )}
+                      </Button>
+                      {comparaisonAnnuelle.length < 3 && (
+                        <p className="text-xs text-muted-foreground">
+                          Au moins 3 années de données historiques sont requises
+                        </p>
+                      )}
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <>
+                    {/* Analyse globale */}
+                    <div className="grid md:grid-cols-4 gap-4">
+                      <Card>
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-sm font-medium">Année Prévue</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="text-2xl font-bold">{previsions.annee_prevue}</div>
+                        </CardContent>
+                      </Card>
+
+                      <Card>
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-sm font-medium">Croissance Prévue</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div
+                            className={`text-2xl font-bold ${
+                              previsions.analyse.croissance_prevue_pct >= 0
+                                ? "text-green-600"
+                                : "text-red-600"
+                            }`}
+                          >
+                            {previsions.analyse.croissance_prevue_pct >= 0 ? "+" : ""}
+                            {previsions.analyse.croissance_prevue_pct.toFixed(1)}%
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      <Card>
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-sm font-medium">Tendance</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="text-2xl font-bold capitalize">
+                            {previsions.analyse.tendance_generale}
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      <Card>
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-sm font-medium">Confiance</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="text-2xl font-bold capitalize">
+                            {previsions.analyse.niveau_confiance_global}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </div>
+
+                    {/* Graphique des prévisions avec intervalle */}
+                    <div className="h-96">
+                      <h3 className="text-lg font-semibold mb-4 text-center">
+                        Prévisions Mensuelles {previsions.annee_prevue} avec Intervalle de Confiance
+                      </h3>
+                      <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart
+                          data={previsions.previsions_mensuelles.map((p) => ({
+                            mois: MOIS_NOMS[p.mois - 1],
+                            prevu: p.montant_prevu,
+                            min: p.montant_min,
+                            max: p.montant_max,
+                          }))}
+                        >
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="mois" />
+                          <YAxis />
+                          <Tooltip
+                            formatter={(value: number) => `${value.toLocaleString()} FCFA`}
+                          />
+                          <Legend />
+                          <Area
+                            type="monotone"
+                            dataKey="max"
+                            stroke="#82ca9d"
+                            fill="#82ca9d"
+                            fillOpacity={0.2}
+                            name="Maximum"
+                          />
+                          <Area
+                            type="monotone"
+                            dataKey="prevu"
+                            stroke="#0088FE"
+                            fill="#0088FE"
+                            fillOpacity={0.6}
+                            name="Prévu"
+                          />
+                          <Area
+                            type="monotone"
+                            dataKey="min"
+                            stroke="#ffc658"
+                            fill="#ffc658"
+                            fillOpacity={0.2}
+                            name="Minimum"
+                          />
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    </div>
+
+                    {/* Facteurs clés */}
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Facteurs Clés Influençant les Prévisions</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <ul className="space-y-2">
+                          {previsions.analyse.facteurs_cles.map((facteur, idx) => (
+                            <li key={idx} className="flex items-start gap-2">
+                              <span className="text-primary">•</span>
+                              <span className="text-sm">{facteur}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </CardContent>
+                    </Card>
+
+                    {/* Tableau détaillé */}
+                    <div className="rounded-md border">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Mois</TableHead>
+                            <TableHead className="text-right">Montant Prévu</TableHead>
+                            <TableHead className="text-right">Intervalle Min-Max</TableHead>
+                            <TableHead className="text-right">Confiance</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {previsions.previsions_mensuelles.map((prev) => (
+                            <TableRow key={prev.mois}>
+                              <TableCell className="font-medium">
+                                {MOIS_NOMS[prev.mois - 1]} {previsions.annee_prevue}
+                              </TableCell>
+                              <TableCell className="text-right font-semibold">
+                                {prev.montant_prevu.toLocaleString()} FCFA
+                              </TableCell>
+                              <TableCell className="text-right text-sm text-muted-foreground">
+                                {prev.montant_min.toLocaleString()} -{" "}
+                                {prev.montant_max.toLocaleString()} FCFA
+                              </TableCell>
+                              <TableCell className="text-right">
+                                <Badge
+                                  className={
+                                    prev.confiance_pct >= 80
+                                      ? "bg-green-500/20 text-green-700"
+                                      : prev.confiance_pct >= 60
+                                      ? "bg-blue-500/20 text-blue-700"
+                                      : "bg-orange-500/20 text-orange-700"
+                                  }
+                                >
+                                  {prev.confiance_pct}%
+                                </Badge>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+
+                    <div className="flex justify-center">
+                      <Button variant="outline" onClick={() => setPrevisions(null)}>
+                        Régénérer les Prévisions
+                      </Button>
+                    </div>
+                  </>
+                )}
               </div>
             </TabsContent>
 
