@@ -27,6 +27,7 @@ import { SeuilsAlertesManagement } from "@/components/minister/SeuilsAlertesMana
 import { AnalysePredictiveActions } from "@/components/minister/AnalysePredictiveActions";
 import { RecommandationsFormation } from "@/components/minister/RecommandationsFormation";
 import { SuiviFormations } from "@/components/minister/SuiviFormations";
+import { BudgetFormations } from "@/components/minister/BudgetFormations";
 import GlobalFilters from "@/components/minister/GlobalFilters";
 import AlertsPanel from "@/components/minister/AlertsPanel";
 import ExportPDFButton from "@/components/minister/ExportPDFButton";
@@ -343,6 +344,7 @@ const MinisterDashboard = () => {
                   <AnalysePredictiveActions />
                   <RecommandationsFormation />
                   <SuiviFormations />
+                  <BudgetFormations />
                 </div>
                 <MinisterHistory />
               </div>
