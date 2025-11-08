@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Download, BarChart3, Receipt, TrendingUp, FileSpreadsheet, Layers, Activity } from "lucide-react";
+import { Download, BarChart3, Receipt, TrendingUp, FileSpreadsheet, Layers, Activity, Bell } from "lucide-react";
 import { FinancialOverviewDashboard } from "./FinancialOverviewDashboard";
 import { FinancesDashboard } from "./FinancesDashboard";
 import { TaxesRemonteesDashboard } from "./TaxesRemonteesDashboard";
@@ -10,6 +10,7 @@ import { PrevisionsDashboard } from "./PrevisionsDashboard";
 import { ScenarioSimulationDashboard } from "./ScenarioSimulationDashboard";
 import { FinancialExportDashboard } from "./FinancialExportDashboard";
 import { InterYearComparisonDashboard } from "./InterYearComparisonDashboard";
+import { SmartAlertsManagement } from "./SmartAlertsManagement";
 
 export function FinancialCompleteDashboard() {
   const [activeTab, setActiveTab] = useState("overview");
@@ -37,7 +38,7 @@ export function FinancialCompleteDashboard() {
 
       {/* Navigation par onglets */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-7 h-auto">
+        <TabsList className="grid w-full grid-cols-8 h-auto">
           <TabsTrigger value="overview" className="flex flex-col gap-1 py-3">
             <BarChart3 className="h-5 w-5" />
             <span className="text-xs">Vue d'ensemble</span>
@@ -65,6 +66,10 @@ export function FinancialCompleteDashboard() {
           <TabsTrigger value="comparaison" className="flex flex-col gap-1 py-3">
             <Activity className="h-5 w-5" />
             <span className="text-xs">Inter-Années</span>
+          </TabsTrigger>
+          <TabsTrigger value="alertes" className="flex flex-col gap-1 py-3">
+            <Bell className="h-5 w-5" />
+            <span className="text-xs">Alertes IA</span>
           </TabsTrigger>
         </TabsList>
 
@@ -191,6 +196,24 @@ export function FinancialCompleteDashboard() {
               </CardHeader>
               <CardContent>
                 <InterYearComparisonDashboard />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* 8. Alertes Intelligentes */}
+          <TabsContent value="alertes" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Bell className="h-5 w-5" />
+                  Alertes Intelligentes avec IA
+                </CardTitle>
+                <CardDescription>
+                  Détection automatique d'anomalies et recommandations intelligentes
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <SmartAlertsManagement />
               </CardContent>
             </Card>
           </TabsContent>
