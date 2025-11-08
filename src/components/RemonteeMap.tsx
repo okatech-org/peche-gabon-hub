@@ -3,7 +3,8 @@ import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Info, X, Circle, Users } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Info, X, Circle, Users, Filter } from 'lucide-react';
 
 interface Remontee {
   id: string;
@@ -31,10 +32,46 @@ const getStatusColor = (statut: string): string => {
   return colors[statut] || '#6b7280';
 };
 
+const statusConfig = [
+  { value: 'nouveau', label: 'Nouveau', color: '#3b82f6' },
+  { value: 'en_cours', label: 'En cours', color: '#eab308' },
+  { value: 'traite', label: 'Traité', color: '#22c55e' },
+  { value: 'rejete', label: 'Rejeté', color: '#ef4444' }
+];
+
+const typeConfig = [
+  { value: 'reclamation', label: 'Réclamation' },
+  { value: 'suggestion', label: 'Suggestion' },
+  { value: 'denonciation', label: 'Dénonciation' },
+  { value: 'article_presse', label: 'Article de presse' },
+  { value: 'commentaire_reseaux', label: 'Commentaire réseaux' },
+  { value: 'avis_reseaux', label: 'Avis réseaux' }
+];
+
 export function RemonteeMap({ remontees, onRemonteeClick, height = "500px" }: RemonteeMapProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const [showLegend, setShowLegend] = useState(true);
+  const [activeStatuses, setActiveStatuses] = useState<string[]>(['nouveau', 'en_cours', 'traite', 'rejete']);
+  const [activeTypes, setActiveTypes] = useState<string[]>([
+    'reclamation', 'suggestion', 'denonciation', 'article_presse', 'commentaire_reseaux', 'avis_reseaux'
+  ]);
+
+  const toggleStatus = (status: string) => {
+    setActiveStatuses(prev => 
+      prev.includes(status) 
+        ? prev.filter(s => s !== status)
+        : [...prev, status]
+    );
+  };
+
+  const toggleType = (type: string) => {
+    setActiveTypes(prev => 
+      prev.includes(type) 
+        ? prev.filter(t => t !== type)
+        : [...prev, type]
+    );
+  };
 
   useEffect(() => {
     if (!mapContainer.current) return;
@@ -227,7 +264,9 @@ export function RemonteeMap({ remontees, onRemonteeClick, height = "500px" }: Re
     if (!map.current || !map.current.isStyleLoaded()) return;
 
     const validRemontees = remontees.filter(
-      r => r.latitude !== null && r.longitude !== null
+      r => r.latitude !== null && r.longitude !== null &&
+           activeStatuses.includes(r.statut) &&
+           activeTypes.includes(r.type_remontee)
     );
 
     const geojson: GeoJSON.FeatureCollection = {
@@ -270,7 +309,7 @@ export function RemonteeMap({ remontees, onRemonteeClick, height = "500px" }: Re
         duration: 1000
       });
     }
-  }, [remontees, onRemonteeClick]);
+  }, [remontees, onRemonteeClick, activeStatuses, activeTypes]);
 
   return (
     <div className="relative w-full" style={{ height }}>
@@ -294,12 +333,12 @@ export function RemonteeMap({ remontees, onRemonteeClick, height = "500px" }: Re
 
       {/* Interactive Legend */}
       {showLegend && (
-        <Card className="absolute top-4 left-4 z-10 shadow-lg animate-scale-in max-w-xs">
+        <Card className="absolute top-4 left-4 z-10 shadow-lg animate-scale-in max-w-xs max-h-[calc(100%-2rem)] overflow-y-auto">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm flex items-center gap-2">
-                <Info className="h-4 w-4 text-primary" />
-                Légende de la carte
+                <Filter className="h-4 w-4 text-primary" />
+                Filtres & Légende
               </CardTitle>
               <Button
                 variant="ghost"
@@ -312,112 +351,135 @@ export function RemonteeMap({ remontees, onRemonteeClick, height = "500px" }: Re
             </div>
           </CardHeader>
           <CardContent className="space-y-4 text-xs">
-            {/* Clusters Section */}
+            {/* Status Filters */}
             <div className="space-y-2">
-              <div className="flex items-center gap-2 font-semibold text-foreground">
-                <Users className="h-3.5 w-3.5" />
-                <span>Regroupements (Clusters)</span>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 font-semibold text-foreground">
+                  <Circle className="h-3.5 w-3.5" />
+                  <span>Statut des remontées</span>
+                </div>
+                <span className="text-[10px] text-muted-foreground">
+                  {activeStatuses.length}/{statusConfig.length}
+                </span>
               </div>
-              <div className="space-y-1.5 pl-5">
-                <div className="flex items-center gap-2">
-                  <div className="flex items-center justify-center">
+              <div className="space-y-2 pl-5">
+                {statusConfig.map(status => (
+                  <div 
+                    key={status.value} 
+                    className="flex items-center gap-2 hover:bg-muted/50 rounded px-1 py-0.5 transition-colors cursor-pointer"
+                    onClick={() => toggleStatus(status.value)}
+                  >
+                    <Checkbox 
+                      checked={activeStatuses.includes(status.value)}
+                      onCheckedChange={() => toggleStatus(status.value)}
+                      className="h-3.5 w-3.5"
+                    />
                     <Circle 
-                      className="h-5 w-5" 
-                      fill="#3b82f6" 
+                      className="h-4 w-4 flex-shrink-0" 
+                      fill={status.color} 
                       color="#ffffff" 
                       strokeWidth={2}
                     />
+                    <span className={`text-muted-foreground flex-1 ${!activeStatuses.includes(status.value) && 'line-through opacity-50'}`}>
+                      {status.label}
+                    </span>
+                    <span className="text-[10px] font-medium text-muted-foreground">
+                      {remontees.filter(r => r.statut === status.value && r.latitude && r.longitude).length}
+                    </span>
                   </div>
-                  <span className="text-muted-foreground">Moins de 10 remontées</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="flex items-center justify-center">
-                    <Circle 
-                      className="h-6 w-6" 
-                      fill="#eab308" 
-                      color="#ffffff" 
-                      strokeWidth={2}
-                    />
-                  </div>
-                  <span className="text-muted-foreground">10 à 30 remontées</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="flex items-center justify-center">
-                    <Circle 
-                      className="h-7 w-7" 
-                      fill="#ef4444" 
-                      color="#ffffff" 
-                      strokeWidth={2}
-                    />
-                  </div>
-                  <span className="text-muted-foreground">Plus de 30 remontées</span>
-                </div>
+                ))}
               </div>
-              <p className="text-muted-foreground italic pl-5 text-[10px]">
-                Cliquez sur un cluster pour zoomer et décomposer
-              </p>
             </div>
 
-            {/* Status Section */}
+            {/* Type Filters */}
+            <div className="space-y-2 pt-2 border-t">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 font-semibold text-foreground">
+                  <Filter className="h-3.5 w-3.5" />
+                  <span>Type de remontée</span>
+                </div>
+                <span className="text-[10px] text-muted-foreground">
+                  {activeTypes.length}/{typeConfig.length}
+                </span>
+              </div>
+              <div className="space-y-2 pl-5">
+                {typeConfig.map(type => (
+                  <div 
+                    key={type.value} 
+                    className="flex items-center gap-2 hover:bg-muted/50 rounded px-1 py-0.5 transition-colors cursor-pointer"
+                    onClick={() => toggleType(type.value)}
+                  >
+                    <Checkbox 
+                      checked={activeTypes.includes(type.value)}
+                      onCheckedChange={() => toggleType(type.value)}
+                      className="h-3.5 w-3.5"
+                    />
+                    <span className={`text-muted-foreground flex-1 ${!activeTypes.includes(type.value) && 'line-through opacity-50'}`}>
+                      {type.label}
+                    </span>
+                    <span className="text-[10px] font-medium text-muted-foreground">
+                      {remontees.filter(r => r.type_remontee === type.value && r.latitude && r.longitude).length}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Clusters Info */}
             <div className="space-y-2 pt-2 border-t">
               <div className="flex items-center gap-2 font-semibold text-foreground">
-                <Circle className="h-3.5 w-3.5" />
-                <span>Statut des remontées</span>
+                <Users className="h-3.5 w-3.5" />
+                <span>Regroupements</span>
               </div>
               <div className="space-y-1.5 pl-5">
                 <div className="flex items-center gap-2">
                   <Circle 
-                    className="h-4 w-4" 
+                    className="h-5 w-5 flex-shrink-0" 
                     fill="#3b82f6" 
                     color="#ffffff" 
                     strokeWidth={2}
                   />
-                  <span className="text-muted-foreground">Nouveau</span>
+                  <span className="text-muted-foreground text-[11px]">&lt; 10 remontées</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Circle 
-                    className="h-4 w-4" 
+                    className="h-6 w-6 flex-shrink-0" 
                     fill="#eab308" 
                     color="#ffffff" 
                     strokeWidth={2}
                   />
-                  <span className="text-muted-foreground">En cours</span>
+                  <span className="text-muted-foreground text-[11px]">10-30 remontées</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Circle 
-                    className="h-4 w-4" 
-                    fill="#22c55e" 
-                    color="#ffffff" 
-                    strokeWidth={2}
-                  />
-                  <span className="text-muted-foreground">Traité</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Circle 
-                    className="h-4 w-4" 
+                    className="h-7 w-7 flex-shrink-0" 
                     fill="#ef4444" 
                     color="#ffffff" 
                     strokeWidth={2}
                   />
-                  <span className="text-muted-foreground">Rejeté</span>
+                  <span className="text-muted-foreground text-[11px]">&gt; 30 remontées</span>
                 </div>
               </div>
               <p className="text-muted-foreground italic pl-5 text-[10px]">
-                Cliquez sur un marqueur pour voir les détails
+                Cliquez sur un cluster pour zoomer
               </p>
             </div>
 
             {/* Stats */}
-            <div className="pt-2 border-t">
+            <div className="pt-2 border-t bg-muted/30 -mx-4 px-4 py-2 rounded-b">
               <div className="flex items-center justify-between text-[10px] text-muted-foreground">
-                <span>Total de remontées:</span>
-                <span className="font-semibold text-foreground">{remontees.length}</span>
+                <span>Affichées sur la carte:</span>
+                <span className="font-semibold text-foreground">
+                  {remontees.filter(r => 
+                    r.latitude && r.longitude && 
+                    activeStatuses.includes(r.statut) && 
+                    activeTypes.includes(r.type_remontee)
+                  ).length}
+                </span>
               </div>
               <div className="flex items-center justify-between text-[10px] text-muted-foreground mt-1">
-                <span>Avec localisation:</span>
-                <span className="font-semibold text-foreground">
-                  {remontees.filter(r => r.latitude && r.longitude).length}
-                </span>
+                <span>Total:</span>
+                <span className="font-semibold text-foreground">{remontees.length}</span>
               </div>
             </div>
           </CardContent>
