@@ -1,6 +1,9 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Info, X, Circle, Users } from 'lucide-react';
 
 interface Remontee {
   id: string;
@@ -31,6 +34,7 @@ const getStatusColor = (statut: string): string => {
 export function RemonteeMap({ remontees, onRemonteeClick, height = "500px" }: RemonteeMapProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
+  const [showLegend, setShowLegend] = useState(true);
 
   useEffect(() => {
     if (!mapContainer.current) return;
@@ -269,10 +273,156 @@ export function RemonteeMap({ remontees, onRemonteeClick, height = "500px" }: Re
   }, [remontees, onRemonteeClick]);
 
   return (
-    <div 
-      ref={mapContainer} 
-      className="w-full rounded-lg border shadow-sm"
-      style={{ height }}
-    />
+    <div className="relative w-full" style={{ height }}>
+      <div 
+        ref={mapContainer} 
+        className="w-full h-full rounded-lg border shadow-sm"
+      />
+      
+      {/* Legend Toggle Button */}
+      {!showLegend && (
+        <Button
+          variant="secondary"
+          size="sm"
+          className="absolute top-4 left-4 z-10 shadow-lg animate-fade-in"
+          onClick={() => setShowLegend(true)}
+        >
+          <Info className="h-4 w-4 mr-2" />
+          Légende
+        </Button>
+      )}
+
+      {/* Interactive Legend */}
+      {showLegend && (
+        <Card className="absolute top-4 left-4 z-10 shadow-lg animate-scale-in max-w-xs">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <Info className="h-4 w-4 text-primary" />
+                Légende de la carte
+              </CardTitle>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-6 w-6 p-0"
+                onClick={() => setShowLegend(false)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4 text-xs">
+            {/* Clusters Section */}
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 font-semibold text-foreground">
+                <Users className="h-3.5 w-3.5" />
+                <span>Regroupements (Clusters)</span>
+              </div>
+              <div className="space-y-1.5 pl-5">
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center justify-center">
+                    <Circle 
+                      className="h-5 w-5" 
+                      fill="#3b82f6" 
+                      color="#ffffff" 
+                      strokeWidth={2}
+                    />
+                  </div>
+                  <span className="text-muted-foreground">Moins de 10 remontées</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center justify-center">
+                    <Circle 
+                      className="h-6 w-6" 
+                      fill="#eab308" 
+                      color="#ffffff" 
+                      strokeWidth={2}
+                    />
+                  </div>
+                  <span className="text-muted-foreground">10 à 30 remontées</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center justify-center">
+                    <Circle 
+                      className="h-7 w-7" 
+                      fill="#ef4444" 
+                      color="#ffffff" 
+                      strokeWidth={2}
+                    />
+                  </div>
+                  <span className="text-muted-foreground">Plus de 30 remontées</span>
+                </div>
+              </div>
+              <p className="text-muted-foreground italic pl-5 text-[10px]">
+                Cliquez sur un cluster pour zoomer et décomposer
+              </p>
+            </div>
+
+            {/* Status Section */}
+            <div className="space-y-2 pt-2 border-t">
+              <div className="flex items-center gap-2 font-semibold text-foreground">
+                <Circle className="h-3.5 w-3.5" />
+                <span>Statut des remontées</span>
+              </div>
+              <div className="space-y-1.5 pl-5">
+                <div className="flex items-center gap-2">
+                  <Circle 
+                    className="h-4 w-4" 
+                    fill="#3b82f6" 
+                    color="#ffffff" 
+                    strokeWidth={2}
+                  />
+                  <span className="text-muted-foreground">Nouveau</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Circle 
+                    className="h-4 w-4" 
+                    fill="#eab308" 
+                    color="#ffffff" 
+                    strokeWidth={2}
+                  />
+                  <span className="text-muted-foreground">En cours</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Circle 
+                    className="h-4 w-4" 
+                    fill="#22c55e" 
+                    color="#ffffff" 
+                    strokeWidth={2}
+                  />
+                  <span className="text-muted-foreground">Traité</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Circle 
+                    className="h-4 w-4" 
+                    fill="#ef4444" 
+                    color="#ffffff" 
+                    strokeWidth={2}
+                  />
+                  <span className="text-muted-foreground">Rejeté</span>
+                </div>
+              </div>
+              <p className="text-muted-foreground italic pl-5 text-[10px]">
+                Cliquez sur un marqueur pour voir les détails
+              </p>
+            </div>
+
+            {/* Stats */}
+            <div className="pt-2 border-t">
+              <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+                <span>Total de remontées:</span>
+                <span className="font-semibold text-foreground">{remontees.length}</span>
+              </div>
+              <div className="flex items-center justify-between text-[10px] text-muted-foreground mt-1">
+                <span>Avec localisation:</span>
+                <span className="font-semibold text-foreground">
+                  {remontees.filter(r => r.latitude && r.longitude).length}
+                </span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+    </div>
   );
 }
