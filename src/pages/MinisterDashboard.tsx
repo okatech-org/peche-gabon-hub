@@ -9,7 +9,7 @@ import {
   Loader2
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useEffect, useState, lazy, Suspense } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { MinisterSidebar } from "@/components/minister/MinisterSidebar";
@@ -32,7 +32,8 @@ import { ComparaisonRegionaleFormations } from "@/components/minister/Comparaiso
 import { GestionFormateurs } from "@/components/minister/GestionFormateurs";
 import { RecommandationFormateurs } from "@/components/minister/RecommandationFormateurs";
 import { HistoriqueRecommandations } from "@/components/minister/HistoriqueRecommandations";
-const CalendrierFormations = lazy(() => import("@/components/minister/CalendrierFormations").then(module => ({ default: module.CalendrierFormations })));
+// Temporarily disabled due to react-big-calendar loading issues
+// const CalendrierFormations = lazy(() => import("@/components/minister/CalendrierFormations").then(module => ({ default: module.CalendrierFormations })));
 import { GanttFormateurs } from "@/components/minister/GanttFormateurs";
 import { AnalyticsFormations } from "@/components/minister/AnalyticsFormations";
 import { PredictionsFormations } from "@/components/minister/PredictionsFormations";
@@ -352,9 +353,10 @@ const MinisterDashboard = () => {
                   <SeuilsAlertesManagement />
                   <AnalysePredictiveActions />
                   <RecommandationsFormation />
-                  <Suspense fallback={<div className="flex items-center justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div>}>
+                  {/* Temporarily disabled due to react-big-calendar loading issues */}
+                  {/* <Suspense fallback={<div className="flex items-center justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div>}>
                     <CalendrierFormations />
-                  </Suspense>
+                  </Suspense> */}
                   <SuiviFormations />
                   <BudgetFormations />
                   <ComparaisonRegionaleFormations />
