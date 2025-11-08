@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Calendar as CalendarIcon, Users, Loader2, Eye, Edit2, AlertTriangle } from "lucide-react";
+import { Calendar as CalendarIcon, Users, Loader2, Eye, Edit2, AlertTriangle, Wand2, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Calendar, dateFnsLocalizer, Event } from "react-big-calendar";
@@ -80,6 +80,19 @@ interface Conflict {
   }[];
 }
 
+interface Suggestion {
+  formation_id: string;
+  formation_titre: string;
+  date_debut_actuelle: string;
+  date_fin_actuelle: string;
+  suggestions_dates: {
+    date_debut: string;
+    date_fin: string;
+    score: number;
+    raison: string;
+  }[];
+}
+
 export function CalendrierFormations() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
@@ -91,6 +104,9 @@ export function CalendrierFormations() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [conflicts, setConflicts] = useState<Conflict[]>([]);
   const [conflictFormationIds, setConflictFormationIds] = useState<Set<string>>(new Set());
+  const [resolvingConflict, setResolvingConflict] = useState(false);
+  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
+  const [showSuggestionsDialog, setShowSuggestionsDialog] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -431,6 +447,56 @@ export function CalendrierFormations() {
     }
   };
 
+  const handleResolveConflicts = async (formateurId: string) => {
+    try {
+      setResolvingConflict(true);
+      toast.info("Analyse des conflits en cours...");
+
+      const { data, error } = await supabase.functions.invoke('resolve-conflicts', {
+        body: { conflict_formateur_id: formateurId },
+      });
+
+      if (error) throw error;
+
+      if (data.success && data.suggestions.length > 0) {
+        setSuggestions(data.suggestions);
+        setShowSuggestionsDialog(true);
+        toast.success(`${data.suggestions.length} suggestion(s) générée(s)`);
+      } else {
+        toast.warning("Aucune solution automatique trouvée");
+      }
+    } catch (error) {
+      console.error("Erreur résolution conflits:", error);
+      toast.error("Erreur lors de la résolution des conflits");
+    } finally {
+      setResolvingConflict(false);
+    }
+  };
+
+  const handleApplySuggestion = async (
+    formationId: string,
+    dateDebut: string,
+    dateFin: string
+  ) => {
+    try {
+      const { error } = await supabase
+        .from("formations_planifiees")
+        .update({
+          date_debut: dateDebut,
+          date_fin: dateFin,
+        })
+        .eq("id", formationId);
+
+      if (error) throw error;
+
+      toast.success("Date alternative appliquée avec succès");
+      loadData();
+    } catch (error) {
+      console.error("Erreur application suggestion:", error);
+      toast.error("Erreur lors de l'application de la suggestion");
+    }
+  };
+
   const handleUpdateFormation = async (formationId: string, data: Partial<Formation>) => {
     try {
       const { error } = await supabase
@@ -469,9 +535,27 @@ export function CalendrierFormations() {
             <div className="mt-2 space-y-3">
               {conflicts.map((conflict, idx) => (
                 <div key={idx} className="bg-background/50 p-3 rounded-md">
-                  <p className="font-semibold mb-2">
-                    {conflict.formateur_nom} a {conflict.formations.length} formations simultanées:
-                  </p>
+                  <div className="flex items-start justify-between gap-4 mb-2">
+                    <p className="font-semibold">
+                      {conflict.formateur_nom} a {conflict.formations.length} formations simultanées:
+                    </p>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleResolveConflicts(conflict.formateur_id)}
+                      disabled={resolvingConflict}
+                      className="shrink-0"
+                    >
+                      {resolvingConflict ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <>
+                          <Wand2 className="h-4 w-4 mr-1" />
+                          Résoudre
+                        </>
+                      )}
+                    </Button>
+                  </div>
                   <ul className="space-y-1 text-sm">
                     {conflict.formations.map((formation) => (
                       <li key={formation.id} className="flex items-start gap-2">
@@ -705,6 +789,70 @@ export function CalendrierFormations() {
           </DialogContent>
         </Dialog>
       )}
+
+      {/* Dialog des suggestions de résolution */}
+      <Dialog open={showSuggestionsDialog} onOpenChange={setShowSuggestionsDialog}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Wand2 className="h-5 w-5" />
+              Suggestions de Résolution Automatique
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-6">
+            {suggestions.map((suggestion) => (
+              <Card key={suggestion.formation_id}>
+                <CardHeader>
+                  <CardTitle className="text-lg">{suggestion.formation_titre}</CardTitle>
+                  <p className="text-sm text-muted-foreground">
+                    Date actuelle: du {format(new Date(suggestion.date_debut_actuelle), "dd MMM yyyy", { locale: fr })} au{" "}
+                    {format(new Date(suggestion.date_fin_actuelle), "dd MMM yyyy", { locale: fr })}
+                  </p>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {suggestion.suggestions_dates.length > 0 ? (
+                      suggestion.suggestions_dates.map((alt, idx) => (
+                        <div
+                          key={idx}
+                          className="flex items-start justify-between gap-4 p-4 border rounded-lg hover:bg-accent/50 transition-colors"
+                        >
+                          <div className="flex-1 space-y-1">
+                            <div className="flex items-center gap-2">
+                              <Badge variant={alt.score >= 90 ? 'default' : alt.score >= 75 ? 'secondary' : 'outline'}>
+                                Score: {alt.score}
+                              </Badge>
+                              <span className="text-sm font-medium">
+                                Du {format(new Date(alt.date_debut), "dd MMM yyyy", { locale: fr })} au{" "}
+                                {format(new Date(alt.date_fin), "dd MMM yyyy", { locale: fr })}
+                              </span>
+                            </div>
+                            <p className="text-sm text-muted-foreground">{alt.raison}</p>
+                          </div>
+                          <Button
+                            size="sm"
+                            onClick={() => {
+                              handleApplySuggestion(suggestion.formation_id, alt.date_debut, alt.date_fin);
+                              setShowSuggestionsDialog(false);
+                            }}
+                          >
+                            <CheckCircle2 className="h-4 w-4 mr-1" />
+                            Appliquer
+                          </Button>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-sm text-muted-foreground text-center py-4">
+                        Aucune suggestion disponible pour cette formation
+                      </p>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
