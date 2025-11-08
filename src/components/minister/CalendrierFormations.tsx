@@ -3,8 +3,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Calendar as CalendarIcon, Users, Loader2, Eye, Edit2 } from "lucide-react";
+import { Calendar as CalendarIcon, Users, Loader2, Eye, Edit2, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Calendar, dateFnsLocalizer, Event } from "react-big-calendar";
 import { format, parse, startOfWeek, getDay } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -68,6 +69,17 @@ interface PresenceUser {
   status: string;
 }
 
+interface Conflict {
+  formateur_id: string;
+  formateur_nom: string;
+  formations: {
+    id: string;
+    titre: string;
+    date_debut: string;
+    date_fin: string;
+  }[];
+}
+
 export function CalendrierFormations() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
@@ -77,6 +89,8 @@ export function CalendrierFormations() {
   const [activeUsers, setActiveUsers] = useState<PresenceUser[]>([]);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [conflicts, setConflicts] = useState<Conflict[]>([]);
+  const [conflictFormationIds, setConflictFormationIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     loadData();
@@ -124,6 +138,79 @@ export function CalendrierFormations() {
     }
   };
 
+  const detectConflicts = async (formationsData: Formation[]) => {
+    const detectedConflicts: Conflict[] = [];
+    const conflictIds = new Set<string>();
+
+    // Grouper les formations par formateur
+    const formationsByFormateur = new Map<string, Formation[]>();
+    
+    for (const formation of formationsData) {
+      if (!formation.formateur_id) continue;
+      
+      if (!formationsByFormateur.has(formation.formateur_id)) {
+        formationsByFormateur.set(formation.formateur_id, []);
+      }
+      formationsByFormateur.get(formation.formateur_id)!.push(formation);
+    }
+
+    // Détecter les chevauchements
+    for (const [formateurId, formations] of formationsByFormateur.entries()) {
+      const overlapping: Formation[] = [];
+      
+      for (let i = 0; i < formations.length; i++) {
+        for (let j = i + 1; j < formations.length; j++) {
+          const formation1 = formations[i];
+          const formation2 = formations[j];
+          
+          const start1 = new Date(formation1.date_debut);
+          const end1 = new Date(formation1.date_fin);
+          const start2 = new Date(formation2.date_debut);
+          const end2 = new Date(formation2.date_fin);
+          
+          // Vérifier si les dates se chevauchent
+          if (start1 <= end2 && start2 <= end1) {
+            if (!overlapping.some(f => f.id === formation1.id)) {
+              overlapping.push(formation1);
+              conflictIds.add(formation1.id);
+            }
+            if (!overlapping.some(f => f.id === formation2.id)) {
+              overlapping.push(formation2);
+              conflictIds.add(formation2.id);
+            }
+          }
+        }
+      }
+      
+      if (overlapping.length > 0) {
+        // Récupérer le nom du formateur
+        const { data: formateur } = await supabase
+          .from("formateurs")
+          .select("nom, prenom")
+          .eq("id", formateurId)
+          .single();
+        
+        detectedConflicts.push({
+          formateur_id: formateurId,
+          formateur_nom: formateur ? `${formateur.prenom} ${formateur.nom}` : "Formateur inconnu",
+          formations: overlapping.map(f => ({
+            id: f.id,
+            titre: f.titre,
+            date_debut: f.date_debut,
+            date_fin: f.date_fin,
+          })),
+        });
+      }
+    }
+
+    setConflicts(detectedConflicts);
+    setConflictFormationIds(conflictIds);
+    
+    if (detectedConflicts.length > 0) {
+      toast.warning(`${detectedConflicts.length} conflit(s) de formateur détecté(s)`);
+    }
+  };
+
   const updateEvents = (
     formationsData: Formation[],
     disponibilitesData: Disponibilite[]
@@ -149,6 +236,7 @@ export function CalendrierFormations() {
       }));
 
     setEvents([...formationEvents, ...dispoEvents]);
+    detectConflicts(formationsData);
   };
 
   const setupRealtimeSubscriptions = () => {
@@ -314,9 +402,11 @@ export function CalendrierFormations() {
   const eventStyleGetter = (event: CalendarEvent) => {
     if (event.type === 'formation') {
       const formation = event.resource as Formation;
+      const hasConflict = conflictFormationIds.has(formation.id);
+      
       return {
         style: {
-          backgroundColor: 
+          backgroundColor: hasConflict ? '#ef4444' :
             formation.statut === 'planifiee' ? '#3b82f6' :
             formation.statut === 'en_cours' ? '#f59e0b' :
             formation.statut === 'terminee' ? '#10b981' :
@@ -324,7 +414,7 @@ export function CalendrierFormations() {
           borderRadius: '5px',
           opacity: 0.9,
           color: 'white',
-          border: '0px',
+          border: hasConflict ? '2px solid #dc2626' : '0px',
           display: 'block',
         },
       };
@@ -370,6 +460,37 @@ export function CalendrierFormations() {
 
   return (
     <div className="space-y-6">
+      {/* Alertes de conflits */}
+      {conflicts.length > 0 && (
+        <Alert variant="destructive">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>⚠️ Conflits de formateurs détectés</AlertTitle>
+          <AlertDescription>
+            <div className="mt-2 space-y-3">
+              {conflicts.map((conflict, idx) => (
+                <div key={idx} className="bg-background/50 p-3 rounded-md">
+                  <p className="font-semibold mb-2">
+                    {conflict.formateur_nom} a {conflict.formations.length} formations simultanées:
+                  </p>
+                  <ul className="space-y-1 text-sm">
+                    {conflict.formations.map((formation) => (
+                      <li key={formation.id} className="flex items-start gap-2">
+                        <span className="text-destructive">•</span>
+                        <span>
+                          <strong>{formation.titre}</strong> - du{" "}
+                          {format(new Date(formation.date_debut), "dd MMM yyyy", { locale: fr })} au{" "}
+                          {format(new Date(formation.date_fin), "dd MMM yyyy", { locale: fr })}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          </AlertDescription>
+        </Alert>
+      )}
+
       {/* Barre d'utilisateurs actifs */}
       {activeUsers.length > 0 && (
         <Card>
@@ -411,6 +532,10 @@ export function CalendrierFormations() {
             <div className="flex items-center gap-2">
               <div className="w-4 h-4 rounded" style={{ backgroundColor: '#d1fae5', border: '1px dashed #10b981' }}></div>
               <span className="text-sm">Disponibilité formateur</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 rounded" style={{ backgroundColor: '#ef4444', border: '2px solid #dc2626' }}></div>
+              <span className="text-sm">Conflit détecté</span>
             </div>
           </div>
         </CardContent>
