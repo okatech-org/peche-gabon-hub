@@ -32,8 +32,7 @@ import { ComparaisonRegionaleFormations } from "@/components/minister/Comparaiso
 import { GestionFormateurs } from "@/components/minister/GestionFormateurs";
 import { RecommandationFormateurs } from "@/components/minister/RecommandationFormateurs";
 import { HistoriqueRecommandations } from "@/components/minister/HistoriqueRecommandations";
-// Temporarily disabled due to react-big-calendar loading issues
-// const CalendrierFormations = lazy(() => import("@/components/minister/CalendrierFormations").then(module => ({ default: module.CalendrierFormations })));
+import { SimpleCalendrierFormations } from "@/components/minister/SimpleCalendrierFormations";
 import { GanttFormateurs } from "@/components/minister/GanttFormateurs";
 import { AnalyticsFormations } from "@/components/minister/AnalyticsFormations";
 import { PredictionsFormations } from "@/components/minister/PredictionsFormations";
@@ -353,10 +352,7 @@ const MinisterDashboard = () => {
                   <SeuilsAlertesManagement />
                   <AnalysePredictiveActions />
                   <RecommandationsFormation />
-                  {/* Temporarily disabled due to react-big-calendar loading issues */}
-                  {/* <Suspense fallback={<div className="flex items-center justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div>}>
-                    <CalendrierFormations />
-                  </Suspense> */}
+                  <SimpleCalendrierFormations />
                   <SuiviFormations />
                   <BudgetFormations />
                   <ComparaisonRegionaleFormations />
