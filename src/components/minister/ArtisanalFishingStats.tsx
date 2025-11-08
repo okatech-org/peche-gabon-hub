@@ -2,7 +2,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
+
+const COLORS = ['hsl(var(--primary))', 'hsl(var(--accent))', 'hsl(var(--secondary))', '#82ca9d', '#ffc658', '#8884d8', '#ff8042'];
 
 const ArtisanalFishingStats = () => {
   const [loading, setLoading] = useState(true);
@@ -13,6 +15,7 @@ const ArtisanalFishingStats = () => {
     tauxPaiementTaxes: 0,
   });
   const [chartData, setChartData] = useState<any[]>([]);
+  const [speciesData, setSpeciesData] = useState<any[]>([]);
 
   useEffect(() => {
     loadStats();
@@ -100,6 +103,32 @@ const ArtisanalFishingStats = () => {
       }
 
       setChartData(monthlyData);
+
+      // Répartition par espèce (année en cours)
+      const { data: capturesParEspece } = await supabase
+        .from("captures_pa")
+        .select(`
+          poids_kg,
+          espece:especes(nom)
+        `)
+        .eq("annee", currentYear);
+
+      const especeMap = new Map<string, number>();
+      capturesParEspece?.forEach((capture: any) => {
+        const especeNom = capture.espece?.nom || "Non spécifié";
+        const poids = capture.poids_kg || 0;
+        especeMap.set(especeNom, (especeMap.get(especeNom) || 0) + poids);
+      });
+
+      const especeData = Array.from(especeMap.entries())
+        .map(([name, value]) => ({
+          name,
+          value: Number((value / 1000).toFixed(1)), // Convertir en tonnes
+        }))
+        .sort((a, b) => b.value - a.value)
+        .slice(0, 7); // Top 7 espèces
+
+      setSpeciesData(especeData);
       setStats({
         capturesPA,
         cpueMoyenne: Number(cpueMoyenne.toFixed(1)),
@@ -182,6 +211,34 @@ const ArtisanalFishingStats = () => {
               <Line yAxisId="left" type="monotone" dataKey="captures" stroke="hsl(var(--primary))" strokeWidth={2} name="Captures (T)" />
               <Line yAxisId="right" type="monotone" dataKey="cpue" stroke="hsl(var(--accent))" strokeWidth={2} name="CPUE" />
             </LineChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Répartition par Espèce</CardTitle>
+          <CardDescription>Top 7 espèces capturées (année en cours)</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ResponsiveContainer width="100%" height={350}>
+            <PieChart>
+              <Pie
+                data={speciesData}
+                cx="50%"
+                cy="50%"
+                labelLine={false}
+                label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
+                outerRadius={120}
+                fill="#8884d8"
+                dataKey="value"
+              >
+                {speciesData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip formatter={(value) => `${value} T`} />
+            </PieChart>
           </ResponsiveContainer>
         </CardContent>
       </Card>

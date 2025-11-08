@@ -2,7 +2,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
+
+const COLORS = ['hsl(var(--primary))', 'hsl(var(--accent))', 'hsl(var(--secondary))', '#82ca9d', '#ffc658'];
 
 const IndustrialFishingStats = () => {
   const [loading, setLoading] = useState(true);
@@ -111,6 +113,40 @@ const IndustrialFishingStats = () => {
               <Legend />
               <Bar dataKey="volume" fill="hsl(var(--primary))" name="Captures (T)" />
             </BarChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Top 5 Espèces Capturées</CardTitle>
+          <CardDescription>Données simulées - Répartition par espèce (pêche industrielle)</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ResponsiveContainer width="100%" height={350}>
+            <PieChart>
+              <Pie
+                data={[
+                  { name: "Thon", value: 145 },
+                  { name: "Espadon", value: 89 },
+                  { name: "Merlu", value: 67 },
+                  { name: "Crevettes", value: 54 },
+                  { name: "Autres", value: 78 },
+                ]}
+                cx="50%"
+                cy="50%"
+                labelLine={false}
+                label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
+                outerRadius={120}
+                fill="#8884d8"
+                dataKey="value"
+              >
+                {[0, 1, 2, 3, 4].map((index) => (
+                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip formatter={(value) => `${value} T`} />
+            </PieChart>
           </ResponsiveContainer>
         </CardContent>
       </Card>
