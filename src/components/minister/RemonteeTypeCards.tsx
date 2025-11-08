@@ -76,9 +76,10 @@ interface RemonteeTypeCardsProps {
   selectedType: string;
   onTypeSelect: (typeId: string) => void;
   typeCounts?: Record<string, number>;
+  newCounts?: Record<string, number>;
 }
 
-export function RemonteeTypeCards({ selectedType, onTypeSelect, typeCounts }: RemonteeTypeCardsProps) {
+export function RemonteeTypeCards({ selectedType, onTypeSelect, typeCounts, newCounts }: RemonteeTypeCardsProps) {
   return (
     <div className="grid gap-3 grid-cols-2 md:grid-cols-4 lg:grid-cols-7">
       {remonteeTypes.map((type, index) => {
@@ -87,6 +88,10 @@ export function RemonteeTypeCards({ selectedType, onTypeSelect, typeCounts }: Re
         const count = type.id === "tous" 
           ? Object.values(typeCounts || {}).reduce((sum, val) => sum + val, 0)
           : typeCounts?.[type.id] || 0;
+        const newCount = type.id === "tous"
+          ? Object.values(newCounts || {}).reduce((sum, val) => sum + val, 0)
+          : newCounts?.[type.id] || 0;
+        const hasNew = newCount > 0;
 
         return (
           <Card
@@ -96,7 +101,8 @@ export function RemonteeTypeCards({ selectedType, onTypeSelect, typeCounts }: Re
               isSelected 
                 ? "border-primary shadow-lg scale-105 animate-scale-in" 
                 : "border-transparent hover:border-border",
-              type.bgColor
+              type.bgColor,
+              hasNew && !isSelected && "animate-pulse"
             )}
             style={{ animationDelay: `${index * 50}ms` }}
             onClick={() => onTypeSelect(type.id)}
@@ -125,13 +131,19 @@ export function RemonteeTypeCards({ selectedType, onTypeSelect, typeCounts }: Re
                   
                   {count > 0 && (
                     <Badge 
-                      variant={isSelected ? "default" : "secondary"}
+                      variant={isSelected ? "default" : hasNew ? "destructive" : "secondary"}
                       className={cn(
                         "text-xs transition-all duration-300",
-                        isSelected && "animate-scale-in"
+                        isSelected && "animate-scale-in",
+                        hasNew && "font-semibold"
                       )}
                     >
                       {count}
+                      {hasNew && (
+                        <span className="ml-1 text-[10px]">
+                          ({newCount} nouv.)
+                        </span>
+                      )}
                     </Badge>
                   )}
                 </div>

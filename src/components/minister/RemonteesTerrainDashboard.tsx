@@ -35,6 +35,7 @@ interface RemonteeStats {
   par_type: Record<string, number>;
   par_priorite: Record<string, number>;
   par_sentiment: Record<string, number>;
+  nouveaux_par_type: Record<string, number>;
 }
 
 interface Remontee {
@@ -67,6 +68,7 @@ export function RemonteesTerrainDashboard() {
     par_type: {},
     par_priorite: {},
     par_sentiment: {},
+    nouveaux_par_type: {},
   });
   const [remontees, setRemontees] = useState<Remontee[]>([]);
   const [loading, setLoading] = useState(true);
@@ -104,6 +106,7 @@ export function RemonteesTerrainDashboard() {
         par_type: {},
         par_priorite: {},
         par_sentiment: {},
+        nouveaux_par_type: {},
       };
 
       // Compter par type
@@ -112,6 +115,10 @@ export function RemonteesTerrainDashboard() {
         newStats.par_priorite[r.niveau_priorite] = (newStats.par_priorite[r.niveau_priorite] || 0) + 1;
         if (r.sentiment) {
           newStats.par_sentiment[r.sentiment] = (newStats.par_sentiment[r.sentiment] || 0) + 1;
+        }
+        // Compter les nouvelles remontées par type
+        if (r.statut === "nouveau") {
+          newStats.nouveaux_par_type[r.type_remontee] = (newStats.nouveaux_par_type[r.type_remontee] || 0) + 1;
         }
       });
 
@@ -275,6 +282,7 @@ export function RemonteesTerrainDashboard() {
           selectedType={filterType}
           onTypeSelect={setFilterType}
           typeCounts={stats.par_type}
+          newCounts={stats.nouveaux_par_type}
         />
       </div>
 
