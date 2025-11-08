@@ -25,6 +25,7 @@ import MinisterHistory from "@/components/minister/MinisterHistory";
 import AlertesRapportsPanel from "@/components/minister/AlertesRapportsPanel";
 import { SeuilsAlertesManagement } from "@/components/minister/SeuilsAlertesManagement";
 import { AnalysePredictiveActions } from "@/components/minister/AnalysePredictiveActions";
+import { RecommandationsFormation } from "@/components/minister/RecommandationsFormation";
 import GlobalFilters from "@/components/minister/GlobalFilters";
 import AlertsPanel from "@/components/minister/AlertsPanel";
 import ExportPDFButton from "@/components/minister/ExportPDFButton";
@@ -339,6 +340,7 @@ const MinisterDashboard = () => {
                   <AlertesRapportsPanel />
                   <SeuilsAlertesManagement />
                   <AnalysePredictiveActions />
+                  <RecommandationsFormation />
                 </div>
                 <MinisterHistory />
               </div>
