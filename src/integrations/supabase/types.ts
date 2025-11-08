@@ -2639,6 +2639,15 @@ export type Database = {
         | "observateur_pi"
         | "analyste"
         | "ministre"
+        | "dgpa"
+        | "anpa"
+        | "agasa"
+        | "dgmm"
+        | "oprag"
+        | "dgddi"
+        | "anpn"
+        | "corep"
+        | "partenaire_international"
       espece_categorie: "pelagique" | "demersal" | "crustace" | "autre"
       pirogue_type:
         | "artisanale_motorisee"
@@ -2783,6 +2792,15 @@ export const Constants = {
         "observateur_pi",
         "analyste",
         "ministre",
+        "dgpa",
+        "anpa",
+        "agasa",
+        "dgmm",
+        "oprag",
+        "dgddi",
+        "anpn",
+        "corep",
+        "partenaire_international",
       ],
       espece_categorie: ["pelagique", "demersal", "crustace", "autre"],
       pirogue_type: [

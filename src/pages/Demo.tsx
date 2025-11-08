@@ -7,7 +7,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { 
   Fish, Clipboard, Users, Shield, MapPin, Building2, 
-  UserCog, Ship, Eye, BarChart3, Crown, Loader2 
+  UserCog, Ship, Eye, BarChart3, Crown, Loader2,
+  FileText, Anchor, Package, TreePine, Globe, HandshakeIcon, Search
 } from "lucide-react";
 
 const Demo = () => {
@@ -16,61 +17,167 @@ const Demo = () => {
   const [isInitializing, setIsInitializing] = useState(true);
 
   const demoAccounts = [
+    // Ministère et Direction
     {
-      role: "pecheur",
-      name: "Pêcheur Artisanal",
-      description: "Déclarer captures, consulter licence",
-      email: "pecheur@demo.ga",
-      icon: Fish,
-      color: "from-blue-500 to-cyan-500"
-    },
-    {
-      role: "agent_collecte",
-      name: "Agent de Collecte",
-      description: "Saisie terrain, validation captures",
-      email: "agent@demo.ga",
-      icon: Clipboard,
-      color: "from-green-500 to-emerald-500"
-    },
-    {
-      role: "gestionnaire_coop",
-      name: "Gestionnaire Coopérative",
-      description: "Gestion pirogues et pêcheurs",
-      email: "coop@demo.ga",
-      icon: Users,
-      color: "from-purple-500 to-pink-500"
-    },
-    {
-      role: "inspecteur",
-      name: "Inspecteur",
-      description: "Surveillance, infractions, saisies",
-      email: "inspecteur@demo.ga",
-      icon: Shield,
-      color: "from-red-500 to-orange-500"
-    },
-    {
-      role: "direction_provinciale",
-      name: "Direction Provinciale",
-      description: "Validation demandes, supervision province",
-      email: "province@demo.ga",
-      icon: MapPin,
-      color: "from-indigo-500 to-blue-500"
+      role: "ministre",
+      name: "Ministère de la Mer",
+      description: "Politique publique secteur halieutique",
+      email: "ministre@demo.ga",
+      icon: Crown,
+      color: "from-yellow-500 to-amber-500",
+      category: "Ministère"
     },
     {
       role: "direction_centrale",
       name: "Direction Centrale",
-      description: "Analytics, publication réglementation",
+      description: "Coordination nationale politiques pêche",
       email: "centrale@demo.ga",
       icon: Building2,
-      color: "from-violet-500 to-purple-500"
+      color: "from-violet-500 to-purple-500",
+      category: "Ministère"
+    },
+    {
+      role: "direction_provinciale",
+      name: "Direction Provinciale",
+      description: "Supervision provinciale",
+      email: "province@demo.ga",
+      icon: MapPin,
+      color: "from-indigo-500 to-blue-500",
+      category: "Ministère"
+    },
+    
+    // Agences techniques
+    {
+      role: "dgpa",
+      name: "DGPA",
+      description: "Licences, Code des pêches",
+      email: "dgpa@demo.ga",
+      icon: FileText,
+      color: "from-blue-500 to-indigo-500",
+      category: "Agences"
+    },
+    {
+      role: "anpa",
+      name: "ANPA",
+      description: "Exécution politique opérationnelle",
+      email: "anpa@demo.ga",
+      icon: Anchor,
+      color: "from-cyan-500 to-blue-500",
+      category: "Agences"
+    },
+    {
+      role: "agasa",
+      name: "AGASA",
+      description: "Contrôle sanitaire produits",
+      email: "agasa@demo.ga",
+      icon: Shield,
+      color: "from-green-500 to-emerald-500",
+      category: "Agences"
+    },
+    {
+      role: "dgmm",
+      name: "DGMM",
+      description: "Sécurité navires et gens de mer",
+      email: "dgmm@demo.ga",
+      icon: Ship,
+      color: "from-blue-600 to-cyan-600",
+      category: "Agences"
+    },
+    {
+      role: "oprag",
+      name: "OPRAG",
+      description: "Gestion portuaire, débarquements",
+      email: "oprag@demo.ga",
+      icon: Anchor,
+      color: "from-teal-500 to-cyan-500",
+      category: "Agences"
+    },
+    {
+      role: "dgddi",
+      name: "DGDDI (Douanes)",
+      description: "Contrôle import/export",
+      email: "dgddi@demo.ga",
+      icon: Package,
+      color: "from-orange-500 to-red-500",
+      category: "Agences"
+    },
+    {
+      role: "anpn",
+      name: "ANPN",
+      description: "Aires marines protégées, lutte INN",
+      email: "anpn@demo.ga",
+      icon: TreePine,
+      color: "from-green-600 to-emerald-600",
+      category: "Agences"
+    },
+    
+    // Coopération
+    {
+      role: "corep",
+      name: "COREP",
+      description: "Coopération régionale Golfe Guinée",
+      email: "corep@demo.ga",
+      icon: Globe,
+      color: "from-purple-500 to-pink-500",
+      category: "Coopération"
+    },
+    {
+      role: "partenaire_international",
+      name: "Partenaire International",
+      description: "APD UE-Gabon, WCS, Global Fishing Watch",
+      email: "partenaire@demo.ga",
+      icon: HandshakeIcon,
+      color: "from-blue-400 to-purple-400",
+      category: "Coopération"
+    },
+    
+    // Acteurs économiques
+    {
+      role: "pecheur",
+      name: "Pêcheur Artisanal",
+      description: "Déclaration captures, souveraineté",
+      email: "pecheur@demo.ga",
+      icon: Fish,
+      color: "from-blue-500 to-cyan-500",
+      category: "Économique"
+    },
+    {
+      role: "gestionnaire_coop",
+      name: "Coopérative",
+      description: "Projet Gab Pêche, organisation",
+      email: "coop@demo.ga",
+      icon: Users,
+      color: "from-purple-500 to-pink-500",
+      category: "Économique"
     },
     {
       role: "armateur_pi",
-      name: "Armateur Pêche Industrielle",
-      description: "Gestion flotte et captures industrielles",
+      name: "Armement Industriel",
+      description: "Flotte, licences internationales",
       email: "armateur@demo.ga",
       icon: Ship,
-      color: "from-teal-500 to-cyan-500"
+      color: "from-teal-500 to-cyan-500",
+      category: "Économique"
+    },
+    
+    // Personnel technique
+    {
+      role: "agent_collecte",
+      name: "Agent de Collecte",
+      description: "Saisie terrain, validation",
+      email: "agent@demo.ga",
+      icon: Clipboard,
+      color: "from-green-500 to-emerald-500",
+      category: "Technique"
+    },
+    {
+      role: "inspecteur",
+      name: "Inspecteur",
+      description: "Surveillance, infractions",
+      email: "inspecteur@demo.ga",
+      icon: Search,
+      color: "from-red-500 to-orange-500",
+      category: "Technique"
     },
     {
       role: "observateur_pi",
@@ -78,31 +185,28 @@ const Demo = () => {
       description: "Journal de marée, rejets",
       email: "observateur@demo.ga",
       icon: Eye,
-      color: "from-amber-500 to-yellow-500"
+      color: "from-amber-500 to-yellow-500",
+      category: "Technique"
     },
     {
       role: "analyste",
       name: "Analyste",
-      description: "Exports, rapports, statistiques",
+      description: "Rapports, statistiques",
       email: "analyste@demo.ga",
       icon: BarChart3,
-      color: "from-pink-500 to-rose-500"
+      color: "from-pink-500 to-rose-500",
+      category: "Technique"
     },
-    {
-      role: "ministre",
-      name: "Ministre",
-      description: "Dashboards exécutifs",
-      email: "ministre@demo.ga",
-      icon: Crown,
-      color: "from-yellow-500 to-amber-500"
-    },
+    
+    // Administration
     {
       role: "admin",
       name: "Administrateur",
       description: "Gestion système, RBAC",
       email: "admin@demo.ga",
       icon: UserCog,
-      color: "from-gray-700 to-gray-900"
+      color: "from-gray-700 to-gray-900",
+      category: "Administration"
     }
   ];
 
@@ -179,38 +283,58 @@ const Demo = () => {
           </div>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
-          {demoAccounts.map((account) => {
-            const Icon = account.icon;
+        <div className="space-y-8 max-w-7xl mx-auto">
+          {['Ministère', 'Agences', 'Coopération', 'Économique', 'Technique', 'Administration'].map(category => {
+            const categoryAccounts = demoAccounts.filter(acc => acc.category === category);
+            if (categoryAccounts.length === 0) return null;
+            
             return (
-              <Card key={account.role} className="group hover:shadow-lg transition-all duration-300 overflow-hidden">
-                <div className={`h-2 bg-gradient-to-r ${account.color}`} />
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div className={`p-3 rounded-lg bg-gradient-to-br ${account.color} text-white`}>
-                      <Icon className="h-6 w-6" />
-                    </div>
-                    <Button
-                      size="sm"
-                      onClick={() => handleQuickAccess(account.email, account.name)}
-                      className="group-hover:scale-105 transition-transform"
-                    >
-                      Accès Rapide
-                    </Button>
-                  </div>
-                  <CardTitle className="mt-4">{account.name}</CardTitle>
-                  <CardDescription>{account.description}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <span className="font-mono text-xs bg-muted px-2 py-1 rounded">
-                        {account.email}
-                      </span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              <div key={category}>
+                <h3 className="text-2xl font-bold mb-4 flex items-center gap-2">
+                  <div className="h-1 w-12 bg-gradient-to-r from-primary to-primary/50 rounded" />
+                  {category === 'Ministère' && 'Ministère et Direction'}
+                  {category === 'Agences' && 'Agences et Directions Techniques'}
+                  {category === 'Coopération' && 'Coopération Internationale'}
+                  {category === 'Économique' && 'Acteurs Économiques'}
+                  {category === 'Technique' && 'Personnel Technique'}
+                  {category === 'Administration' && 'Administration Système'}
+                </h3>
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {categoryAccounts.map((account) => {
+                    const Icon = account.icon;
+                    return (
+                      <Card key={account.role} className="group hover:shadow-lg transition-all duration-300 overflow-hidden">
+                        <div className={`h-2 bg-gradient-to-r ${account.color}`} />
+                        <CardHeader>
+                          <div className="flex items-start justify-between">
+                            <div className={`p-3 rounded-lg bg-gradient-to-br ${account.color} text-white`}>
+                              <Icon className="h-6 w-6" />
+                            </div>
+                            <Button
+                              size="sm"
+                              onClick={() => handleQuickAccess(account.email, account.name)}
+                              className="group-hover:scale-105 transition-transform"
+                            >
+                              Accès Rapide
+                            </Button>
+                          </div>
+                          <CardTitle className="mt-4 text-lg">{account.name}</CardTitle>
+                          <CardDescription>{account.description}</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="space-y-2 text-sm">
+                            <div className="flex items-center gap-2 text-muted-foreground">
+                              <span className="font-mono text-xs bg-muted px-2 py-1 rounded">
+                                {account.email}
+                              </span>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+              </div>
             );
           })}
         </div>

@@ -1,0 +1,10 @@
+-- Ajouter les nouveaux rôles institutionnels à l'enum app_role
+ALTER TYPE public.app_role ADD VALUE IF NOT EXISTS 'dgpa';
+ALTER TYPE public.app_role ADD VALUE IF NOT EXISTS 'anpa';
+ALTER TYPE public.app_role ADD VALUE IF NOT EXISTS 'agasa';
+ALTER TYPE public.app_role ADD VALUE IF NOT EXISTS 'dgmm';
+ALTER TYPE public.app_role ADD VALUE IF NOT EXISTS 'oprag';
+ALTER TYPE public.app_role ADD VALUE IF NOT EXISTS 'dgddi';
+ALTER TYPE public.app_role ADD VALUE IF NOT EXISTS 'anpn';
+ALTER TYPE public.app_role ADD VALUE IF NOT EXISTS 'corep';
+ALTER TYPE public.app_role ADD VALUE IF NOT EXISTS 'partenaire_international';

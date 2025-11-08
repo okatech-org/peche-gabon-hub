@@ -14,16 +14,50 @@ interface DemoAccount {
 }
 
 const demoAccounts: DemoAccount[] = [
-  { email: 'pecheur@demo.ga', password: 'Demo2025!', firstName: 'Jean', lastName: 'Pêcheur', role: 'pecheur' },
-  { email: 'agent@demo.ga', password: 'Demo2025!', firstName: 'Marie', lastName: 'Collecte', role: 'agent_collecte' },
-  { email: 'coop@demo.ga', password: 'Demo2025!', firstName: 'Paul', lastName: 'Gestionnaire', role: 'gestionnaire_coop' },
-  { email: 'inspecteur@demo.ga', password: 'Demo2025!', firstName: 'Pierre', lastName: 'Inspecteur', role: 'inspecteur' },
-  { email: 'province@demo.ga', password: 'Demo2025!', firstName: 'Sophie', lastName: 'Province', role: 'direction_provinciale' },
+  // Ministère et Direction Centrale
+  { email: 'ministre@demo.ga', password: 'Demo2025!', firstName: 'Honorable', lastName: 'Ministre', role: 'ministre' },
   { email: 'centrale@demo.ga', password: 'Demo2025!', firstName: 'André', lastName: 'Centrale', role: 'direction_centrale' },
+  { email: 'province@demo.ga', password: 'Demo2025!', firstName: 'Sophie', lastName: 'Province', role: 'direction_provinciale' },
+  
+  // DGPA - Direction générale des Pêches et de l'Aquaculture
+  { email: 'dgpa@demo.ga', password: 'Demo2025!', firstName: 'Martin', lastName: 'Koumba', role: 'dgpa' },
+  
+  // ANPA - Agence nationale des Pêches et de l'Aquaculture
+  { email: 'anpa@demo.ga', password: 'Demo2025!', firstName: 'Francine', lastName: 'Essono', role: 'anpa' },
+  
+  // AGASA - Agence gabonaise de sécurité alimentaire
+  { email: 'agasa@demo.ga', password: 'Demo2025!', firstName: 'David', lastName: 'Mintsa', role: 'agasa' },
+  
+  // DGMM - Direction générale de la Marine marchande
+  { email: 'dgmm@demo.ga', password: 'Demo2025!', firstName: 'Alain', lastName: 'Boussougou', role: 'dgmm' },
+  
+  // OPRAG - Office des Ports et Rades du Gabon
+  { email: 'oprag@demo.ga', password: 'Demo2025!', firstName: 'Patricia', lastName: 'Moussavou', role: 'oprag' },
+  
+  // DGDDI - Direction générale des Douanes
+  { email: 'dgddi@demo.ga', password: 'Demo2025!', firstName: 'Bernard', lastName: 'Ndong', role: 'dgddi' },
+  
+  // ANPN - Agence nationale des Parcs nationaux
+  { email: 'anpn@demo.ga', password: 'Demo2025!', firstName: 'Christelle', lastName: 'Obame', role: 'anpn' },
+  
+  // COREP - Commission régionale des pêches
+  { email: 'corep@demo.ga', password: 'Demo2025!', firstName: 'Georges', lastName: 'Mba', role: 'corep' },
+  
+  // Partenaires internationaux
+  { email: 'partenaire@demo.ga', password: 'Demo2025!', firstName: 'Elena', lastName: 'Schmidt', role: 'partenaire_international' },
+  
+  // Acteurs économiques et sociaux
+  { email: 'pecheur@demo.ga', password: 'Demo2025!', firstName: 'Jean', lastName: 'Pêcheur', role: 'pecheur' },
+  { email: 'coop@demo.ga', password: 'Demo2025!', firstName: 'Paul', lastName: 'Gestionnaire', role: 'gestionnaire_coop' },
   { email: 'armateur@demo.ga', password: 'Demo2025!', firstName: 'Michel', lastName: 'Armateur', role: 'armateur_pi' },
+  
+  // Personnel technique
+  { email: 'agent@demo.ga', password: 'Demo2025!', firstName: 'Marie', lastName: 'Collecte', role: 'agent_collecte' },
+  { email: 'inspecteur@demo.ga', password: 'Demo2025!', firstName: 'Pierre', lastName: 'Inspecteur', role: 'inspecteur' },
   { email: 'observateur@demo.ga', password: 'Demo2025!', firstName: 'Claire', lastName: 'Observateur', role: 'observateur_pi' },
   { email: 'analyste@demo.ga', password: 'Demo2025!', firstName: 'Thomas', lastName: 'Analyste', role: 'analyste' },
-  { email: 'ministre@demo.ga', password: 'Demo2025!', firstName: 'Honorable', lastName: 'Ministre', role: 'ministre' },
+  
+  // Administration système
   { email: 'admin@demo.ga', password: 'Demo2025!', firstName: 'Super', lastName: 'Admin', role: 'admin' },
 ]
 
