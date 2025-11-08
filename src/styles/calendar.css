@@ -1,0 +1,106 @@
+/* React Big Calendar custom styles */
+.rbc-calendar {
+  font-family: inherit;
+}
+
+.rbc-header {
+  padding: 10px 3px;
+  font-weight: 600;
+  font-size: 14px;
+  background: hsl(var(--muted));
+  border-bottom: 1px solid hsl(var(--border));
+}
+
+.rbc-today {
+  background-color: hsl(var(--accent));
+}
+
+.rbc-event {
+  padding: 2px 5px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.rbc-event:focus {
+  outline: 2px solid hsl(var(--ring));
+}
+
+.rbc-selected {
+  background-color: hsl(var(--primary)) !important;
+}
+
+.rbc-toolbar {
+  padding: 15px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.rbc-toolbar button {
+  padding: 5px 15px;
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.rbc-toolbar button:hover {
+  background: hsl(var(--accent));
+}
+
+.rbc-toolbar button.rbc-active {
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+}
+
+.rbc-month-view,
+.rbc-time-view {
+  border: 1px solid hsl(var(--border));
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.rbc-month-row {
+  border-top: 1px solid hsl(var(--border));
+  min-height: 80px;
+}
+
+.rbc-day-bg {
+  border-left: 1px solid hsl(var(--border));
+}
+
+.rbc-off-range-bg {
+  background: hsl(var(--muted) / 0.3);
+}
+
+.rbc-time-slot {
+  border-top: 1px solid hsl(var(--border));
+}
+
+.rbc-current-time-indicator {
+  background-color: hsl(var(--destructive));
+}
+
+.rbc-addons-dnd .rbc-addons-dnd-resizable {
+  position: relative;
+}
+
+.rbc-addons-dnd .rbc-addons-dnd-resize-anchor {
+  position: absolute;
+  bottom: 0;
+  height: 10px;
+  width: 100%;
+  cursor: ns-resize;
+}
+
+.rbc-addons-dnd .rbc-event {
+  transition: opacity 0.2s;
+}
+
+.rbc-addons-dnd .rbc-addons-dnd-dragging {
+  opacity: 0.5;
+}

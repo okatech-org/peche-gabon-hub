@@ -340,6 +340,42 @@ export type Database = {
         }
         Relationships: []
       }
+      calendrier_presence: {
+        Row: {
+          created_at: string
+          id: string
+          last_seen: string
+          metadata: Json | null
+          status: string
+          updated_at: string
+          user_email: string | null
+          user_id: string
+          user_name: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          last_seen?: string
+          metadata?: Json | null
+          status?: string
+          updated_at?: string
+          user_email?: string | null
+          user_id: string
+          user_name?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_seen?: string
+          metadata?: Json | null
+          status?: string
+          updated_at?: string
+          user_email?: string | null
+          user_id?: string
+          user_name?: string | null
+        }
+        Relationships: []
+      }
       captures_detail: {
         Row: {
           created_at: string
