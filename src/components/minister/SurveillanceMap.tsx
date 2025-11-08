@@ -10,10 +10,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Loader2, AlertTriangle, Pencil, Download, X, BarChart3 } from "lucide-react";
+import { Loader2, AlertTriangle, Pencil, Download, X, BarChart3, FileText } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 
 interface ZoneStats {
   totalCaptures: number;
@@ -36,6 +39,8 @@ const SurveillanceMap = () => {
   const [zoneStats, setZoneStats] = useState<ZoneStats | null>(null);
   const [showStatsDialog, setShowStatsDialog] = useState(false);
   const [analyzingZone, setAnalyzingZone] = useState(false);
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+  const [aiRecommendations, setAiRecommendations] = useState<string>("");
   const [stats, setStats] = useState({
     sites: 0,
     zonesRestreintes: 0,
@@ -728,6 +733,156 @@ const SurveillanceMap = () => {
     toast.success("Statistiques exportées en CSV");
   };
 
+  const generateAIRecommendations = async (stats: ZoneStats) => {
+    try {
+      const { data, error } = await supabase.functions.invoke('analyze-zone', {
+        body: { 
+          zoneStats: {
+            totalCaptures: stats.totalCaptures,
+            sitesCount: stats.nombreSites,
+            averageCpue: stats.moyenneCPUE,
+            provinces: stats.capturesParProvince.map(p => p.province),
+            topSpecies: stats.capturesParEspece.map(e => ({ nom: e.espece, total: e.kg })),
+            topSites: stats.topSites.map(s => ({ nom: s.nom, total: s.kg }))
+          }
+        }
+      });
+
+      if (error) throw error;
+      return data.recommendations;
+    } catch (error) {
+      console.error('Error getting AI recommendations:', error);
+      toast.error("Erreur lors de la génération des recommandations IA");
+      return "Recommandations indisponibles pour le moment.";
+    }
+  };
+
+  const generatePDFReport = async () => {
+    if (!zoneStats) return;
+
+    setIsGeneratingPDF(true);
+    toast.info("Génération du rapport PDF en cours...");
+
+    try {
+      // Get AI recommendations
+      const recommendations = await generateAIRecommendations(zoneStats);
+      setAiRecommendations(recommendations);
+
+      // Wait a bit for UI to render with recommendations
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      let yPosition = 20;
+
+      // Header
+      pdf.setFontSize(20);
+      pdf.setTextColor(0, 102, 204);
+      pdf.text("RAPPORT D'ANALYSE DE ZONE", pageWidth / 2, yPosition, { align: 'center' });
+      yPosition += 10;
+
+      pdf.setFontSize(10);
+      pdf.setTextColor(100, 100, 100);
+      pdf.text(`Généré le ${new Date().toLocaleDateString('fr-FR')} à ${new Date().toLocaleTimeString('fr-FR')}`, pageWidth / 2, yPosition, { align: 'center' });
+      yPosition += 15;
+
+      // Capture map
+      const mapElement = document.querySelector('.mapboxgl-canvas-container canvas') as HTMLCanvasElement;
+      if (mapElement) {
+        const mapCanvas = await html2canvas(mapElement, { scale: 1 });
+        const mapImgData = mapCanvas.toDataURL('image/jpeg', 0.8);
+        const mapWidth = pageWidth - 30;
+        const mapHeight = (mapCanvas.height * mapWidth) / mapCanvas.width;
+        
+        if (yPosition + mapHeight > pageHeight - 20) {
+          pdf.addPage();
+          yPosition = 20;
+        }
+        
+        pdf.addImage(mapImgData, 'JPEG', 15, yPosition, mapWidth, Math.min(mapHeight, 80));
+        yPosition += Math.min(mapHeight, 80) + 10;
+      }
+
+      // Key Statistics
+      pdf.addPage();
+      yPosition = 20;
+      pdf.setFontSize(16);
+      pdf.setTextColor(0, 0, 0);
+      pdf.text("STATISTIQUES CLÉS", 15, yPosition);
+      yPosition += 10;
+
+      pdf.setFontSize(11);
+      const statLines = [
+        `Captures totales: ${zoneStats.totalCaptures.toFixed(2)} kg`,
+        `Nombre de sites: ${zoneStats.nombreSites}`,
+        `CPUE moyen: ${zoneStats.moyenneCPUE}`,
+        `Province(s): ${zoneStats.capturesParProvince.map(p => p.province).join(', ')}`,
+      ];
+
+      statLines.forEach(stat => {
+        pdf.text(stat, 20, yPosition);
+        yPosition += 7;
+      });
+      yPosition += 10;
+
+      // Capture charts
+      const chartsContainer = document.getElementById('pdf-charts-container');
+      if (chartsContainer) {
+        const chartsCanvas = await html2canvas(chartsContainer, { scale: 2 });
+        const chartsImgData = chartsCanvas.toDataURL('image/png');
+        const chartsWidth = pageWidth - 30;
+        const chartsHeight = (chartsCanvas.height * chartsWidth) / chartsCanvas.width;
+        
+        if (yPosition + chartsHeight > pageHeight - 20) {
+          pdf.addPage();
+          yPosition = 20;
+        }
+        
+        pdf.addImage(chartsImgData, 'PNG', 15, yPosition, chartsWidth, Math.min(chartsHeight, 100));
+        yPosition += Math.min(chartsHeight, 100) + 10;
+      }
+
+      // AI Recommendations
+      pdf.addPage();
+      yPosition = 20;
+      pdf.setFontSize(16);
+      pdf.setTextColor(0, 102, 204);
+      pdf.text("RECOMMANDATIONS IA", 15, yPosition);
+      yPosition += 10;
+
+      pdf.setFontSize(10);
+      pdf.setTextColor(0, 0, 0);
+      const lines = pdf.splitTextToSize(recommendations, pageWidth - 30);
+      lines.forEach((line: string) => {
+        if (yPosition > pageHeight - 20) {
+          pdf.addPage();
+          yPosition = 20;
+        }
+        pdf.text(line, 15, yPosition);
+        yPosition += 5;
+      });
+
+      // Footer on all pages
+      const pageCount = pdf.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        pdf.setPage(i);
+        pdf.setFontSize(8);
+        pdf.setTextColor(150, 150, 150);
+        pdf.text(`Page ${i} sur ${pageCount}`, pageWidth / 2, pageHeight - 10, { align: 'center' });
+        pdf.text('MINISTÈRE DE LA PÊCHE - CONFIDENTIEL', pageWidth / 2, pageHeight - 5, { align: 'center' });
+      }
+
+      pdf.save(`rapport_zone_${Date.now()}.pdf`);
+      toast.success("Rapport PDF généré avec succès");
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      toast.error("Erreur lors de la génération du rapport PDF");
+    } finally {
+      setIsGeneratingPDF(false);
+    }
+  };
+
   return (
     <>
       <Card>
@@ -958,10 +1113,96 @@ const SurveillanceMap = () => {
               <Button variant="outline" onClick={() => setShowStatsDialog(false)}>
                 Fermer
               </Button>
-              <Button onClick={exportStats} className="gap-2">
+              <Button variant="outline" onClick={exportStats} className="gap-2">
                 <Download className="h-4 w-4" />
                 Exporter CSV
               </Button>
+              <Button 
+                onClick={generatePDFReport}
+                disabled={isGeneratingPDF}
+                className="gap-2"
+              >
+                {isGeneratingPDF ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Génération...
+                  </>
+                ) : (
+                  <>
+                    <FileText className="h-4 w-4" />
+                    Rapport PDF
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Hidden charts container for PDF export */}
+        {zoneStats && (
+          <div id="pdf-charts-container" style={{ position: 'absolute', left: '-9999px', width: '800px', padding: '20px', background: 'white' }}>
+            <div style={{ marginBottom: '30px' }}>
+              <h3 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '15px', color: '#000' }}>Captures par Espèce</h3>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={zoneStats.capturesParEspece.slice(0, 8)}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis 
+                    dataKey="espece" 
+                    angle={-45} 
+                    textAnchor="end" 
+                    height={100}
+                    style={{ fontSize: '12px' }}
+                  />
+                  <YAxis 
+                    label={{ value: 'Captures (kg)', angle: -90, position: 'insideLeft', style: { fontSize: '12px' } }}
+                    style={{ fontSize: '12px' }}
+                  />
+                  <Tooltip />
+                  <Bar dataKey="kg" fill="#0066cc" name="Captures (kg)" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+            
+            <div style={{ marginBottom: '30px' }}>
+              <h3 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '15px', color: '#000' }}>Répartition par Site</h3>
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart>
+                  <Pie
+                    data={zoneStats.topSites.slice(0, 6)}
+                    dataKey="kg"
+                    nameKey="nom"
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={100}
+                    label={(entry) => `${entry.nom}: ${(entry.kg/1000).toFixed(1)}T`}
+                    style={{ fontSize: '11px' }}
+                  >
+                    {zoneStats.topSites.slice(0, 6).map((_: any, index: number) => (
+                      <Cell key={`cell-${index}`} fill={['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'][index % 6]} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+
+            <div>
+              <h3 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '15px', color: '#000' }}>Répartition par Province</h3>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={zoneStats.capturesParProvince}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis 
+                    dataKey="province" 
+                    style={{ fontSize: '12px' }}
+                  />
+                  <YAxis 
+                    label={{ value: 'Captures (kg)', angle: -90, position: 'insideLeft', style: { fontSize: '12px' } }}
+                    style={{ fontSize: '12px' }}
+                  />
+                  <Tooltip />
+                  <Bar dataKey="kg" fill="#22c55e" name="Captures (kg)" />
+                </BarChart>
+              </ResponsiveContainer>
             </div>
           </div>
         )}
