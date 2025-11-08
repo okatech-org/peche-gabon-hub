@@ -4,12 +4,13 @@ import "mapbox-gl/dist/mapbox-gl.css";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2 } from "lucide-react";
+import { Loader2, AlertTriangle } from "lucide-react";
 
 const SurveillanceMap = () => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [stats, setStats] = useState({
     sites: 0,
     zonesRestreintes: 0,
@@ -18,8 +19,16 @@ const SurveillanceMap = () => {
   useEffect(() => {
     if (!mapContainer.current) return;
 
+    // Vérifier que le token Mapbox est défini
+    const mapboxToken = import.meta.env.VITE_MAPBOX_TOKEN;
+    if (!mapboxToken) {
+      setError("Token Mapbox manquant. Veuillez configurer VITE_MAPBOX_TOKEN dans les secrets.");
+      setLoading(false);
+      return;
+    }
+
     // Initialize map
-    mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
+    mapboxgl.accessToken = mapboxToken;
 
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
@@ -176,6 +185,7 @@ const SurveillanceMap = () => {
       });
     } catch (error) {
       console.error("Erreur lors du chargement des données:", error);
+      setError("Erreur lors du chargement des données cartographiques");
     }
   };
 
@@ -199,16 +209,25 @@ const SurveillanceMap = () => {
       </CardHeader>
       <CardContent>
         <div className="relative">
-          {loading && (
+          {loading && !error && (
             <div className="absolute inset-0 flex items-center justify-center bg-background/50 z-10 rounded-lg">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
           )}
-          <div
-            ref={mapContainer}
-            className="w-full rounded-lg shadow-lg"
-            style={{ height: "600px" }}
-          />
+          {error ? (
+            <div className="w-full h-[600px] flex items-center justify-center bg-muted rounded-lg">
+              <div className="text-center p-6">
+                <AlertTriangle className="h-12 w-12 text-destructive mx-auto mb-4" />
+                <p className="text-sm text-muted-foreground">{error}</p>
+              </div>
+            </div>
+          ) : (
+            <div
+              ref={mapContainer}
+              className="w-full rounded-lg shadow-lg"
+              style={{ height: "600px" }}
+            />
+          )}
         </div>
       </CardContent>
     </Card>
