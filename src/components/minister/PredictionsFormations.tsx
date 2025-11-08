@@ -4,10 +4,19 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Sparkles, Loader2, TrendingUp, AlertCircle, Target, Award, Calendar, CheckCircle2 } from "lucide-react";
+import { Sparkles, Loader2, TrendingUp, AlertCircle, Target, Award, Calendar, CheckCircle2, CalendarPlus } from "lucide-react";
 import { toast } from "sonner";
 import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { addDays, format as formatDate } from "date-fns";
+import { fr } from "date-fns/locale";
 
 interface FormateurRecommande {
   formateur_id: string;
@@ -36,12 +45,24 @@ interface Prediction {
   score_confiance: number;
 }
 
+interface FormationCreee {
+  titre: string;
+  type: string;
+  formateur: string;
+  date_debut: string;
+  date_fin: string;
+  priorite: string;
+}
+
 export function PredictionsFormations() {
   const [loading, setLoading] = useState(false);
   const [horizonMois, setHorizonMois] = useState("6");
   const [prediction, setPrediction] = useState<Prediction | null>(null);
   const [nbEvaluations, setNbEvaluations] = useState(0);
   const [nbFormateurs, setNbFormateurs] = useState(0);
+  const [planning, setPlanning] = useState(false);
+  const [formationsCreees, setFormationsCreees] = useState<FormationCreee[]>([]);
+  const [showPlanningDialog, setShowPlanningDialog] = useState(false);
 
   const handleGeneratePrediction = async () => {
     try {
@@ -98,6 +119,120 @@ export function PredictionsFormations() {
     }
   };
 
+  const handlePlanifierAutomatiquement = async () => {
+    if (!prediction) return;
+
+    try {
+      setPlanning(true);
+      toast.info("Planification automatique en cours...");
+
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("User not authenticated");
+
+      // Récupérer les disponibilités futures
+      const futureDate = new Date();
+      futureDate.setMonth(futureDate.getMonth() + parseInt(horizonMois));
+
+      const { data: disponibilites } = await supabase
+        .from("formateurs_disponibilites")
+        .select("*")
+        .eq("disponible", true)
+        .lte("date_debut", futureDate.toISOString().split('T')[0]);
+
+      const nouvellesFormations: FormationCreee[] = [];
+      let currentDate = new Date();
+
+      // Trier les besoins par priorité et urgence
+      const besoinsTries = [...prediction.besoins_prioritaires].sort((a, b) => {
+        const priorityOrder = { haute: 3, moyenne: 2, basse: 1 };
+        const priorityDiff = priorityOrder[b.priorite] - priorityOrder[a.priorite];
+        if (priorityDiff !== 0) return priorityDiff;
+        return b.urgence - a.urgence;
+      });
+
+      for (const besoin of besoinsTries) {
+        // Prendre le meilleur formateur disponible
+        const meilleurFormateur = besoin.formateurs_recommandes
+          .filter((f) => f.disponibilite_estimee)
+          .sort((a, b) => b.score_adequation - a.score_adequation)[0];
+
+        if (!meilleurFormateur) continue;
+
+        // Trouver une date disponible pour le formateur
+        const formateurDispo = disponibilites?.find(
+          (d: any) =>
+            d.formateur_id === meilleurFormateur.formateur_id &&
+            new Date(d.date_debut) >= currentDate
+        );
+
+        let dateDebut: Date;
+        let dateFin: Date;
+
+        if (formateurDispo) {
+          dateDebut = new Date(formateurDispo.date_debut);
+          // Durée de formation: 5 jours par défaut
+          dateFin = addDays(dateDebut, 4);
+        } else {
+          // Planifier dans 2 semaines si pas de disponibilité spécifique
+          dateDebut = addDays(currentDate, 14);
+          dateFin = addDays(dateDebut, 4);
+        }
+
+        // Créer la formation
+        const formationData = {
+          titre: `${besoin.type_formation.charAt(0).toUpperCase() + besoin.type_formation.slice(1)} - ${besoin.indicateur}`,
+          description: besoin.raison,
+          type_formation: besoin.type_formation,
+          date_debut: formatDate(dateDebut, "yyyy-MM-dd"),
+          date_fin: formatDate(dateFin, "yyyy-MM-dd"),
+          formateur_id: meilleurFormateur.formateur_id,
+          statut: "planifiee",
+          priorite: besoin.priorite,
+          objectifs: [
+            `Améliorer ${besoin.indicateur}`,
+            ...meilleurFormateur.specialites_matching.map((s) => `Formation en ${s}`),
+          ],
+          participants_cibles: ["pecheur", "agent_collecte", "gestionnaire_coop"],
+          indicateurs_cibles: [besoin.indicateur],
+          created_by: user.id,
+          nb_participants_max: 20,
+        };
+
+        const { data: formation, error } = await supabase
+          .from("formations_planifiees")
+          .insert(formationData)
+          .select()
+          .single();
+
+        if (error) {
+          console.error("Erreur création formation:", error);
+          continue;
+        }
+
+        nouvellesFormations.push({
+          titre: formationData.titre,
+          type: besoin.type_formation,
+          formateur: meilleurFormateur.formateur_nom,
+          date_debut: formationData.date_debut,
+          date_fin: formationData.date_fin,
+          priorite: besoin.priorite,
+        });
+
+        // Décaler la date pour la prochaine formation
+        currentDate = addDays(dateFin, 3);
+      }
+
+      setFormationsCreees(nouvellesFormations);
+      setShowPlanningDialog(true);
+      toast.success(`${nouvellesFormations.length} formation(s) planifiée(s) automatiquement`);
+    } catch (error) {
+      console.error("Erreur planification:", error);
+      toast.error("Erreur lors de la planification automatique");
+    } finally {
+      setPlanning(false);
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -130,6 +265,20 @@ export function PredictionsFormations() {
               )}
               Générer prédiction
             </Button>
+            {prediction && (
+              <Button
+                onClick={handlePlanifierAutomatiquement}
+                disabled={planning}
+                variant="default"
+              >
+                {planning ? (
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                ) : (
+                  <CalendarPlus className="h-4 w-4 mr-2" />
+                )}
+                Planifier automatiquement
+              </Button>
+            )}
           </div>
         </div>
       </CardHeader>
@@ -308,6 +457,62 @@ export function PredictionsFormations() {
           </div>
         )}
       </CardContent>
+
+      {/* Dialog des formations créées */}
+      <Dialog open={showPlanningDialog} onOpenChange={setShowPlanningDialog}>
+        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CalendarPlus className="h-5 w-5 text-primary" />
+              Planification Automatique Réussie
+            </DialogTitle>
+            <DialogDescription>
+              {formationsCreees.length} formation(s) ont été créées et ajoutées au calendrier
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-3">
+            {formationsCreees.map((formation, idx) => (
+              <Card key={idx}>
+                <CardContent className="pt-4">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1 space-y-2">
+                      <div className="flex items-center gap-2">
+                        <Badge variant={getPrioriteColor(formation.priorite)}>
+                          {formation.priorite}
+                        </Badge>
+                        <Badge variant="outline">{formation.type}</Badge>
+                      </div>
+                      <div className="font-medium">{formation.titre}</div>
+                      <div className="text-sm text-muted-foreground">
+                        Formateur: {formation.formateur}
+                      </div>
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Calendar className="h-3 w-3" />
+                        <span>
+                          Du {formatDate(new Date(formation.date_debut), "dd MMM yyyy", { locale: fr })} au{" "}
+                          {formatDate(new Date(formation.date_fin), "dd MMM yyyy", { locale: fr })}
+                        </span>
+                      </div>
+                    </div>
+                    <CheckCircle2 className="h-8 w-8 text-green-500" />
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          <div className="flex justify-end gap-2 pt-4 border-t">
+            <Button variant="outline" onClick={() => setShowPlanningDialog(false)}>
+              Fermer
+            </Button>
+            <Button onClick={() => window.location.reload()}>
+              <Calendar className="h-4 w-4 mr-2" />
+              Voir le calendrier
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }
