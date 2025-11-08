@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectContent,
@@ -21,7 +22,8 @@ import {
   BarChart3,
   Loader2,
   Filter,
-  X
+  X,
+  ArrowRight
 } from "lucide-react";
 import { format, differenceInHours } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -54,12 +56,18 @@ export function ValidationStats() {
     tempsRevisionMoyen: 0,
     raisonsRejet: []
   });
+  const [statsComparaison, setStatsComparaison] = useState<ValidationStats | null>(null);
 
   // Filtres
   const [dateDebut, setDateDebut] = useState("");
   const [dateFin, setDateFin] = useState("");
   const [formateurId, setFormateurId] = useState<string>("");
   const [typeFormation, setTypeFormation] = useState<string>("");
+  
+  // Mode comparaison
+  const [modeComparaison, setModeComparaison] = useState(false);
+  const [dateDebutComparaison, setDateDebutComparaison] = useState("");
+  const [dateFinComparaison, setDateFinComparaison] = useState("");
 
   useEffect(() => {
     loadFormateurs();
@@ -68,7 +76,12 @@ export function ValidationStats() {
 
   useEffect(() => {
     loadStats();
-  }, [dateDebut, dateFin, formateurId, typeFormation]);
+    if (modeComparaison && dateDebutComparaison && dateFinComparaison) {
+      loadStatsComparaison();
+    } else {
+      setStatsComparaison(null);
+    }
+  }, [dateDebut, dateFin, formateurId, typeFormation, modeComparaison, dateDebutComparaison, dateFinComparaison]);
 
   const loadFormateurs = async () => {
     try {
@@ -90,9 +103,125 @@ export function ValidationStats() {
     setDateFin("");
     setFormateurId("");
     setTypeFormation("");
+    setModeComparaison(false);
+    setDateDebutComparaison("");
+    setDateFinComparaison("");
   };
 
   const hasActiveFilters = dateDebut || dateFin || formateurId || typeFormation;
+
+  const loadStatsComparaison = async () => {
+    try {
+      let query = supabase.from("formations_validation").select("*");
+
+      if (dateDebutComparaison) {
+        query = query.gte("created_at", dateDebutComparaison);
+      }
+      if (dateFinComparaison) {
+        query = query.lte("created_at", dateFinComparaison);
+      }
+      if (formateurId) {
+        query = query.eq("formateur_id", formateurId);
+      }
+      if (typeFormation) {
+        query = query.eq("type_formation", typeFormation);
+      }
+
+      const { data, error } = await query;
+
+      if (error) throw error;
+
+      if (!data || data.length === 0) {
+        setStatsComparaison({
+          total: 0,
+          approuvees: 0,
+          rejetees: 0,
+          enAttente: 0,
+          tauxApprobation: 0,
+          tempsRevisionMoyen: 0,
+          raisonsRejet: []
+        });
+        return;
+      }
+
+      const total = data.length;
+      const approuvees = data.filter(f => f.statut === "approuvee").length;
+      const rejetees = data.filter(f => f.statut === "rejetee").length;
+      const enAttente = data.filter(f => f.statut === "en_attente").length;
+
+      const tauxApprobation = total > 0 ? (approuvees / (approuvees + rejetees)) * 100 : 0;
+
+      const formationsRevisees = data.filter(f => 
+        f.reviewed_at && f.created_at && (f.statut === "approuvee" || f.statut === "rejetee")
+      );
+
+      let tempsRevisionMoyen = 0;
+      if (formationsRevisees.length > 0) {
+        const totalHeures = formationsRevisees.reduce((sum, f) => {
+          const heures = differenceInHours(
+            new Date(f.reviewed_at!),
+            new Date(f.created_at)
+          );
+          return sum + heures;
+        }, 0);
+        tempsRevisionMoyen = totalHeures / formationsRevisees.length;
+      }
+
+      const formationsRejetees = data.filter(f => 
+        f.statut === "rejetee" && f.notes_revision
+      );
+
+      const raisonsMap = new Map<string, number>();
+      formationsRejetees.forEach(f => {
+        const raison = f.notes_revision || "Non spécifié";
+        raisonsMap.set(raison, (raisonsMap.get(raison) || 0) + 1);
+      });
+
+      const raisonsRejet = Array.from(raisonsMap.entries())
+        .map(([raison, count]) => ({ raison, count }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 5);
+
+      setStatsComparaison({
+        total,
+        approuvees,
+        rejetees,
+        enAttente,
+        tauxApprobation,
+        tempsRevisionMoyen,
+        raisonsRejet
+      });
+    } catch (error) {
+      console.error("Erreur chargement stats comparaison:", error);
+    }
+  };
+
+  const calculerEvolution = (valeurActuelle: number, valeurPrecedente: number) => {
+    if (valeurPrecedente === 0) return 0;
+    return ((valeurActuelle - valeurPrecedente) / valeurPrecedente) * 100;
+  };
+
+  const renderEvolution = (valeurActuelle: number, valeurPrecedente: number, inverse = false) => {
+    const evolution = calculerEvolution(valeurActuelle, valeurPrecedente);
+    const isPositive = inverse ? evolution < 0 : evolution > 0;
+    
+    if (Math.abs(evolution) < 0.1) {
+      return <Badge variant="outline">Stable</Badge>;
+    }
+
+    return (
+      <div className="flex items-center gap-1">
+        {isPositive ? (
+          <TrendingUp className="h-4 w-4 text-green-500" />
+        ) : (
+          <TrendingDown className="h-4 w-4 text-red-500" />
+        )}
+        <span className={`text-sm font-medium ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
+          {evolution > 0 ? '+' : ''}{evolution.toFixed(1)}%
+        </span>
+      </div>
+    );
+  };
 
   const loadStats = async () => {
     try {
@@ -216,67 +345,119 @@ export function ValidationStats() {
       {/* Filtres */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
-            <Filter className="h-4 w-4" />
-            Filtres
-          </CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Filter className="h-4 w-4" />
+              Filtres et Comparaison
+            </CardTitle>
+            <div className="flex items-center gap-2">
+              <Label htmlFor="modeComparaison" className="text-sm">Mode comparaison</Label>
+              <Switch
+                id="modeComparaison"
+                checked={modeComparaison}
+                onCheckedChange={setModeComparaison}
+              />
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="dateDebut">Date début</Label>
-              <Input
-                id="dateDebut"
-                type="date"
-                value={dateDebut}
-                onChange={(e) => setDateDebut(e.target.value)}
-              />
+          <div className="space-y-4">
+            <div>
+              <Label className="text-sm font-medium mb-2 block">
+                {modeComparaison ? "Période 1 (actuelle)" : "Filtres"}
+              </Label>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="dateDebut">Date début</Label>
+                  <Input
+                    id="dateDebut"
+                    type="date"
+                    value={dateDebut}
+                    onChange={(e) => setDateDebut(e.target.value)}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="dateFin">Date fin</Label>
+                  <Input
+                    id="dateFin"
+                    type="date"
+                    value={dateFin}
+                    onChange={(e) => setDateFin(e.target.value)}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="formateur">Formateur</Label>
+                  <Select value={formateurId} onValueChange={setFormateurId}>
+                    <SelectTrigger id="formateur">
+                      <SelectValue placeholder="Tous les formateurs" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">Tous les formateurs</SelectItem>
+                      {formateurs.map((formateur) => (
+                        <SelectItem key={formateur.id} value={formateur.id}>
+                          {formateur.prenom} {formateur.nom}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="typeFormation">Type de formation</Label>
+                  <Select value={typeFormation} onValueChange={setTypeFormation}>
+                    <SelectTrigger id="typeFormation">
+                      <SelectValue placeholder="Tous les types" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">Tous les types</SelectItem>
+                      <SelectItem value="technique">Technique</SelectItem>
+                      <SelectItem value="gestion">Gestion</SelectItem>
+                      <SelectItem value="reglementation">Réglementation</SelectItem>
+                      <SelectItem value="securite">Sécurité</SelectItem>
+                      <SelectItem value="conservation">Conservation</SelectItem>
+                      <SelectItem value="commercialisation">Commercialisation</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="dateFin">Date fin</Label>
-              <Input
-                id="dateFin"
-                type="date"
-                value={dateFin}
-                onChange={(e) => setDateFin(e.target.value)}
-              />
-            </div>
+            {modeComparaison && (
+              <>
+                <div className="flex items-center gap-2 py-2">
+                  <div className="flex-1 border-t" />
+                  <ArrowRight className="h-4 w-4 text-muted-foreground" />
+                  <div className="flex-1 border-t" />
+                </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="formateur">Formateur</Label>
-              <Select value={formateurId} onValueChange={setFormateurId}>
-                <SelectTrigger id="formateur">
-                  <SelectValue placeholder="Tous les formateurs" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">Tous les formateurs</SelectItem>
-                  {formateurs.map((formateur) => (
-                    <SelectItem key={formateur.id} value={formateur.id}>
-                      {formateur.prenom} {formateur.nom}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+                <div>
+                  <Label className="text-sm font-medium mb-2 block">Période 2 (comparaison)</Label>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="dateDebutComp">Date début</Label>
+                      <Input
+                        id="dateDebutComp"
+                        type="date"
+                        value={dateDebutComparaison}
+                        onChange={(e) => setDateDebutComparaison(e.target.value)}
+                      />
+                    </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="typeFormation">Type de formation</Label>
-              <Select value={typeFormation} onValueChange={setTypeFormation}>
-                <SelectTrigger id="typeFormation">
-                  <SelectValue placeholder="Tous les types" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">Tous les types</SelectItem>
-                  <SelectItem value="technique">Technique</SelectItem>
-                  <SelectItem value="gestion">Gestion</SelectItem>
-                  <SelectItem value="reglementation">Réglementation</SelectItem>
-                  <SelectItem value="securite">Sécurité</SelectItem>
-                  <SelectItem value="conservation">Conservation</SelectItem>
-                  <SelectItem value="commercialisation">Commercialisation</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="dateFinComp">Date fin</Label>
+                      <Input
+                        id="dateFinComp"
+                        type="date"
+                        value={dateFinComparaison}
+                        onChange={(e) => setDateFinComparaison(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -300,6 +481,14 @@ export function ValidationStats() {
               <div className="text-xs text-muted-foreground">
                 {stats.approuvees} approuvées / {stats.approuvees + stats.rejetees} traitées
               </div>
+              {statsComparaison && (
+                <div className="pt-2 border-t">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-muted-foreground">vs Période 2:</span>
+                    {renderEvolution(stats.tauxApprobation, statsComparaison.tauxApprobation)}
+                  </div>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -317,6 +506,14 @@ export function ValidationStats() {
               <div className="text-xs text-muted-foreground">
                 Par formation validée
               </div>
+              {statsComparaison && (
+                <div className="pt-2 border-t">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-muted-foreground">vs Période 2:</span>
+                    {renderEvolution(stats.tempsRevisionMoyen, statsComparaison.tempsRevisionMoyen, true)}
+                  </div>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -334,6 +531,14 @@ export function ValidationStats() {
               <div className="text-xs text-muted-foreground">
                 Sur {stats.total} prédictions IA
               </div>
+              {statsComparaison && (
+                <div className="pt-2 border-t">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-muted-foreground">vs Période 2:</span>
+                    {renderEvolution(stats.approuvees, statsComparaison.approuvees)}
+                  </div>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -351,6 +556,14 @@ export function ValidationStats() {
               <div className="text-xs text-muted-foreground">
                 {stats.enAttente} en attente
               </div>
+              {statsComparaison && (
+                <div className="pt-2 border-t">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-muted-foreground">vs Période 2:</span>
+                    {renderEvolution(stats.rejetees, statsComparaison.rejetees, true)}
+                  </div>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
