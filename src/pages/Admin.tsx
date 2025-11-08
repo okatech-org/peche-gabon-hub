@@ -29,6 +29,7 @@ import { ObjectifsPecheManagement } from "@/components/admin/ObjectifsPecheManag
 import { TaxesRemonteesDashboard } from "@/components/admin/TaxesRemonteesDashboard";
 import { SuiviObjectifsDashboard } from "@/components/admin/SuiviObjectifsDashboard";
 import { FinancialExportDashboard } from "@/components/admin/FinancialExportDashboard";
+import { FinancialCompleteDashboard } from "@/components/admin/FinancialCompleteDashboard";
 
 const Admin = () => {
   const { user, roles, signOut } = useAuth();
@@ -92,6 +93,7 @@ const Admin = () => {
               <Route path="/licences" element={<LicencesManagement />} />
               <Route path="/quittances" element={<QuittancesManagement />} />
               <Route path="/financial-overview" element={<FinancialOverviewDashboard />} />
+              <Route path="/finances-complet" element={<FinancialCompleteDashboard />} />
               <Route path="/finances-dashboard" element={<FinancesDashboard />} />
               <Route path="/previsions" element={<PrevisionsDashboard />} />
               <Route path="/previsions-history" element={<PrevisionsHistoryDashboard />} />

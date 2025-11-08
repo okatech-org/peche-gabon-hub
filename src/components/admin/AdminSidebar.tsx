@@ -69,6 +69,7 @@ const menuItems = [
   {
     group: "Finances",
     items: [
+      { title: "Dashboard Complet", url: "/admin/finances-complet", icon: BarChart3 },
       { title: "Vue d'Ensemble", url: "/admin/financial-overview", icon: PieChart },
       { title: "Quittances", url: "/admin/quittances", icon: FileText },
       { title: "Tableau de Bord", url: "/admin/finances-dashboard", icon: LayoutDashboard },
