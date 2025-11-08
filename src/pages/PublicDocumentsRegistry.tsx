@@ -6,10 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, FileText, Download, Calendar, Filter, Home } from "lucide-react";
+import { Search, FileText, Download, Calendar, Filter, Home, Bell } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { toast } from "sonner";
+import { NotificationSubscriptionDialog } from "@/components/notifications/NotificationSubscriptionDialog";
+import { NotificationHistoryPanel } from "@/components/notifications/NotificationHistoryPanel";
 
 const TYPE_DOCUMENTS = [
   { value: "arrete", label: "Arrêté ministériel" },
@@ -44,6 +46,7 @@ export default function PublicDocumentsRegistry() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState<string>("all");
+  const [showSubscriptionDialog, setShowSubscriptionDialog] = useState(false);
   const [filteredDocuments, setFilteredDocuments] = useState<Document[]>([]);
 
   useEffect(() => {
@@ -134,8 +137,8 @@ ${doc.destinataires && doc.destinataires.length > 0 ? `\nDestinataires:\n${doc.d
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-secondary/10">
       <div className="container mx-auto px-4 py-8">
-        {/* Bouton retour */}
-        <div className="mb-6">
+        {/* Bouton retour et abonnement */}
+        <div className="mb-6 flex items-center justify-between gap-4">
           <Button
             variant="outline"
             onClick={() => navigate("/")}
@@ -143,6 +146,14 @@ ${doc.destinataires && doc.destinataires.length > 0 ? `\nDestinataires:\n${doc.d
           >
             <Home className="h-4 w-4" />
             Retour à l'accueil
+          </Button>
+          
+          <Button
+            onClick={() => setShowSubscriptionDialog(true)}
+            className="gap-2"
+          >
+            <Bell className="h-4 w-4" />
+            S'abonner aux notifications
           </Button>
         </div>
 
@@ -281,7 +292,17 @@ ${doc.destinataires && doc.destinataires.length > 0 ? `\nDestinataires:\n${doc.d
             ))}
           </div>
         )}
+
+        {/* Historique des notifications (pour démo) */}
+        <div className="mt-8">
+          <NotificationHistoryPanel />
+        </div>
       </div>
+
+      <NotificationSubscriptionDialog 
+        open={showSubscriptionDialog}
+        onOpenChange={setShowSubscriptionDialog}
+      />
     </div>
   );
 }

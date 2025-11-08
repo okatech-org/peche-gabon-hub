@@ -1509,6 +1509,86 @@ export type Database = {
           },
         ]
       }
+      notification_history: {
+        Row: {
+          channel: string
+          document_id: string | null
+          document_titre: string | null
+          id: string
+          message: string
+          recipient: string
+          sent_at: string
+          status: string
+          subscription_id: string | null
+        }
+        Insert: {
+          channel: string
+          document_id?: string | null
+          document_titre?: string | null
+          id?: string
+          message: string
+          recipient: string
+          sent_at?: string
+          status?: string
+          subscription_id?: string | null
+        }
+        Update: {
+          channel?: string
+          document_id?: string | null
+          document_titre?: string | null
+          id?: string
+          message?: string
+          recipient?: string
+          sent_at?: string
+          status?: string
+          subscription_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_history_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "notification_subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notification_subscriptions: {
+        Row: {
+          active: boolean
+          created_at: string
+          email: string
+          id: string
+          interests: Json
+          notification_channels: string[]
+          phone: string | null
+          updated_at: string
+          whatsapp_number: string | null
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          email: string
+          id?: string
+          interests?: Json
+          notification_channels?: string[]
+          phone?: string | null
+          updated_at?: string
+          whatsapp_number?: string | null
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          email?: string
+          id?: string
+          interests?: Json
+          notification_channels?: string[]
+          phone?: string | null
+          updated_at?: string
+          whatsapp_number?: string | null
+        }
+        Relationships: []
+      }
       notifications_nationales: {
         Row: {
           audience: string[]
