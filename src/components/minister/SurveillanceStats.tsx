@@ -1,4 +1,5 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import SurveillanceMap from "./SurveillanceMap";
 
 const SurveillanceStats = () => {
   return (
@@ -38,17 +39,7 @@ const SurveillanceStats = () => {
         </Card>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Carte des Infractions</CardTitle>
-          <CardDescription>Distribution géographique des contrôles et infractions</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="h-96 bg-muted/20 rounded-lg flex items-center justify-center">
-            <p className="text-muted-foreground">Carte interactive en développement</p>
-          </div>
-        </CardContent>
-      </Card>
+      <SurveillanceMap />
 
       <Card>
         <CardHeader>
