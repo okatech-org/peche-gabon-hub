@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ValidationStats } from "./ValidationStats";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -443,7 +444,7 @@ export function ValidationFormations() {
 
       {/* Tabs */}
       <Tabs defaultValue="attente">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="attente">
             En attente ({formationsEnAttente.length})
           </TabsTrigger>
@@ -452,6 +453,9 @@ export function ValidationFormations() {
           </TabsTrigger>
           <TabsTrigger value="rejetees">
             Rejetées ({formationsRejetees.length})
+          </TabsTrigger>
+          <TabsTrigger value="stats">
+            Statistiques
           </TabsTrigger>
         </TabsList>
 
@@ -489,6 +493,10 @@ export function ValidationFormations() {
           ) : (
             formationsRejetees.map((formation) => renderFormationCard(formation, false))
           )}
+        </TabsContent>
+
+        <TabsContent value="stats" className="mt-4">
+          <ValidationStats />
         </TabsContent>
       </Tabs>
 
