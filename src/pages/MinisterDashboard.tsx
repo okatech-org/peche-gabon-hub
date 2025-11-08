@@ -28,6 +28,8 @@ import SurveillanceStats from "@/components/minister/SurveillanceStats";
 import EconomicStats from "@/components/minister/EconomicStats";
 import MinisterHistory from "@/components/minister/MinisterHistory";
 import GlobalFilters from "@/components/minister/GlobalFilters";
+import AlertsPanel from "@/components/minister/AlertsPanel";
+import ExportPDFButton from "@/components/minister/ExportPDFButton";
 
 interface ExecutiveKPIs {
   productionAnnuelle: number;
@@ -44,6 +46,12 @@ const MinisterDashboard = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
+  const [filters, setFilters] = useState({
+    annee: new Date().getFullYear().toString(),
+    mois: "tous",
+    province: "tous",
+    typePeche: "tous",
+  });
   const [kpis, setKpis] = useState<ExecutiveKPIs>({
     productionAnnuelle: 0,
     productionTrend: "",
@@ -57,18 +65,25 @@ const MinisterDashboard = () => {
 
   useEffect(() => {
     loadExecutiveData();
-  }, []);
+  }, [filters]);
 
   const loadExecutiveData = async () => {
     try {
-      const currentYear = new Date().getFullYear();
+      const currentYear = parseInt(filters.annee);
       const lastYear = currentYear - 1;
 
-      // Production totale année en cours
-      const { data: capturesCurrentYear } = await supabase
+      // Build query with filters
+      let capturesQuery = supabase
         .from("captures_pa")
-        .select("poids_kg")
+        .select("poids_kg, site_id")
         .eq("annee", currentYear);
+
+      if (filters.mois !== "tous") {
+        capturesQuery = capturesQuery.eq("mois", parseInt(filters.mois));
+      }
+
+      // Production totale année en cours
+      const { data: capturesCurrentYear } = await capturesQuery;
 
       const productionAnnuelle = 
         (capturesCurrentYear?.reduce((sum, c) => sum + (c.poids_kg || 0), 0) || 0) / 1000; // Convert to tonnes
@@ -175,10 +190,13 @@ const MinisterDashboard = () => {
       </header>
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h2 className="text-3xl font-bold mb-2">Tableau de Bord Exécutif</h2>
-          <p className="text-muted-foreground">Vue d'ensemble stratégique du secteur halieutique</p>
+      <main className="container mx-auto px-4 py-8" id="main-content">
+        <div className="mb-8 flex items-center justify-between">
+          <div>
+            <h2 className="text-3xl font-bold mb-2">Tableau de Bord Exécutif</h2>
+            <p className="text-muted-foreground">Vue d'ensemble stratégique du secteur halieutique</p>
+          </div>
+          <ExportPDFButton filters={filters} />
         </div>
 
         {/* KPIs Grid */}
@@ -266,7 +284,12 @@ const MinisterDashboard = () => {
         </Card>
 
         {/* Global Filters */}
-        <GlobalFilters />
+        <GlobalFilters onFiltersChange={setFilters} />
+
+        {/* Alerts Panel */}
+        <div className="mb-8">
+          <AlertsPanel />
+        </div>
 
         {/* Detailed Stats Tabs */}
         <Tabs defaultValue="executive" className="space-y-6">
