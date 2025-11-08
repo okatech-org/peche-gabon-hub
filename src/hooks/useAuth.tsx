@@ -90,7 +90,34 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (error) throw error;
       
       toast.success("Connexion réussie");
-      navigate("/dashboard");
+      
+      // Redirection intelligente selon le rôle
+      setTimeout(async () => {
+        const { data } = await supabase.rpc('get_user_roles', {
+          _user_id: (await supabase.auth.getUser()).data.user?.id
+        });
+        
+        const userRoles = data || [];
+        if (userRoles.includes('ministre')) {
+          navigate("/minister-dashboard");
+        } else if (userRoles.includes('dgpa')) {
+          navigate("/dgpa-dashboard");
+        } else if (userRoles.includes('anpa')) {
+          navigate("/anpa-dashboard");
+        } else if (userRoles.includes('agasa')) {
+          navigate("/agasa-dashboard");
+        } else if (userRoles.includes('dgmm')) {
+          navigate("/dgmm-dashboard");
+        } else if (userRoles.includes('oprag')) {
+          navigate("/oprag-dashboard");
+        } else if (userRoles.includes('anpn')) {
+          navigate("/anpn-dashboard");
+        } else if (userRoles.includes('admin')) {
+          navigate("/admin");
+        } else {
+          navigate("/dashboard");
+        }
+      }, 100);
     } catch (error: any) {
       toast.error(error.message || "Erreur de connexion");
       throw error;

@@ -22,9 +22,35 @@ export const ProtectedRoute = ({ children, allowedRoles }: ProtectedRouteProps) 
     return <Navigate to="/auth" replace />;
   }
 
+  // Redirection spécifique selon le rôle
   if (allowedRoles && allowedRoles.length > 0) {
     const hasAccess = allowedRoles.some(role => roles.includes(role as any));
     if (!hasAccess) {
+      // Rediriger vers le dashboard approprié selon le rôle
+      if (roles.includes('ministre' as any)) {
+        return <Navigate to="/minister-dashboard" replace />;
+      }
+      if (roles.includes('dgpa' as any)) {
+        return <Navigate to="/dgpa-dashboard" replace />;
+      }
+      if (roles.includes('anpa' as any)) {
+        return <Navigate to="/anpa-dashboard" replace />;
+      }
+      if (roles.includes('agasa' as any)) {
+        return <Navigate to="/agasa-dashboard" replace />;
+      }
+      if (roles.includes('dgmm' as any)) {
+        return <Navigate to="/dgmm-dashboard" replace />;
+      }
+      if (roles.includes('oprag' as any)) {
+        return <Navigate to="/oprag-dashboard" replace />;
+      }
+      if (roles.includes('anpn' as any)) {
+        return <Navigate to="/anpn-dashboard" replace />;
+      }
+      if (roles.includes('admin' as any)) {
+        return <Navigate to="/admin" replace />;
+      }
       return <Navigate to="/dashboard" replace />;
     }
   }

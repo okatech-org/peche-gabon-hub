@@ -14,6 +14,12 @@ import Demo from "./pages/Demo";
 import Captures from "./pages/Captures";
 import MonCompte from "./pages/MonCompte";
 import MinisterDashboard from "./pages/MinisterDashboard";
+import DGPADashboard from "./pages/DGPADashboard";
+import ANPADashboard from "./pages/ANPADashboard";
+import AGASADashboard from "./pages/AGASADashboard";
+import DGMMDashboard from "./pages/DGMMDashboard";
+import OPRAGDashboard from "./pages/OPRAGDashboard";
+import ANPNDashboard from "./pages/ANPNDashboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -67,6 +73,54 @@ function App() {
               element={
                 <ProtectedRoute allowedRoles={['ministre']}>
                   <MinisterDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/dgpa-dashboard"
+              element={
+                <ProtectedRoute allowedRoles={['dgpa', 'admin']}>
+                  <DGPADashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/anpa-dashboard"
+              element={
+                <ProtectedRoute allowedRoles={['anpa', 'admin']}>
+                  <ANPADashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/agasa-dashboard"
+              element={
+                <ProtectedRoute allowedRoles={['agasa', 'admin']}>
+                  <AGASADashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/dgmm-dashboard"
+              element={
+                <ProtectedRoute allowedRoles={['dgmm', 'admin']}>
+                  <DGMMDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/oprag-dashboard"
+              element={
+                <ProtectedRoute allowedRoles={['oprag', 'admin']}>
+                  <OPRAGDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/anpn-dashboard"
+              element={
+                <ProtectedRoute allowedRoles={['anpn', 'admin']}>
+                  <ANPNDashboard />
                 </ProtectedRoute>
               }
             />
