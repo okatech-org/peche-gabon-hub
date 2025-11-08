@@ -2,6 +2,16 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { 
   TrendingUp, 
   TrendingDown, 
@@ -9,7 +19,9 @@ import {
   CheckCircle2, 
   XCircle,
   BarChart3,
-  Loader2
+  Loader2,
+  Filter,
+  X
 } from "lucide-react";
 import { format, differenceInHours } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -24,8 +36,15 @@ interface ValidationStats {
   raisonsRejet: { raison: string; count: number }[];
 }
 
+interface Formateur {
+  id: string;
+  nom: string;
+  prenom: string;
+}
+
 export function ValidationStats() {
   const [loading, setLoading] = useState(true);
+  const [formateurs, setFormateurs] = useState<Formateur[]>([]);
   const [stats, setStats] = useState<ValidationStats>({
     total: 0,
     approuvees: 0,
@@ -36,17 +55,66 @@ export function ValidationStats() {
     raisonsRejet: []
   });
 
+  // Filtres
+  const [dateDebut, setDateDebut] = useState("");
+  const [dateFin, setDateFin] = useState("");
+  const [formateurId, setFormateurId] = useState<string>("");
+  const [typeFormation, setTypeFormation] = useState<string>("");
+
   useEffect(() => {
+    loadFormateurs();
     loadStats();
   }, []);
+
+  useEffect(() => {
+    loadStats();
+  }, [dateDebut, dateFin, formateurId, typeFormation]);
+
+  const loadFormateurs = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("formateurs")
+        .select("id, nom, prenom")
+        .eq("statut", "actif")
+        .order("nom");
+
+      if (error) throw error;
+      setFormateurs(data || []);
+    } catch (error) {
+      console.error("Erreur chargement formateurs:", error);
+    }
+  };
+
+  const resetFilters = () => {
+    setDateDebut("");
+    setDateFin("");
+    setFormateurId("");
+    setTypeFormation("");
+  };
+
+  const hasActiveFilters = dateDebut || dateFin || formateurId || typeFormation;
 
   const loadStats = async () => {
     try {
       setLoading(true);
 
-      const { data, error } = await supabase
-        .from("formations_validation")
-        .select("*");
+      let query = supabase.from("formations_validation").select("*");
+
+      // Appliquer les filtres
+      if (dateDebut) {
+        query = query.gte("created_at", dateDebut);
+      }
+      if (dateFin) {
+        query = query.lte("created_at", dateFin);
+      }
+      if (formateurId) {
+        query = query.eq("formateur_id", formateurId);
+      }
+      if (typeFormation) {
+        query = query.eq("type_formation", typeFormation);
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
 
@@ -125,14 +193,92 @@ export function ValidationStats() {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <BarChart3 className="h-5 w-5 text-primary" />
-            Statistiques de Validation
-          </CardTitle>
-          <CardDescription>
-            Vue d'ensemble des performances du système de validation
-          </CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <BarChart3 className="h-5 w-5 text-primary" />
+                Statistiques de Validation
+              </CardTitle>
+              <CardDescription>
+                Vue d'ensemble des performances du système de validation
+              </CardDescription>
+            </div>
+            {hasActiveFilters && (
+              <Button variant="ghost" size="sm" onClick={resetFilters}>
+                <X className="h-4 w-4 mr-1" />
+                Réinitialiser
+              </Button>
+            )}
+          </div>
         </CardHeader>
+      </Card>
+
+      {/* Filtres */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Filter className="h-4 w-4" />
+            Filtres
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="dateDebut">Date début</Label>
+              <Input
+                id="dateDebut"
+                type="date"
+                value={dateDebut}
+                onChange={(e) => setDateDebut(e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="dateFin">Date fin</Label>
+              <Input
+                id="dateFin"
+                type="date"
+                value={dateFin}
+                onChange={(e) => setDateFin(e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="formateur">Formateur</Label>
+              <Select value={formateurId} onValueChange={setFormateurId}>
+                <SelectTrigger id="formateur">
+                  <SelectValue placeholder="Tous les formateurs" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Tous les formateurs</SelectItem>
+                  {formateurs.map((formateur) => (
+                    <SelectItem key={formateur.id} value={formateur.id}>
+                      {formateur.prenom} {formateur.nom}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="typeFormation">Type de formation</Label>
+              <Select value={typeFormation} onValueChange={setTypeFormation}>
+                <SelectTrigger id="typeFormation">
+                  <SelectValue placeholder="Tous les types" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Tous les types</SelectItem>
+                  <SelectItem value="technique">Technique</SelectItem>
+                  <SelectItem value="gestion">Gestion</SelectItem>
+                  <SelectItem value="reglementation">Réglementation</SelectItem>
+                  <SelectItem value="securite">Sécurité</SelectItem>
+                  <SelectItem value="conservation">Conservation</SelectItem>
+                  <SelectItem value="commercialisation">Commercialisation</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </CardContent>
       </Card>
 
       {/* Métriques principales */}
