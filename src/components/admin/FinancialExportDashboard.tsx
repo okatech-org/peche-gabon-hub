@@ -15,6 +15,7 @@ import { format } from "date-fns";
 import { ExcelExportButton } from "./ExcelExportButton";
 import { ScheduledExportsManagement } from "./ScheduledExportsManagement";
 import { useCSVData } from "@/hooks/useCSVData";
+import { ExportPreviewDialog } from "./ExportPreviewDialog";
 
 interface ExportTemplate {
   id: string;
@@ -180,7 +181,6 @@ export const FinancialExportDashboard = () => {
     }
 
     setLoading(true);
-    setShowPreview(true);
     
     try {
       const results: any = {};
@@ -194,6 +194,7 @@ export const FinancialExportDashboard = () => {
       }
       
       setPreviewData(results);
+      setShowPreview(true);
       toast.success(`Prévisualisation chargée: ${Object.values(results).flat().length} lignes`);
     } catch (error: any) {
       console.error("Error loading preview:", error);
@@ -572,6 +573,13 @@ export const FinancialExportDashboard = () => {
           />
         </TabsContent>
       </Tabs>
+
+      <ExportPreviewDialog 
+        open={showPreview}
+        onOpenChange={setShowPreview}
+        data={previewData}
+        templateName={templates.find(t => t.id === selectedTemplate)?.nom}
+      />
     </div>
   );
 };
