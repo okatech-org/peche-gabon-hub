@@ -4,7 +4,8 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Info, X, Circle, Users, Filter } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Info, X, Circle, Users, Filter, AlertCircle, Clock, CheckCircle, Zap } from 'lucide-react';
 
 interface Remontee {
   id: string;
@@ -48,10 +49,54 @@ const typeConfig = [
   { value: 'avis_reseaux', label: 'Avis réseaux' }
 ];
 
+const quickFilters = [
+  {
+    id: 'all',
+    label: 'Tout voir',
+    icon: Circle,
+    statuses: ['nouveau', 'en_cours', 'traite', 'rejete'],
+    types: ['reclamation', 'suggestion', 'denonciation', 'article_presse', 'commentaire_reseaux', 'avis_reseaux'],
+    color: 'bg-primary'
+  },
+  {
+    id: 'urgent',
+    label: 'Urgents',
+    icon: AlertCircle,
+    statuses: ['nouveau', 'rejete'],
+    types: ['denonciation', 'reclamation'],
+    color: 'bg-red-500'
+  },
+  {
+    id: 'pending',
+    label: 'En attente',
+    icon: Clock,
+    statuses: ['nouveau', 'en_cours'],
+    types: ['reclamation', 'suggestion', 'denonciation', 'article_presse', 'commentaire_reseaux', 'avis_reseaux'],
+    color: 'bg-yellow-500'
+  },
+  {
+    id: 'completed',
+    label: 'Traités',
+    icon: CheckCircle,
+    statuses: ['traite'],
+    types: ['reclamation', 'suggestion', 'denonciation', 'article_presse', 'commentaire_reseaux', 'avis_reseaux'],
+    color: 'bg-green-500'
+  },
+  {
+    id: 'critical',
+    label: 'Critiques',
+    icon: Zap,
+    statuses: ['nouveau', 'en_cours'],
+    types: ['denonciation'],
+    color: 'bg-orange-500'
+  }
+];
+
 export function RemonteeMap({ remontees, onRemonteeClick, height = "500px" }: RemonteeMapProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const [showLegend, setShowLegend] = useState(true);
+  const [activeQuickFilter, setActiveQuickFilter] = useState<string>('all');
   const [activeStatuses, setActiveStatuses] = useState<string[]>(['nouveau', 'en_cours', 'traite', 'rejete']);
   const [activeTypes, setActiveTypes] = useState<string[]>([
     'reclamation', 'suggestion', 'denonciation', 'article_presse', 'commentaire_reseaux', 'avis_reseaux'
@@ -87,6 +132,15 @@ export function RemonteeMap({ remontees, onRemonteeClick, height = "500px" }: Re
 
   const selectNoTypes = () => {
     setActiveTypes([]);
+  };
+
+  const applyQuickFilter = (filterId: string) => {
+    const filter = quickFilters.find(f => f.id === filterId);
+    if (filter) {
+      setActiveStatuses(filter.statuses);
+      setActiveTypes(filter.types);
+      setActiveQuickFilter(filterId);
+    }
   };
 
   useEffect(() => {
@@ -367,6 +421,44 @@ export function RemonteeMap({ remontees, onRemonteeClick, height = "500px" }: Re
             </div>
           </CardHeader>
           <CardContent className="space-y-4 text-xs">
+            {/* Quick Filters */}
+            <div className="space-y-2">
+              <div className="font-semibold text-foreground text-xs">
+                Filtres rapides
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {quickFilters.map(filter => {
+                  const Icon = filter.icon;
+                  const count = remontees.filter(r => 
+                    r.latitude && r.longitude &&
+                    filter.statuses.includes(r.statut) &&
+                    filter.types.includes(r.type_remontee)
+                  ).length;
+                  
+                  return (
+                    <Badge
+                      key={filter.id}
+                      variant={activeQuickFilter === filter.id ? "default" : "outline"}
+                      className={`cursor-pointer transition-all hover:scale-105 ${
+                        activeQuickFilter === filter.id 
+                          ? `${filter.color} text-white hover:opacity-90` 
+                          : 'hover:bg-muted'
+                      }`}
+                      onClick={() => applyQuickFilter(filter.id)}
+                    >
+                      <Icon className="h-3 w-3 mr-1" />
+                      {filter.label}
+                      <span className="ml-1 text-[10px] opacity-80">({count})</span>
+                    </Badge>
+                  );
+                })}
+              </div>
+              <p className="text-muted-foreground italic text-[10px] mt-2">
+                Cliquez sur un badge pour appliquer le filtre
+              </p>
+            </div>
+
+            <div className="border-t pt-3" />
             {/* Status Filters */}
             <div className="space-y-2">
               <div className="flex items-center justify-between gap-2">
