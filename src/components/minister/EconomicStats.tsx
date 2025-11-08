@@ -14,6 +14,8 @@ const EconomicStats = () => {
     totalCooperatives: 0,
     poidsTotal: 0,
     cpueMoyenne: 0,
+    recettesTresor: 0,
+    totalQuittances: 0,
   });
 
   // Charger données CSV
@@ -51,11 +53,19 @@ const EconomicStats = () => {
         .select("*", { count: "exact", head: true })
         .eq("statut", "active");
 
+      // Calculer total des quittances (revenus de l'État)
+      const totalQuittances = quittancesData.reduce((sum, row) => sum + (Number(row['Valeur']) || 0), 0);
+      
+      // Part du Trésor Public (70% des recettes totales selon réglementation)
+      const recettesTresor = totalQuittances * 0.70;
+
       setStats({
         valeurExportations: Number(valeurExportations.toFixed(1)),
         totalCooperatives: totalCooperatives || 0,
         poidsTotal: Number(poidsTotal.toFixed(0)),
         cpueMoyenne: Number(cpue.toFixed(2)),
+        recettesTresor: Number(recettesTresor.toFixed(0)),
+        totalQuittances: Number(totalQuittances.toFixed(0)),
       });
     } catch (error) {
       console.error("Erreur:", error);
@@ -103,9 +113,63 @@ const EconomicStats = () => {
     );
   }
 
+  // Données répartition Trésor Public vs Institutions
+  const repartitionRecettesData = [
+    { 
+      categorie: 'Trésor Public',
+      montant: stats.recettesTresor,
+      pourcentage: 70,
+    },
+    { 
+      categorie: 'Institutions',
+      montant: stats.totalQuittances - stats.recettesTresor,
+      pourcentage: 30,
+    },
+  ];
+
   return (
     <div className="space-y-6">
-      {/* KPIs */}
+      {/* KPIs - Ligne 1: Finances de l'État */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card className="md:col-span-1 border-l-4 border-l-primary">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-primary">Recettes Trésor Public</CardTitle>
+            <CardDescription>Part de l'État (70%)</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold">{stats.recettesTresor.toLocaleString()} FCFA</div>
+            <p className="text-xs text-muted-foreground mt-1">
+              Sur {stats.totalQuittances.toLocaleString()} FCFA total
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Revenus Totaux État</CardTitle>
+            <CardDescription>Quittances collectées</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.totalQuittances.toLocaleString()} FCFA</div>
+            <p className="text-xs text-muted-foreground mt-1">Taxes + redevances pêche</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Remontées Institutions</CardTitle>
+            <CardDescription>Part reversée (30%)</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {(stats.totalQuittances - stats.recettesTresor).toLocaleString()} FCFA
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">Organismes publics</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* KPIs - Ligne 2: Économie */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="pb-2">
@@ -153,6 +217,57 @@ const EconomicStats = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Répartition des recettes de l'État */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Répartition des Recettes de l'État</CardTitle>
+          <CardDescription>Distribution entre Trésor Public et Institutions</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-4">
+              {repartitionRecettesData.map((item, index) => (
+                <div key={item.categorie} className="flex items-center justify-between p-4 rounded-lg bg-muted/50">
+                  <div className="flex items-center gap-3">
+                    <div 
+                      className="h-4 w-4 rounded-full" 
+                      style={{ backgroundColor: COLORS[index] }}
+                    />
+                    <div>
+                      <p className="font-medium">{item.categorie}</p>
+                      <p className="text-xs text-muted-foreground">{item.pourcentage}% du total</p>
+                    </div>
+                  </div>
+                  <p className="text-lg font-bold">{item.montant.toLocaleString()} FCFA</p>
+                </div>
+              ))}
+            </div>
+            <ResponsiveContainer width="100%" height={200}>
+              <PieChart>
+                <Pie
+                  data={repartitionRecettesData}
+                  dataKey="montant"
+                  nameKey="categorie"
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={80}
+                  label={(entry) => `${entry.pourcentage}%`}
+                >
+                  {repartitionRecettesData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index]} />
+                  ))}
+                </Pie>
+                <Tooltip 
+                  formatter={(value: number) => `${value.toLocaleString()} FCFA`}
+                  contentStyle={{ backgroundColor: 'hsl(var(--background))', border: '1px solid hsl(var(--border))' }}
+                />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Graphiques principaux */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
