@@ -1,8 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, TrendingUp, TrendingDown, DollarSign, AlertTriangle, CheckCircle, Clock, Activity } from "lucide-react";
+import { Loader2, TrendingUp, TrendingDown, DollarSign, AlertTriangle, CheckCircle, Clock, Activity, Download } from "lucide-react";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { generateFinancialOverviewPDF } from "@/lib/pdfExport";
 import {
   LineChart,
   Line,
@@ -50,11 +52,17 @@ interface StatutDistribution {
 
 export const FinancialOverviewDashboard = () => {
   const [loading, setLoading] = useState(true);
+  const [exporting, setExporting] = useState(false);
   const [kpi, setKpi] = useState<KPIData | null>(null);
   const [tendances, setTendances] = useState<TendanceMensuelle[]>([]);
   const [distribution, setDistribution] = useState<StatutDistribution[]>([]);
   const [performanceModele, setPerformanceModele] = useState<any>(null);
   const [facteursActifs, setFacteursActifs] = useState<any[]>([]);
+
+  const evolutionChartRef = useRef<HTMLDivElement>(null);
+  const tauxChartRef = useRef<HTMLDivElement>(null);
+  const pieChartRef = useRef<HTMLDivElement>(null);
+  const barChartRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     loadAllData();
@@ -204,6 +212,38 @@ export const FinancialOverviewDashboard = () => {
     return `${labels[mois - 1]} ${annee}`;
   };
 
+  const handleExportPDF = async () => {
+    if (!kpi) return;
+
+    setExporting(true);
+    try {
+      await generateFinancialOverviewPDF(
+        {
+          totalAttendu: kpi.totalAttendu,
+          totalRecouvre: kpi.totalRecouvre,
+          tauxGlobal: kpi.tauxGlobal,
+          enAttente: kpi.enAttente,
+          enRetard: kpi.enRetard,
+          nbQuittances: kpi.nbQuittances,
+          tendanceMensuelle: kpi.tendanceMensuelle,
+          variationMensuelle: kpi.variationMensuelle,
+          performanceModele: performanceModele,
+          facteursActifs: facteursActifs,
+        },
+        evolutionChartRef.current,
+        tauxChartRef.current,
+        pieChartRef.current,
+        barChartRef.current
+      );
+      toast.success("Rapport PDF généré avec succès");
+    } catch (error) {
+      console.error('Erreur lors de l\'export PDF:', error);
+      toast.error("Erreur lors de la génération du PDF");
+    } finally {
+      setExporting(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -233,10 +273,30 @@ export const FinancialOverviewDashboard = () => {
             Vue d'ensemble en temps réel - Mis à jour il y a quelques secondes
           </p>
         </div>
-        <Badge variant="outline" className="gap-2">
-          <Activity className="h-3 w-3 animate-pulse" />
-          En direct
-        </Badge>
+        <div className="flex items-center gap-3">
+          <Button
+            onClick={handleExportPDF}
+            disabled={exporting}
+            variant="outline"
+            className="gap-2"
+          >
+            {exporting ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Génération...
+              </>
+            ) : (
+              <>
+                <Download className="h-4 w-4" />
+                Exporter en PDF
+              </>
+            )}
+          </Button>
+          <Badge variant="outline" className="gap-2">
+            <Activity className="h-3 w-3 animate-pulse" />
+            En direct
+          </Badge>
+        </div>
       </div>
 
       {/* KPI Principaux */}
@@ -413,7 +473,8 @@ export const FinancialOverviewDashboard = () => {
             <CardDescription>12 derniers mois (en milliers FCFA)</CardDescription>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
+            <div ref={evolutionChartRef}>
+              <ResponsiveContainer width="100%" height={300}>
               <AreaChart data={tendances}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="mois" angle={-45} textAnchor="end" height={80} />
@@ -440,6 +501,7 @@ export const FinancialOverviewDashboard = () => {
                 />
               </AreaChart>
             </ResponsiveContainer>
+            </div>
           </CardContent>
         </Card>
 
@@ -449,7 +511,8 @@ export const FinancialOverviewDashboard = () => {
             <CardDescription>Performance mensuelle en %</CardDescription>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
+            <div ref={tauxChartRef}>
+              <ResponsiveContainer width="100%" height={300}>
               <LineChart data={tendances}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="mois" angle={-45} textAnchor="end" height={80} />
@@ -466,6 +529,7 @@ export const FinancialOverviewDashboard = () => {
                 />
               </LineChart>
             </ResponsiveContainer>
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -478,7 +542,8 @@ export const FinancialOverviewDashboard = () => {
             <CardDescription>Par statut de paiement</CardDescription>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
+            <div ref={pieChartRef}>
+              <ResponsiveContainer width="100%" height={300}>
               <PieChart>
                 <Pie
                   data={distribution}
@@ -496,6 +561,7 @@ export const FinancialOverviewDashboard = () => {
                 <Tooltip />
               </PieChart>
             </ResponsiveContainer>
+            </div>
           </CardContent>
         </Card>
 
@@ -505,7 +571,8 @@ export const FinancialOverviewDashboard = () => {
             <CardDescription>En FCFA par statut</CardDescription>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
+            <div ref={barChartRef}>
+              <ResponsiveContainer width="100%" height={300}>
               <BarChart data={distribution}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="statut" />
@@ -519,6 +586,7 @@ export const FinancialOverviewDashboard = () => {
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
+            </div>
           </CardContent>
         </Card>
       </div>
