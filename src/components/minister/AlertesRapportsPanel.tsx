@@ -4,11 +4,16 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Bell, TrendingUp, TrendingDown, AlertTriangle, Eye, Check, X, Loader2 } from "lucide-react";
+import { Bell, TrendingUp, TrendingDown, AlertTriangle, Eye, Check, X, Loader2, Plus, Star, Calendar } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
 
 interface Alerte {
   id: string;
@@ -38,16 +43,46 @@ interface Alerte {
   };
 }
 
+interface ActionCorrective {
+  id: string;
+  alerte_id: string;
+  action_description: string;
+  statut: 'planifiee' | 'en_cours' | 'terminee' | 'abandonnee';
+  date_debut: string | null;
+  date_fin_prevue: string | null;
+  date_fin_reelle: string | null;
+  resultats: string | null;
+  efficacite: number | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 const AlertesRapportsPanel = () => {
   const [alertes, setAlertes] = useState<Alerte[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedAlerte, setSelectedAlerte] = useState<Alerte | null>(null);
   const [showDetails, setShowDetails] = useState(false);
   const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
+  const [actions, setActions] = useState<ActionCorrective[]>([]);
+  const [showAddAction, setShowAddAction] = useState(false);
+  const [newAction, setNewAction] = useState({
+    action_description: '',
+    date_debut: '',
+    date_fin_prevue: '',
+    notes: ''
+  });
+  const [editingAction, setEditingAction] = useState<ActionCorrective | null>(null);
 
   useEffect(() => {
     loadAlertes();
   }, []);
+
+  useEffect(() => {
+    if (selectedAlerte) {
+      loadActions(selectedAlerte.id);
+    }
+  }, [selectedAlerte]);
 
   const loadAlertes = async () => {
     setLoading(true);
@@ -82,6 +117,93 @@ const AlertesRapportsPanel = () => {
       toast.error("Erreur lors du chargement des alertes");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadActions = async (alerteId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from("actions_correctives")
+        .select("*")
+        .eq("alerte_id", alerteId)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      setActions((data || []) as ActionCorrective[]);
+    } catch (error) {
+      console.error("Error loading actions:", error);
+    }
+  };
+
+  const createAction = async () => {
+    if (!selectedAlerte || !newAction.action_description) {
+      toast.error("Description de l'action requise");
+      return;
+    }
+
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      const { error } = await supabase
+        .from("actions_correctives")
+        .insert({
+          alerte_id: selectedAlerte.id,
+          action_description: newAction.action_description,
+          date_debut: newAction.date_debut || null,
+          date_fin_prevue: newAction.date_fin_prevue || null,
+          notes: newAction.notes || null,
+          created_by: userData.user?.id,
+          responsable: userData.user?.id
+        });
+
+      if (error) throw error;
+
+      toast.success("Action corrective créée");
+      setShowAddAction(false);
+      setNewAction({ action_description: '', date_debut: '', date_fin_prevue: '', notes: '' });
+      loadActions(selectedAlerte.id);
+    } catch (error: any) {
+      console.error("Error creating action:", error);
+      toast.error("Erreur lors de la création");
+    }
+  };
+
+  const updateAction = async (actionId: string, updates: Partial<ActionCorrective>) => {
+    try {
+      const { error } = await supabase
+        .from("actions_correctives")
+        .update(updates)
+        .eq("id", actionId);
+
+      if (error) throw error;
+
+      toast.success("Action mise à jour");
+      if (selectedAlerte) {
+        loadActions(selectedAlerte.id);
+      }
+      setEditingAction(null);
+    } catch (error: any) {
+      console.error("Error updating action:", error);
+      toast.error("Erreur lors de la mise à jour");
+    }
+  };
+
+  const getStatutLabel = (statut: string) => {
+    switch (statut) {
+      case 'planifiee': return 'Planifiée';
+      case 'en_cours': return 'En cours';
+      case 'terminee': return 'Terminée';
+      case 'abandonnee': return 'Abandonnée';
+      default: return statut;
+    }
+  };
+
+  const getStatutColor = (statut: string) => {
+    switch (statut) {
+      case 'planifiee': return 'secondary';
+      case 'en_cours': return 'default';
+      case 'terminee': return 'outline';
+      case 'abandonnee': return 'destructive';
+      default: return 'outline';
     }
   };
 
@@ -384,7 +506,250 @@ const AlertesRapportsPanel = () => {
                 </Card>
               )}
 
-              <div className="flex justify-end gap-2 pt-4 border-t">
+              <Separator className="my-6" />
+
+              {/* Section Actions Correctives */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold">Actions Correctives</h3>
+                  <Button size="sm" onClick={() => setShowAddAction(true)}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Nouvelle Action
+                  </Button>
+                </div>
+
+                {showAddAction && (
+                  <Card className="border-dashed">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-sm">Créer une action corrective</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div className="space-y-2">
+                        <Label htmlFor="action-desc">Description de l'action *</Label>
+                        <Textarea
+                          id="action-desc"
+                          value={newAction.action_description}
+                          onChange={(e) => setNewAction({ ...newAction, action_description: e.target.value })}
+                          placeholder="Décrire l'action à mettre en œuvre..."
+                          rows={3}
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-2">
+                          <Label htmlFor="date-debut">Date de début</Label>
+                          <Input
+                            id="date-debut"
+                            type="date"
+                            value={newAction.date_debut}
+                            onChange={(e) => setNewAction({ ...newAction, date_debut: e.target.value })}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="date-fin">Date de fin prévue</Label>
+                          <Input
+                            id="date-fin"
+                            type="date"
+                            value={newAction.date_fin_prevue}
+                            onChange={(e) => setNewAction({ ...newAction, date_fin_prevue: e.target.value })}
+                          />
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="notes">Notes</Label>
+                        <Textarea
+                          id="notes"
+                          value={newAction.notes}
+                          onChange={(e) => setNewAction({ ...newAction, notes: e.target.value })}
+                          placeholder="Notes additionnelles..."
+                          rows={2}
+                        />
+                      </div>
+                      <div className="flex justify-end gap-2">
+                        <Button variant="outline" size="sm" onClick={() => {
+                          setShowAddAction(false);
+                          setNewAction({ action_description: '', date_debut: '', date_fin_prevue: '', notes: '' });
+                        }}>
+                          Annuler
+                        </Button>
+                        <Button size="sm" onClick={createAction}>
+                          Créer
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {actions.length === 0 && !showAddAction && (
+                  <Card className="border-dashed">
+                    <CardContent className="flex flex-col items-center justify-center py-8 text-center">
+                      <p className="text-sm text-muted-foreground">
+                        Aucune action corrective enregistrée
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Créez une action pour suivre sa mise en œuvre
+                      </p>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {actions.map((action) => (
+                  <Card key={action.id}>
+                    <CardHeader className="pb-3">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          {editingAction?.id === action.id ? (
+                            <Textarea
+                              value={editingAction.action_description}
+                              onChange={(e) => setEditingAction({ ...editingAction, action_description: e.target.value })}
+                              className="mb-2"
+                              rows={2}
+                            />
+                          ) : (
+                            <CardTitle className="text-sm font-medium">
+                              {action.action_description}
+                            </CardTitle>
+                          )}
+                          <CardDescription className="text-xs mt-1">
+                            Créée le {format(new Date(action.created_at), "PPP", { locale: fr })}
+                          </CardDescription>
+                        </div>
+                        <Badge variant={getStatutColor(action.statut) as any}>
+                          {getStatutLabel(action.statut)}
+                        </Badge>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      {editingAction?.id === action.id ? (
+                        <>
+                          <div className="grid grid-cols-2 gap-3">
+                            <div className="space-y-2">
+                              <Label className="text-xs">Statut</Label>
+                              <Select
+                                value={editingAction.statut}
+                                onValueChange={(value: any) => setEditingAction({ ...editingAction, statut: value })}
+                              >
+                                <SelectTrigger className="h-8">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="planifiee">Planifiée</SelectItem>
+                                  <SelectItem value="en_cours">En cours</SelectItem>
+                                  <SelectItem value="terminee">Terminée</SelectItem>
+                                  <SelectItem value="abandonnee">Abandonnée</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            <div className="space-y-2">
+                              <Label className="text-xs">Date de fin réelle</Label>
+                              <Input
+                                type="date"
+                                value={editingAction.date_fin_reelle || ''}
+                                onChange={(e) => setEditingAction({ ...editingAction, date_fin_reelle: e.target.value })}
+                                className="h-8"
+                              />
+                            </div>
+                          </div>
+                          {editingAction.statut === 'terminee' && (
+                            <>
+                              <div className="space-y-2">
+                                <Label className="text-xs">Efficacité (1-5)</Label>
+                                <div className="flex gap-1">
+                                  {[1, 2, 3, 4, 5].map((rating) => (
+                                    <Button
+                                      key={rating}
+                                      type="button"
+                                      variant={editingAction.efficacite === rating ? "default" : "outline"}
+                                      size="sm"
+                                      className="h-8 w-8 p-0"
+                                      onClick={() => setEditingAction({ ...editingAction, efficacite: rating })}
+                                    >
+                                      <Star className={`h-4 w-4 ${editingAction.efficacite === rating ? 'fill-current' : ''}`} />
+                                    </Button>
+                                  ))}
+                                </div>
+                              </div>
+                              <div className="space-y-2">
+                                <Label className="text-xs">Résultats obtenus</Label>
+                                <Textarea
+                                  value={editingAction.resultats || ''}
+                                  onChange={(e) => setEditingAction({ ...editingAction, resultats: e.target.value })}
+                                  placeholder="Décrire les résultats et impacts..."
+                                  rows={3}
+                                />
+                              </div>
+                            </>
+                          )}
+                          <div className="flex justify-end gap-2">
+                            <Button variant="outline" size="sm" onClick={() => setEditingAction(null)}>
+                              Annuler
+                            </Button>
+                            <Button size="sm" onClick={() => updateAction(action.id, editingAction)}>
+                              Enregistrer
+                            </Button>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <div className="grid grid-cols-3 gap-2 text-xs">
+                            {action.date_debut && (
+                              <div>
+                                <p className="text-muted-foreground">Début</p>
+                                <p className="font-medium">{format(new Date(action.date_debut), "PP", { locale: fr })}</p>
+                              </div>
+                            )}
+                            {action.date_fin_prevue && (
+                              <div>
+                                <p className="text-muted-foreground">Fin prévue</p>
+                                <p className="font-medium">{format(new Date(action.date_fin_prevue), "PP", { locale: fr })}</p>
+                              </div>
+                            )}
+                            {action.date_fin_reelle && (
+                              <div>
+                                <p className="text-muted-foreground">Fin réelle</p>
+                                <p className="font-medium">{format(new Date(action.date_fin_reelle), "PP", { locale: fr })}</p>
+                              </div>
+                            )}
+                          </div>
+                          {action.efficacite && (
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs text-muted-foreground">Efficacité:</span>
+                              <div className="flex gap-0.5">
+                                {[1, 2, 3, 4, 5].map((rating) => (
+                                  <Star
+                                    key={rating}
+                                    className={`h-3 w-3 ${rating <= action.efficacite! ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`}
+                                  />
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                          {action.resultats && (
+                            <div>
+                              <p className="text-xs text-muted-foreground mb-1">Résultats:</p>
+                              <p className="text-xs">{action.resultats}</p>
+                            </div>
+                          )}
+                          {action.notes && (
+                            <div>
+                              <p className="text-xs text-muted-foreground mb-1">Notes:</p>
+                              <p className="text-xs">{action.notes}</p>
+                            </div>
+                          )}
+                          <div className="flex justify-end">
+                            <Button variant="outline" size="sm" onClick={() => setEditingAction({ ...action })}>
+                              Modifier
+                            </Button>
+                          </div>
+                        </>
+                      )}
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+
+              <Separator className="my-6" />
+
+              <div className="flex justify-end gap-2">
                 {selectedAlerte.statut === "nouvelle" || selectedAlerte.statut === "vue" ? (
                   <Button
                     onClick={() => {

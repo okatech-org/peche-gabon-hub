@@ -14,6 +14,65 @@ export type Database = {
   }
   public: {
     Tables: {
+      actions_correctives: {
+        Row: {
+          action_description: string
+          alerte_id: string
+          created_at: string
+          created_by: string | null
+          date_debut: string | null
+          date_fin_prevue: string | null
+          date_fin_reelle: string | null
+          efficacite: number | null
+          id: string
+          notes: string | null
+          responsable: string | null
+          resultats: string | null
+          statut: string
+          updated_at: string
+        }
+        Insert: {
+          action_description: string
+          alerte_id: string
+          created_at?: string
+          created_by?: string | null
+          date_debut?: string | null
+          date_fin_prevue?: string | null
+          date_fin_reelle?: string | null
+          efficacite?: number | null
+          id?: string
+          notes?: string | null
+          responsable?: string | null
+          resultats?: string | null
+          statut?: string
+          updated_at?: string
+        }
+        Update: {
+          action_description?: string
+          alerte_id?: string
+          created_at?: string
+          created_by?: string | null
+          date_debut?: string | null
+          date_fin_prevue?: string | null
+          date_fin_reelle?: string | null
+          efficacite?: number | null
+          id?: string
+          notes?: string | null
+          responsable?: string | null
+          resultats?: string | null
+          statut?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "actions_correctives_alerte_id_fkey"
+            columns: ["alerte_id"]
+            isOneToOne: false
+            referencedRelation: "alertes_rapports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       alerte_historique: {
         Row: {
           created_at: string
