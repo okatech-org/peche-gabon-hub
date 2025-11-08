@@ -81,7 +81,7 @@ interface RemonteeTypeCardsProps {
 export function RemonteeTypeCards({ selectedType, onTypeSelect, typeCounts }: RemonteeTypeCardsProps) {
   return (
     <div className="grid gap-3 grid-cols-2 md:grid-cols-4 lg:grid-cols-7">
-      {remonteeTypes.map((type) => {
+      {remonteeTypes.map((type, index) => {
         const Icon = type.icon;
         const isSelected = selectedType === type.id;
         const count = type.id === "tous" 
@@ -92,30 +92,33 @@ export function RemonteeTypeCards({ selectedType, onTypeSelect, typeCounts }: Re
           <Card
             key={type.id}
             className={cn(
-              "cursor-pointer transition-all duration-200 border-2 hover:shadow-md",
+              "cursor-pointer transition-all duration-300 border-2 hover:shadow-md animate-fade-in hover:scale-[1.02]",
               isSelected 
-                ? "border-primary shadow-lg scale-105" 
+                ? "border-primary shadow-lg scale-105 animate-scale-in" 
                 : "border-transparent hover:border-border",
               type.bgColor
             )}
+            style={{ animationDelay: `${index * 50}ms` }}
             onClick={() => onTypeSelect(type.id)}
           >
             <CardContent className="p-4">
               <div className="flex flex-col items-center text-center gap-2">
                 <div className={cn(
-                  "rounded-full p-3 transition-colors",
-                  isSelected ? "bg-primary/20" : "bg-background/50"
+                  "rounded-full p-3 transition-all duration-300",
+                  isSelected 
+                    ? "bg-primary/20 scale-110" 
+                    : "bg-background/50 hover:scale-105"
                 )}>
                   <Icon className={cn(
-                    "h-6 w-6 transition-colors",
-                    isSelected ? "text-primary" : type.color
+                    "h-6 w-6 transition-all duration-300",
+                    isSelected ? "text-primary scale-110" : type.color
                   )} />
                 </div>
                 
                 <div className="space-y-1">
                   <p className={cn(
-                    "text-sm font-medium leading-tight",
-                    isSelected ? "text-primary font-semibold" : "text-foreground"
+                    "text-sm font-medium leading-tight transition-all duration-300",
+                    isSelected ? "text-primary font-semibold scale-105" : "text-foreground"
                   )}>
                     {type.label}
                   </p>
@@ -123,7 +126,10 @@ export function RemonteeTypeCards({ selectedType, onTypeSelect, typeCounts }: Re
                   {count > 0 && (
                     <Badge 
                       variant={isSelected ? "default" : "secondary"}
-                      className="text-xs"
+                      className={cn(
+                        "text-xs transition-all duration-300",
+                        isSelected && "animate-scale-in"
+                      )}
                     >
                       {count}
                     </Badge>
@@ -131,7 +137,7 @@ export function RemonteeTypeCards({ selectedType, onTypeSelect, typeCounts }: Re
                 </div>
 
                 {isSelected && (
-                  <CheckCircle className="h-4 w-4 text-primary absolute top-2 right-2" />
+                  <CheckCircle className="h-4 w-4 text-primary absolute top-2 right-2 animate-scale-in" />
                 )}
               </div>
             </CardContent>
