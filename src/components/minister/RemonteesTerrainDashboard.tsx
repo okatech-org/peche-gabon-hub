@@ -25,6 +25,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Checkbox } from "@/components/ui/checkbox";
 import { RemonteeTypeCards } from "./RemonteeTypeCards";
 import { RemonteeTypeDetailDialog } from "./RemonteeTypeDetailDialog";
+import { RemonteesSyntheseGlobale } from "./RemonteesSyntheseGlobale";
 
 interface RemonteeStats {
   total: number;
@@ -221,6 +222,17 @@ export function RemonteesTerrainDashboard() {
           />
         </div>
       </div>
+
+      {/* Synthèse globale */}
+      <RemonteesSyntheseGlobale
+        stats={stats}
+        remontees={remontees}
+        onGenerateSynthese={() => {
+          // Générer synthèse de toutes les remontées
+          const allIds = remontees.map(r => r.id);
+          // On pourrait ouvrir le dialog de synthèse ici
+        }}
+      />
 
       {/* Statistiques globales */}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
