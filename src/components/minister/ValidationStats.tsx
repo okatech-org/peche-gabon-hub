@@ -25,8 +25,20 @@ import {
   X,
   ArrowRight
 } from "lucide-react";
-import { format, differenceInHours } from "date-fns";
+import { format, differenceInHours, startOfMonth, endOfMonth, subMonths } from "date-fns";
 import { fr } from "date-fns/locale";
+import {
+  LineChart,
+  Line,
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Legend
+} from "recharts";
 
 interface ValidationStats {
   total: number;
@@ -44,8 +56,18 @@ interface Formateur {
   prenom: string;
 }
 
+interface TendanceData {
+  mois: string;
+  tauxApprobation: number;
+  tempsRevision: number;
+  total: number;
+  approuvees: number;
+  rejetees: number;
+}
+
 export function ValidationStats() {
   const [loading, setLoading] = useState(true);
+  const [loadingTendances, setLoadingTendances] = useState(true);
   const [formateurs, setFormateurs] = useState<Formateur[]>([]);
   const [stats, setStats] = useState<ValidationStats>({
     total: 0,
@@ -57,6 +79,7 @@ export function ValidationStats() {
     raisonsRejet: []
   });
   const [statsComparaison, setStatsComparaison] = useState<ValidationStats | null>(null);
+  const [tendancesData, setTendancesData] = useState<TendanceData[]>([]);
 
   // Filtres
   const [dateDebut, setDateDebut] = useState("");
@@ -72,10 +95,12 @@ export function ValidationStats() {
   useEffect(() => {
     loadFormateurs();
     loadStats();
+    loadTendances();
   }, []);
 
   useEffect(() => {
     loadStats();
+    loadTendances();
     if (modeComparaison && dateDebutComparaison && dateFinComparaison) {
       loadStatsComparaison();
     } else {
@@ -109,6 +134,75 @@ export function ValidationStats() {
   };
 
   const hasActiveFilters = dateDebut || dateFin || formateurId || typeFormation;
+
+  const loadTendances = async () => {
+    try {
+      setLoadingTendances(true);
+
+      // Récupérer les données des 6 derniers mois
+      const moisData: TendanceData[] = [];
+      
+      for (let i = 5; i >= 0; i--) {
+        const dateRef = subMonths(new Date(), i);
+        const debut = startOfMonth(dateRef);
+        const fin = endOfMonth(dateRef);
+
+        let query = supabase
+          .from("formations_validation")
+          .select("*")
+          .gte("created_at", debut.toISOString())
+          .lte("created_at", fin.toISOString());
+
+        if (formateurId) {
+          query = query.eq("formateur_id", formateurId);
+        }
+        if (typeFormation) {
+          query = query.eq("type_formation", typeFormation);
+        }
+
+        const { data, error } = await query;
+
+        if (error) throw error;
+
+        const total = data?.length || 0;
+        const approuvees = data?.filter(f => f.statut === "approuvee").length || 0;
+        const rejetees = data?.filter(f => f.statut === "rejetee").length || 0;
+        
+        const tauxApprobation = total > 0 ? (approuvees / (approuvees + rejetees)) * 100 : 0;
+
+        const formationsRevisees = data?.filter(f => 
+          f.reviewed_at && f.created_at && (f.statut === "approuvee" || f.statut === "rejetee")
+        ) || [];
+
+        let tempsRevision = 0;
+        if (formationsRevisees.length > 0) {
+          const totalHeures = formationsRevisees.reduce((sum, f) => {
+            const heures = differenceInHours(
+              new Date(f.reviewed_at!),
+              new Date(f.created_at)
+            );
+            return sum + heures;
+          }, 0);
+          tempsRevision = totalHeures / formationsRevisees.length;
+        }
+
+        moisData.push({
+          mois: format(dateRef, "MMM yyyy", { locale: fr }),
+          tauxApprobation: Math.round(tauxApprobation * 10) / 10,
+          tempsRevision: Math.round(tempsRevision * 10) / 10,
+          total,
+          approuvees,
+          rejetees
+        });
+      }
+
+      setTendancesData(moisData);
+    } catch (error) {
+      console.error("Erreur chargement tendances:", error);
+    } finally {
+      setLoadingTendances(false);
+    }
+  };
 
   const loadStatsComparaison = async () => {
     try {
@@ -643,6 +737,151 @@ export function ValidationStats() {
           </CardContent>
         </Card>
       )}
+
+      {/* Graphiques d'évolution temporelle */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Évolution Temporelle (6 derniers mois)</CardTitle>
+          <CardDescription>
+            Tendances des performances de validation au fil du temps
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {loadingTendances ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          ) : (
+            <div className="space-y-8">
+              {/* Graphique Taux d'approbation */}
+              <div>
+                <h4 className="text-sm font-medium mb-4">Taux d'approbation (%)</h4>
+                <ResponsiveContainer width="100%" height={250}>
+                  <AreaChart data={tendancesData}>
+                    <defs>
+                      <linearGradient id="colorTaux" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
+                        <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                    <XAxis 
+                      dataKey="mois" 
+                      className="text-xs"
+                      tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                    />
+                    <YAxis 
+                      className="text-xs"
+                      tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                      domain={[0, 100]}
+                    />
+                    <Tooltip 
+                      contentStyle={{
+                        backgroundColor: 'hsl(var(--background))',
+                        border: '1px solid hsl(var(--border))',
+                        borderRadius: '8px'
+                      }}
+                    />
+                    <Area 
+                      type="monotone" 
+                      dataKey="tauxApprobation" 
+                      stroke="hsl(var(--primary))" 
+                      strokeWidth={2}
+                      fillOpacity={1}
+                      fill="url(#colorTaux)"
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+
+              {/* Graphique Temps de révision */}
+              <div>
+                <h4 className="text-sm font-medium mb-4">Temps de révision moyen (heures)</h4>
+                <ResponsiveContainer width="100%" height={250}>
+                  <LineChart data={tendancesData}>
+                    <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                    <XAxis 
+                      dataKey="mois" 
+                      className="text-xs"
+                      tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                    />
+                    <YAxis 
+                      className="text-xs"
+                      tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                    />
+                    <Tooltip 
+                      contentStyle={{
+                        backgroundColor: 'hsl(var(--background))',
+                        border: '1px solid hsl(var(--border))',
+                        borderRadius: '8px'
+                      }}
+                    />
+                    <Line 
+                      type="monotone" 
+                      dataKey="tempsRevision" 
+                      stroke="hsl(var(--chart-2))" 
+                      strokeWidth={2}
+                      dot={{ fill: 'hsl(var(--chart-2))', r: 4 }}
+                      activeDot={{ r: 6 }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+
+              {/* Graphique Volume de formations */}
+              <div>
+                <h4 className="text-sm font-medium mb-4">Volume de formations par statut</h4>
+                <ResponsiveContainer width="100%" height={250}>
+                  <LineChart data={tendancesData}>
+                    <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                    <XAxis 
+                      dataKey="mois" 
+                      className="text-xs"
+                      tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                    />
+                    <YAxis 
+                      className="text-xs"
+                      tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                    />
+                    <Tooltip 
+                      contentStyle={{
+                        backgroundColor: 'hsl(var(--background))',
+                        border: '1px solid hsl(var(--border))',
+                        borderRadius: '8px'
+                      }}
+                    />
+                    <Legend />
+                    <Line 
+                      type="monotone" 
+                      dataKey="total" 
+                      stroke="hsl(var(--chart-1))" 
+                      strokeWidth={2}
+                      name="Total"
+                      dot={{ fill: 'hsl(var(--chart-1))', r: 4 }}
+                    />
+                    <Line 
+                      type="monotone" 
+                      dataKey="approuvees" 
+                      stroke="hsl(var(--chart-3))" 
+                      strokeWidth={2}
+                      name="Approuvées"
+                      dot={{ fill: 'hsl(var(--chart-3))', r: 4 }}
+                    />
+                    <Line 
+                      type="monotone" 
+                      dataKey="rejetees" 
+                      stroke="hsl(var(--chart-5))" 
+                      strokeWidth={2}
+                      name="Rejetées"
+                      dot={{ fill: 'hsl(var(--chart-5))', r: 4 }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Indicateurs de performance */}
       <Card>
