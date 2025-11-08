@@ -94,7 +94,9 @@ export const MinisterialDocumentsPanel = () => {
   const handleUpdateStatut = async (id: string, newStatut: string) => {
     try {
       const updates: any = { statut: newStatut };
-      if (newStatut === "publie" && !documents.find(d => d.id === id)?.date_publication) {
+      const document = documents.find(d => d.id === id);
+      
+      if (newStatut === "publie" && !document?.date_publication) {
         updates.date_publication = new Date().toISOString().split('T')[0];
       }
 
@@ -104,7 +106,34 @@ export const MinisterialDocumentsPanel = () => {
         .eq("id", id);
 
       if (error) throw error;
+      
       toast.success("Statut mis à jour");
+      
+      // Envoyer automatiquement les notifications si le document est publié
+      if (newStatut === "publie" && document) {
+        toast.info("Envoi des notifications aux abonnés...");
+        
+        try {
+          const { data, error: notifError } = await supabase.functions.invoke('simulate-notifications', {
+            body: { documentId: id }
+          });
+
+          if (notifError) throw notifError;
+
+          toast.success(
+            "Notifications envoyées automatiquement!",
+            {
+              description: `${data.notifications?.length || 0} notification(s) envoyée(s) aux abonnés`
+            }
+          );
+        } catch (notifError: any) {
+          console.error("Error sending automatic notifications:", notifError);
+          toast.warning("Document publié mais erreur lors de l'envoi des notifications", {
+            description: "Vous pouvez réessayer manuellement avec le bouton Notifier"
+          });
+        }
+      }
+      
       loadDocuments();
     } catch (error: any) {
       console.error("Error updating status:", error);
