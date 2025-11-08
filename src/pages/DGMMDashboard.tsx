@@ -2,6 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Ship, Shield, Anchor, AlertTriangle } from "lucide-react";
 import { useState } from "react";
+import { InstitutionWorkflowsPanel } from "@/components/workflows/InstitutionWorkflowsPanel";
 
 export default function DGMMDashboard() {
   const [stats] = useState({
@@ -124,17 +125,10 @@ export default function DGMMDashboard() {
           </TabsContent>
 
           <TabsContent value="securite" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Sécurité Maritime</CardTitle>
-                <CardDescription>Réglementation et inspections</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">
-                  Module de gestion de la sécurité maritime en développement
-                </p>
-              </CardContent>
-            </Card>
+            <InstitutionWorkflowsPanel
+              institutionCode="dgmm"
+              institutionName="DGMM"
+            />
           </TabsContent>
 
           <TabsContent value="controle" className="space-y-4">

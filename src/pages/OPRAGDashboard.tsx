@@ -2,6 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Anchor, Ship, Package, TrendingUp } from "lucide-react";
 import { useState } from "react";
+import { InstitutionWorkflowsPanel } from "@/components/workflows/InstitutionWorkflowsPanel";
 
 export default function OPRAGDashboard() {
   const [stats] = useState({
@@ -124,17 +125,10 @@ export default function OPRAGDashboard() {
           </TabsContent>
 
           <TabsContent value="debarquements" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Débarquements de Pêche</CardTitle>
-                <CardDescription>Suivi des opérations de débarquement</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">
-                  Module de gestion des débarquements en développement
-                </p>
-              </CardContent>
-            </Card>
+            <InstitutionWorkflowsPanel
+              institutionCode="oprag"
+              institutionName="OPRAG"
+            />
           </TabsContent>
 
           <TabsContent value="surete" className="space-y-4">

@@ -2,6 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TreePine, Shield, AlertTriangle, Fish } from "lucide-react";
 import { useState } from "react";
+import { InstitutionWorkflowsPanel } from "@/components/workflows/InstitutionWorkflowsPanel";
 
 export default function ANPNDashboard() {
   const [stats] = useState({
@@ -142,22 +143,10 @@ export default function ANPNDashboard() {
           </TabsContent>
 
           <TabsContent value="lutte-inn" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Lutte contre Pêche INN</CardTitle>
-                <CardDescription>Surveillance et contrôle des activités illégales</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="p-3 bg-blue-500/10 border border-blue-200 rounded-lg">
-                  <h4 className="font-semibold text-blue-900 mb-1">Partenaires Techniques</h4>
-                  <ul className="text-sm text-muted-foreground list-disc list-inside">
-                    <li>WCS (Wildlife Conservation Society)</li>
-                    <li>USFWS (US Fish & Wildlife Service)</li>
-                    <li>Global Fishing Watch (données satellitaires)</li>
-                  </ul>
-                </div>
-              </CardContent>
-            </Card>
+            <InstitutionWorkflowsPanel
+              institutionCode="anpn"
+              institutionName="ANPN"
+            />
           </TabsContent>
         </Tabs>
       </div>

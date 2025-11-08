@@ -4,6 +4,7 @@ import { Anchor, TrendingUp, Users, Ship, BarChart3 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from "recharts";
+import { InstitutionWorkflowsPanel } from "@/components/workflows/InstitutionWorkflowsPanel";
 
 export default function ANPADashboard() {
   const [stats, setStats] = useState({
@@ -176,17 +177,10 @@ export default function ANPADashboard() {
           </TabsContent>
 
           <TabsContent value="operations" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Opérations en Cours</CardTitle>
-                <CardDescription>Suivi des activités opérationnelles</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">
-                  Module de suivi opérationnel en développement
-                </p>
-              </CardContent>
-            </Card>
+            <InstitutionWorkflowsPanel
+              institutionCode="anpa"
+              institutionName="ANPA"
+            />
           </TabsContent>
 
           <TabsContent value="gab-peche" className="space-y-4">
