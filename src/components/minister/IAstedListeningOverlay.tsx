@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react';
 import { Mic, Clock } from 'lucide-react';
-
+import { Button } from '@/components/ui/button';
 interface IAstedListeningOverlayProps {
   audioLevel: number;
   isVisible: boolean;
   silenceDetected: boolean;
   silenceTimeRemaining: number;
   silenceDuration: number;
+  onSendNow?: () => void;
+  onCancel?: () => void;
 }
 
 export const IAstedListeningOverlay = ({ 
@@ -14,7 +16,9 @@ export const IAstedListeningOverlay = ({
   isVisible, 
   silenceDetected, 
   silenceTimeRemaining,
-  silenceDuration 
+  silenceDuration,
+  onSendNow,
+  onCancel,
 }: IAstedListeningOverlayProps) => {
   const [pulseScale, setPulseScale] = useState(1);
 
@@ -118,18 +122,34 @@ export const IAstedListeningOverlay = ({
         )}
 
         {/* Indicateur d'activité */}
-        <div className="flex gap-2 animate-in slide-in-from-bottom duration-1000">
-          {[...Array(5)].map((_, i) => (
-            <div
-              key={i}
-              className="w-2 h-8 bg-primary/60 rounded-full animate-pulse"
-              style={{
-                animationDelay: `${i * 0.1}s`,
-                height: `${20 + (audioLevel / 100) * 20}px`,
-                transition: 'height 0.1s ease-out'
-              }}
-            />
-          ))}
+        <div className="flex flex-col items-center gap-6 animate-in slide-in-from-bottom duration-1000">
+          <div className="flex gap-2">
+            {[...Array(5)].map((_, i) => (
+              <div
+                key={i}
+                className="w-2 h-8 bg-primary/60 rounded-full animate-pulse"
+                style={{
+                  animationDelay: `${i * 0.1}s`,
+                  height: `${20 + (audioLevel / 100) * 20}px`,
+                  transition: 'height 0.1s ease-out'
+                }}
+              />
+            ))}
+          </div>
+
+          {/* Actions */}
+          <div className="flex items-center gap-3">
+            {onSendNow && (
+              <Button onClick={onSendNow} className="px-6">
+                Envoyer maintenant
+              </Button>
+            )}
+            {onCancel && (
+              <Button variant="secondary" onClick={onCancel} className="px-6">
+                Annuler
+              </Button>
+            )}
+          </div>
         </div>
       </div>
     </div>

@@ -128,6 +128,8 @@ export const IAstedVoiceButton = ({ className = '', size = 'md' }: IAstedVoiceBu
         silenceDetected={silenceDetected}
         silenceTimeRemaining={silenceTimeRemaining}
         silenceDuration={silenceDuration}
+        onSendNow={stopListening}
+        onCancel={cancelInteraction}
       />
       
       {/* Contrôles vocaux */}

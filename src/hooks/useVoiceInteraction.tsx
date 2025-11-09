@@ -18,7 +18,7 @@ export const useVoiceInteraction = () => {
   const [audioChunks, setAudioChunks] = useState<Blob[]>([]);
   const [currentAudio, setCurrentAudio] = useState<HTMLAudioElement | null>(null);
   const [audioLevel, setAudioLevel] = useState<number>(0);
-  const [silenceDuration, setSilenceDuration] = useState<number>(1500);
+  const [silenceDuration, setSilenceDuration] = useState<number>(900);
   const [silenceThreshold, setSilenceThreshold] = useState<number>(10);
   const [continuousMode, setContinuousMode] = useState<boolean>(false);
   const [continuousModePaused, setContinuousModePaused] = useState<boolean>(false);
@@ -267,8 +267,8 @@ export const useVoiceInteraction = () => {
     } else {
       const timeSinceLastSound = Date.now() - lastSoundTimeRef.current;
 
-      // Show visual feedback after 300ms of silence
-      if (timeSinceLastSound >= 300 && !silenceDetected) {
+      // Show visual feedback after 200ms of silence
+      if (timeSinceLastSound >= 200 && !silenceDetected) {
         setSilenceDetected(true);
         setSilenceTimeRemaining(silenceDuration);
         if (!silenceCountdownIntervalRef.current) {
@@ -373,13 +373,13 @@ export const useVoiceInteraction = () => {
       // Start analyzing audio level
       analyzeAudioLevel();
 
-      // Auto stop after 15 seconds as fallback
+      // Auto stop after 10 seconds as fallback
       setTimeout(() => {
         if (recorder.state === 'recording') {
           console.log('Max recording time reached, stopping');
           stopListening();
         }
-      }, 15000);
+      }, 10000);
 
     } catch (error) {
       console.error('Error accessing microphone:', error);
