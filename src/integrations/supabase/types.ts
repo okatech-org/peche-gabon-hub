@@ -4390,6 +4390,7 @@ export type Database = {
           updated_at: string
           user_id: string
           voice_continuous_mode: boolean | null
+          voice_id: string | null
           voice_silence_duration: number | null
           voice_silence_threshold: number | null
         }
@@ -4403,6 +4404,7 @@ export type Database = {
           updated_at?: string
           user_id: string
           voice_continuous_mode?: boolean | null
+          voice_id?: string | null
           voice_silence_duration?: number | null
           voice_silence_threshold?: number | null
         }
@@ -4416,6 +4418,7 @@ export type Database = {
           updated_at?: string
           user_id?: string
           voice_continuous_mode?: boolean | null
+          voice_id?: string | null
           voice_silence_duration?: number | null
           voice_silence_threshold?: number | null
         }
