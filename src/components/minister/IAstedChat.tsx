@@ -38,6 +38,8 @@ export const IAstedChat = () => {
   const [recordingDuration, setRecordingDuration] = useState(0);
   const [audioPreview, setAudioPreview] = useState<{ blob: Blob; url: string; duration: number } | null>(null);
   const [showAudioPreview, setShowAudioPreview] = useState(false);
+  const [playbackSpeed, setPlaybackSpeed] = useState(1);
+  const audioPreviewRef = useRef<HTMLAudioElement>(null);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [showHistory, setShowHistory] = useState(false);
@@ -465,6 +467,7 @@ export const IAstedChat = () => {
     if (!audioPreview) return;
     
     setShowAudioPreview(false);
+    setPlaybackSpeed(1); // Reset speed
     await transcribeAudio(audioPreview.blob);
     
     // Clean up
@@ -478,11 +481,19 @@ export const IAstedChat = () => {
       setAudioPreview(null);
     }
     setShowAudioPreview(false);
+    setPlaybackSpeed(1);
     
     toast({
       title: "Enregistrement supprimé",
       description: "Vous pouvez faire un nouvel enregistrement.",
     });
+  };
+
+  const handlePlaybackSpeedChange = (speed: number) => {
+    setPlaybackSpeed(speed);
+    if (audioPreviewRef.current) {
+      audioPreviewRef.current.playbackRate = speed;
+    }
   };
 
   return (
@@ -679,13 +690,33 @@ export const IAstedChat = () => {
                   </div>
                 </div>
                 
-                <div className="w-full">
+                <div className="w-full space-y-3">
                   <audio 
+                    ref={audioPreviewRef}
                     controls 
                     src={audioPreview.url} 
                     className="w-full"
                     preload="auto"
                   />
+                  
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-muted-foreground">
+                      Vitesse de lecture
+                    </label>
+                    <div className="flex gap-2">
+                      {[0.5, 1, 1.5, 2].map((speed) => (
+                        <Button
+                          key={speed}
+                          variant={playbackSpeed === speed ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => handlePlaybackSpeedChange(speed)}
+                          className="flex-1"
+                        >
+                          {speed}x
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               </>
             )}
