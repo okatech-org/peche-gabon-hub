@@ -311,6 +311,7 @@ export type Database = {
           statut: string | null
           telephone: string | null
           updated_at: string
+          user_id: string | null
         }
         Insert: {
           adresse?: string | null
@@ -322,6 +323,7 @@ export type Database = {
           statut?: string | null
           telephone?: string | null
           updated_at?: string
+          user_id?: string | null
         }
         Update: {
           adresse?: string | null
@@ -333,6 +335,7 @@ export type Database = {
           statut?: string | null
           telephone?: string | null
           updated_at?: string
+          user_id?: string | null
         }
         Relationships: []
       }

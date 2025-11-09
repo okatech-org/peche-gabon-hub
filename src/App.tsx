@@ -34,6 +34,7 @@ import AGASADashboard from "./pages/AGASADashboard";
 import DGMMDashboard from "./pages/DGMMDashboard";
 import OPRAGDashboard from "./pages/OPRAGDashboard";
 import ANPNDashboard from "./pages/ANPNDashboard";
+import ArmeurDashboard from "./pages/ArmeurDashboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -157,6 +158,14 @@ function App() {
               element={
                 <ProtectedRoute allowedRoles={['anpn', 'admin']}>
                   <ANPNDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/armeur-dashboard"
+              element={
+                <ProtectedRoute allowedRoles={['armateur_pi', 'admin']}>
+                  <ArmeurDashboard />
                 </ProtectedRoute>
               }
             />

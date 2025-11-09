@@ -48,6 +48,9 @@ export const ProtectedRoute = ({ children, allowedRoles }: ProtectedRouteProps) 
       if (roles.includes('anpn' as any)) {
         return <Navigate to="/anpn-dashboard" replace />;
       }
+      if (roles.includes('armateur_pi' as any)) {
+        return <Navigate to="/armeur-dashboard" replace />;
+      }
       if (roles.includes('admin' as any)) {
         return <Navigate to="/admin" replace />;
       }
