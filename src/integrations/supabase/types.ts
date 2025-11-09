@@ -954,6 +954,30 @@ export type Database = {
           },
         ]
       }
+      conversations_iasted: {
+        Row: {
+          created_at: string
+          id: string
+          titre: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          titre: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          titre?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       cooperatives: {
         Row: {
           adresse: string | null
@@ -1932,6 +1956,41 @@ export type Database = {
             columns: ["navire_id"]
             isOneToOne: false
             referencedRelation: "navires_industriels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      messages_iasted: {
+        Row: {
+          audio_url: string | null
+          content: string
+          conversation_id: string
+          created_at: string
+          id: string
+          role: string
+        }
+        Insert: {
+          audio_url?: string | null
+          content: string
+          conversation_id: string
+          created_at?: string
+          id?: string
+          role: string
+        }
+        Update: {
+          audio_url?: string | null
+          content?: string
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_iasted_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations_iasted"
             referencedColumns: ["id"]
           },
         ]

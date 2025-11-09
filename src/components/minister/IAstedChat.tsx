@@ -24,6 +24,7 @@ export const IAstedChat = () => {
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
   const [audioChunks, setAudioChunks] = useState<Blob[]>([]);
   const [audioStream, setAudioStream] = useState<MediaStream | null>(null);
+  const [conversationId, setConversationId] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
@@ -31,11 +32,65 @@ export const IAstedChat = () => {
     scrollRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  // Créer ou charger une conversation
+  useEffect(() => {
+    const initializeConversation = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        // Créer une nouvelle conversation
+        const { data, error } = await supabase
+          .from('conversations_iasted')
+          .insert({
+            user_id: user.id,
+            titre: 'Nouvelle conversation'
+          })
+          .select()
+          .single();
+
+        if (error) throw error;
+        setConversationId(data.id);
+      } catch (error) {
+        console.error('Error initializing conversation:', error);
+      }
+    };
+
+    initializeConversation();
+  }, []);
+
+  const saveMessage = async (message: Message) => {
+    if (!conversationId) return;
+
+    try {
+      await supabase
+        .from('messages_iasted')
+        .insert({
+          conversation_id: conversationId,
+          role: message.role,
+          content: message.content,
+          audio_url: message.audioUrl
+        });
+
+      // Mettre à jour le titre de la conversation si c'est le premier message
+      if (messages.length === 0 && message.role === 'user') {
+        const titre = message.content.substring(0, 50) + (message.content.length > 50 ? '...' : '');
+        await supabase
+          .from('conversations_iasted')
+          .update({ titre })
+          .eq('id', conversationId);
+      }
+    } catch (error) {
+      console.error('Error saving message:', error);
+    }
+  };
+
   const handleSendMessage = async () => {
     if (!input.trim() || isLoading) return;
 
     const userMessage: Message = { role: 'user', content: input };
     setMessages(prev => [...prev, userMessage]);
+    await saveMessage(userMessage);
     setInput("");
     setIsLoading(true);
 
@@ -56,6 +111,7 @@ export const IAstedChat = () => {
           audioUrl: data.audioContent ? `data:audio/mp3;base64,${data.audioContent}` : undefined
         };
         setMessages(prev => [...prev, assistantMessage]);
+        await saveMessage(assistantMessage);
 
         // Auto-play audio
         if (assistantMessage.audioUrl) {
