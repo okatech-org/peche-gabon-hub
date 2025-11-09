@@ -32,6 +32,7 @@ import Formations from "./pages/minister/Formations";
 import Remontees from "./pages/minister/Remontees";
 import History from "./pages/minister/History";
 import Settings from "./pages/minister/Settings";
+import IAsted from "./pages/minister/IAsted";
 import PublicDocumentsRegistry from "./pages/PublicDocumentsRegistry";
 import DGPADashboard from "./pages/DGPADashboard";
 import ANPADashboard from "./pages/ANPADashboard";
@@ -146,6 +147,7 @@ function App() {
               <Route path="formations" element={<Formations />} />
               <Route path="history" element={<History />} />
               <Route path="settings" element={<Settings />} />
+              <Route path="iasted" element={<IAsted />} />
             </Route>
             <Route
               path="/dgpa-dashboard"

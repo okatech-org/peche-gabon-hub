@@ -24,3 +24,6 @@ verify_jwt = true
 [functions.get-knowledge-base]
 verify_jwt = false
 
+[functions.chat-with-iasted]
+verify_jwt = true
+

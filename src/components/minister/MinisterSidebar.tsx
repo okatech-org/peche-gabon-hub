@@ -15,7 +15,8 @@ import {
   GraduationCap,
   MessageSquare,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Bot
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -128,6 +129,18 @@ const navigationSections = {
         description: "Configuration"
       },
     ]
+  },
+  assistants: {
+    title: "ASSISTANTS IA",
+    items: [
+      { 
+        title: "iAsted", 
+        url: "/minister-dashboard/iasted", 
+        icon: Bot,
+        description: "Assistant vocal intelligent",
+        highlight: true
+      },
+    ]
   }
 };
 
@@ -142,6 +155,7 @@ export function MinisterSidebar() {
   const [analyticsOpen, setAnalyticsOpen] = useState(true);
   const [economicsOpen, setEconomicsOpen] = useState(true);
   const [actionsOpen, setActionsOpen] = useState(true);
+  const [assistantsOpen, setAssistantsOpen] = useState(true);
 
   const isActive = (url: string) => currentPath === url;
   const isSectionActive = (items: any[]) => 
@@ -291,6 +305,43 @@ export function MinisterSidebar() {
                           )}
                           {collapsed && item.badge && (
                             <div className="absolute -top-0.5 -right-0.5 h-2 w-2 bg-destructive rounded-full border border-sidebar-background" />
+                          )}
+                        </NavLink>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ))}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </CollapsibleContent>
+          </Collapsible>
+        </SidebarGroup>
+
+        {/* Assistants Section */}
+        <SidebarGroup>
+          <Collapsible open={assistantsOpen} onOpenChange={setAssistantsOpen} defaultOpen={true}>
+            {!collapsed && (
+              <div className="px-3 py-2 mt-2">
+                <p className="text-[10px] font-bold text-muted-foreground tracking-wider uppercase">
+                  {navigationSections.assistants.title}
+                </p>
+              </div>
+            )}
+            <CollapsibleContent>
+              <SidebarGroupContent className="px-2">
+                <SidebarMenu className="space-y-0.5">
+                  {navigationSections.assistants.items.map((item) => (
+                    <SidebarMenuItem key={item.title}>
+                      <SidebarMenuButton asChild>
+                        <NavLink
+                          to={item.url}
+                          end
+                          className="relative flex items-center gap-2.5 px-2.5 py-2 rounded-md transition-all duration-200 hover:bg-sidebar-accent group bg-gradient-to-r from-primary/5 to-accent/5 border border-primary/10"
+                          activeClassName="bg-primary/15 text-primary font-medium"
+                          title={collapsed ? item.title : undefined}
+                        >
+                          <item.icon className={`${collapsed ? "h-4 w-4" : "h-4 w-4"} flex-shrink-0 group-hover:scale-110 transition-transform text-primary`} />
+                          {!collapsed && (
+                            <span className="text-sm truncate font-medium">{item.title}</span>
                           )}
                         </NavLink>
                       </SidebarMenuButton>

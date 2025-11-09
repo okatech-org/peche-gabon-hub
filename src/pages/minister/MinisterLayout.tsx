@@ -26,6 +26,7 @@ const breadcrumbMap: Record<string, { label: string; icon?: any }[]> = {
   "/minister-dashboard/settings": [{ label: "Actions" }, { label: "Paramètres" }],
   "/minister-dashboard/documents": [{ label: "Actions" }, { label: "Documents" }],
   "/minister-dashboard/powers": [{ label: "Actions" }, { label: "Pouvoirs Exécutifs" }],
+  "/minister-dashboard/iasted": [{ label: "Assistants" }, { label: "iAsted" }],
 };
 
 export default function MinisterLayout() {
