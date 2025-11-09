@@ -260,97 +260,97 @@ export function RemonteeCardEnriched({ remontee, onViewDetails, selected, onSele
   };
 
   return (
-    <Card className="group relative overflow-hidden border-border/40 bg-gradient-to-br from-card to-card/95 hover:-translate-y-1 hover:shadow-elevated transition-all duration-300">
+    <Card className="group relative overflow-hidden border-border/40 bg-gradient-to-br from-card to-card/95 hover:-translate-y-0.5 hover:shadow-lg transition-all duration-200 h-full flex flex-col">
       {/* Gradient overlay on hover */}
       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 opacity-0 group-hover:opacity-100 transition-opacity" />
       
-      <CardHeader className="relative pb-3">
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex-1 space-y-2">
+      <CardHeader className="relative pb-2 pt-3 px-3">
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex-1 space-y-1.5 min-w-0">
             {/* Référence et type */}
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-2xl">{getTypeIcon(remontee.type_remontee)}</span>
-              <Badge variant="outline" className="font-mono text-xs">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="text-lg leading-none">{getTypeIcon(remontee.type_remontee)}</span>
+              <Badge variant="outline" className="font-mono text-[10px] px-1.5 py-0">
                 {remontee.numero_reference}
               </Badge>
-              <Badge className={getPrioriteColor(remontee.niveau_priorite)}>
+              <Badge className={`${getPrioriteColor(remontee.niveau_priorite)} text-[10px] px-1.5 py-0`}>
                 {remontee.niveau_priorite}
               </Badge>
             </div>
 
             {/* Titre */}
-            <h3 className="font-semibold text-base leading-tight line-clamp-2 group-hover:text-primary transition-colors">
+            <h3 className="font-semibold text-sm leading-snug line-clamp-2 group-hover:text-primary transition-colors">
               {remontee.titre}
             </h3>
           </div>
 
           {/* Statut */}
-          <Badge className={getStatutColor(remontee.statut)}>
+          <Badge className={`${getStatutColor(remontee.statut)} text-[10px] px-1.5 py-0 shrink-0`}>
             {remontee.statut.replace('_', ' ')}
           </Badge>
         </div>
       </CardHeader>
 
-      <CardContent className="relative space-y-4">
+      <CardContent className="relative space-y-2.5 pt-0 pb-3 px-3 flex-1 flex flex-col">
         {/* Description aperçu */}
-        <p className="text-sm text-muted-foreground line-clamp-3 leading-relaxed">
+        <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
           {remontee.description}
         </p>
 
         {/* Métadonnées */}
-        <div className="grid grid-cols-2 gap-2 text-xs">
+        <div className="grid grid-cols-2 gap-1.5 text-[11px]">
           {remontee.localisation && (
-            <div className="flex items-center gap-1.5 text-muted-foreground">
-              <MapPin className="h-3.5 w-3.5 flex-shrink-0" />
+            <div className="flex items-center gap-1 text-muted-foreground">
+              <MapPin className="h-3 w-3 flex-shrink-0" />
               <span className="truncate">{remontee.localisation}</span>
             </div>
           )}
-          <div className="flex items-center gap-1.5 text-muted-foreground">
-            <Calendar className="h-3.5 w-3.5 flex-shrink-0" />
-            <span>{new Date(remontee.created_at).toLocaleDateString('fr-FR')}</span>
+          <div className="flex items-center gap-1 text-muted-foreground">
+            <Calendar className="h-3 w-3 flex-shrink-0" />
+            <span className="truncate">{new Date(remontee.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })}</span>
           </div>
           {remontee.source && (
-            <div className="flex items-center gap-1.5 text-muted-foreground col-span-2">
-              <AlertCircle className="h-3.5 w-3.5 flex-shrink-0" />
-              <span className="truncate">Source: {remontee.source}</span>
+            <div className="flex items-center gap-1 text-muted-foreground col-span-2">
+              <AlertCircle className="h-3 w-3 flex-shrink-0" />
+              <span className="truncate text-[10px]">Source: {remontee.source}</span>
             </div>
           )}
           {remontee.nb_personnes_concernees && (
-            <div className="flex items-center gap-1.5 text-muted-foreground">
-              <Users className="h-3.5 w-3.5 flex-shrink-0" />
-              <span>{remontee.nb_personnes_concernees} personnes</span>
+            <div className="flex items-center gap-1 text-muted-foreground">
+              <Users className="h-3 w-3 flex-shrink-0" />
+              <span>{remontee.nb_personnes_concernees} pers.</span>
             </div>
           )}
         </div>
 
         {/* Impact estimé */}
         {remontee.impact_estime && (
-          <div className="p-2.5 rounded-lg bg-muted/50 border border-border/50">
-            <p className="text-xs font-medium text-muted-foreground mb-1">Impact estimé</p>
-            <p className="text-xs leading-relaxed">{remontee.impact_estime}</p>
+          <div className="p-2 rounded-md bg-muted/50 border border-border/50">
+            <p className="text-[10px] font-medium text-muted-foreground mb-0.5">Impact estimé</p>
+            <p className="text-[11px] leading-snug line-clamp-2">{remontee.impact_estime}</p>
           </div>
         )}
 
         {/* Actions */}
-        <div className="flex items-center gap-2 pt-2 border-t border-border/50">
+        <div className="flex items-center gap-1.5 pt-2 mt-auto border-t border-border/50">
           <Button
             size="sm"
             variant="outline"
             onClick={onViewDetails}
-            className="flex-1 gap-1.5 hover:bg-primary/5 hover:text-primary hover:border-primary/30 transition-all"
+            className="flex-1 gap-1 h-7 text-[11px] hover:bg-primary/5 hover:text-primary hover:border-primary/30 transition-all"
           >
-            <Eye className="h-3.5 w-3.5" />
-            <span className="text-xs">Voir détails</span>
+            <Eye className="h-3 w-3" />
+            <span>Détails</span>
           </Button>
 
           <Button
             size="sm"
             variant="outline"
             onClick={handleExportPDF}
-            className="gap-1.5 hover:bg-accent/5 hover:text-accent hover:border-accent/30 transition-all"
+            className="gap-1 h-7 px-2 hover:bg-accent/5 hover:text-accent hover:border-accent/30 transition-all"
             title="Exporter en PDF"
           >
-            <FileDown className="h-3.5 w-3.5" />
+            <FileDown className="h-3 w-3" />
           </Button>
 
           <Button
@@ -358,15 +358,15 @@ export function RemonteeCardEnriched({ remontee, onViewDetails, selected, onSele
             variant="outline"
             onClick={handleGenerateAndPlayAudio}
             disabled={isGeneratingAudio || isPlayingAudio}
-            className="gap-1.5 hover:bg-green-500/5 hover:text-green-600 hover:border-green-500/30 transition-all"
+            className="gap-1 h-7 px-2 hover:bg-green-500/5 hover:text-green-600 hover:border-green-500/30 transition-all"
             title="Synthèse vocale IA (15s)"
           >
             {isGeneratingAudio ? (
-              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              <Loader2 className="h-3 w-3 animate-spin" />
             ) : isPlayingAudio ? (
-              <Volume2 className="h-3.5 w-3.5 animate-pulse" />
+              <Volume2 className="h-3 w-3 animate-pulse" />
             ) : (
-              <Volume2 className="h-3.5 w-3.5" />
+              <Volume2 className="h-3 w-3" />
             )}
           </Button>
         </div>
