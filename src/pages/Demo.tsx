@@ -399,10 +399,44 @@ const Demo = () => {
     initializeDemoAccounts();
   }, []);
 
-  const handleQuickAccess = async (email: string, roleName: string) => {
+  const getRoleRoute = (role: string): string => {
+    const roleRoutes: Record<string, string> = {
+      ministre: "/minister-dashboard",
+      admin: "/admin",
+      super_admin: "/superadmin-dashboard",
+      pecheur: "/dashboard",
+      cooperative: "/cooperative-dashboard",
+      gestionnaire_coop: "/cooperative-dashboard",
+      armateur_pi: "/armeur-dashboard",
+      dgpa: "/dgpa-dashboard",
+      anpa: "/anpa-dashboard",
+      agasa: "/agasa-dashboard",
+      dgmm: "/dgmm-dashboard",
+      oprag: "/oprag-dashboard",
+      anpn: "/anpn-dashboard",
+      dgddi: "/dgddi-dashboard",
+      corep: "/corep-dashboard",
+      direction_centrale: "/dashboard",
+      direction_provinciale: "/dashboard",
+      agent_collecte: "/dashboard",
+      inspecteur: "/dashboard",
+      observateur_pi: "/dashboard",
+      analyste: "/dashboard",
+      partenaire_international: "/dashboard",
+    };
+    return roleRoutes[role] || "/dashboard";
+  };
+
+  const handleQuickAccess = async (email: string, roleName: string, role: string) => {
     try {
       await signIn(email, "Demo2025!");
       toast.success(`Connecté en tant que ${roleName}`);
+      
+      // Attendre un court instant pour que les rôles soient chargés
+      setTimeout(() => {
+        const route = getRoleRoute(role);
+        navigate(route);
+      }, 500);
     } catch (error) {
       toast.error("Erreur de connexion");
     }
@@ -517,7 +551,7 @@ const Demo = () => {
                     </CardContent>
                     <CardFooter className="flex flex-col gap-2">
                       <Button 
-                        onClick={() => handleQuickAccess(account.email, account.name)}
+                        onClick={() => handleQuickAccess(account.email, account.name, account.role)}
                         className="w-full"
                         variant={isActive ? "default" : "secondary"}
                         disabled={!isActive}
@@ -594,7 +628,7 @@ const Demo = () => {
                     </CardContent>
                     <CardFooter className="flex flex-col gap-2">
                       <Button 
-                        onClick={() => handleQuickAccess(account.email, account.name)}
+                        onClick={() => handleQuickAccess(account.email, account.name, account.role)}
                         className="w-full"
                         variant={isActive ? "default" : "secondary"}
                         disabled={!isActive}
@@ -671,7 +705,7 @@ const Demo = () => {
                     </CardContent>
                     <CardFooter className="flex flex-col gap-2">
                       <Button 
-                        onClick={() => handleQuickAccess(account.email, account.name)}
+                        onClick={() => handleQuickAccess(account.email, account.name, account.role)}
                         className="w-full"
                         variant={isActive ? "default" : "secondary"}
                         disabled={!isActive}
@@ -748,7 +782,7 @@ const Demo = () => {
                     </CardContent>
                     <CardFooter className="flex flex-col gap-2">
                       <Button 
-                        onClick={() => handleQuickAccess(account.email, account.name)}
+                        onClick={() => handleQuickAccess(account.email, account.name, account.role)}
                         className="w-full"
                         variant={isActive ? "default" : "secondary"}
                         disabled={!isActive}
@@ -825,7 +859,7 @@ const Demo = () => {
                     </CardContent>
                     <CardFooter className="flex flex-col gap-2">
                       <Button 
-                        onClick={() => handleQuickAccess(account.email, account.name)}
+                        onClick={() => handleQuickAccess(account.email, account.name, account.role)}
                         className="w-full"
                         variant={isActive ? "default" : "secondary"}
                         disabled={!isActive}
@@ -902,7 +936,7 @@ const Demo = () => {
                     </CardContent>
                     <CardFooter className="flex flex-col gap-2">
                       <Button 
-                        onClick={() => handleQuickAccess(account.email, account.name)}
+                        onClick={() => handleQuickAccess(account.email, account.name, account.role)}
                         className="w-full"
                         variant={isActive ? "default" : "secondary"}
                         disabled={!isActive}
@@ -979,7 +1013,7 @@ const Demo = () => {
                     </CardContent>
                     <CardFooter className="flex flex-col gap-2">
                       <Button 
-                        onClick={() => handleQuickAccess(account.email, account.name)}
+                        onClick={() => handleQuickAccess(account.email, account.name, account.role)}
                         className="w-full"
                         variant={isActive ? "default" : "secondary"}
                         disabled={!isActive}
@@ -1071,7 +1105,7 @@ const Demo = () => {
                     </CardContent>
                     <CardFooter className="flex flex-col gap-2 bg-slate-50/50 dark:bg-slate-900/20">
                       <Button 
-                        onClick={() => handleQuickAccess(account.email, account.name)}
+                        onClick={() => handleQuickAccess(account.email, account.name, account.role)}
                         className={`w-full ${isActive ? 'bg-slate-800 hover:bg-slate-900 dark:bg-slate-700 dark:hover:bg-slate-600' : ''}`}
                         variant={isActive ? "default" : "secondary"}
                         disabled={!isActive}
