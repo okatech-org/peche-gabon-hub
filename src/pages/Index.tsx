@@ -1,6 +1,12 @@
 import { Button } from "@/components/ui/button";
-import { Fish, Waves, Shield, BarChart3, Users, ArrowRight, FileText } from "lucide-react";
+import { Fish, Waves, Shield, BarChart3, Users, ArrowRight, FileText, TrendingUp, Newspaper, Heart } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import heroImage from "@/assets/hero-fisherman.jpg";
+import artisanalImage from "@/assets/artisanal-fishing.jpg";
+import industrialImage from "@/assets/industrial-fishing.jpg";
+import surveillanceImage from "@/assets/surveillance.jpg";
+import marketImage from "@/assets/market-economy.jpg";
+import investorsImage from "@/assets/investors.jpg";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -8,72 +14,197 @@ const Index = () => {
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
-      <section className="relative bg-gradient-ocean text-white py-20 px-4">
+      <section className="relative overflow-hidden">
+        <div className="absolute inset-0">
+          <img 
+            src={heroImage} 
+            alt="Pêcheur gabonais en action" 
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/60 to-transparent" />
+        </div>
+        <div className="relative container mx-auto max-w-6xl py-24 px-4">
+          <div className="max-w-2xl">
+            <div className="flex items-center gap-3 mb-6">
+              <Fish className="h-16 w-16 text-primary" />
+              <h1 className="text-5xl lg:text-7xl font-bold text-white">PÊCHE GABON</h1>
+            </div>
+            <p className="text-2xl lg:text-3xl mb-6 text-primary font-semibold">
+              Excellence en Gestion Halieutique
+            </p>
+            <p className="text-lg mb-8 text-white/90">
+              Une plateforme digitale de pointe pour une gestion durable et transparente des ressources 
+              halieutiques gabonaises. Nous offrons aux investisseurs un écosystème moderne, 
+              réglementé et propice à la croissance.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4">
+              <Button
+                size="lg"
+                onClick={() => navigate("/donnees-publiques")}
+                className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-glow"
+              >
+                <TrendingUp className="mr-2 h-5 w-5" />
+                Données & Investissements
+              </Button>
+              <Button
+                size="lg"
+                variant="outline"
+                onClick={() => navigate("/auth")}
+                className="border-primary text-white bg-background/20 backdrop-blur-sm hover:bg-primary/20"
+              >
+                Espace Professionnel
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </Button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Quick Links */}
+      <section className="bg-card border-b py-8">
+        <div className="container mx-auto max-w-6xl px-4">
+          <div className="flex flex-wrap justify-center gap-4">
+            <Button variant="ghost" onClick={() => navigate("/donnees-publiques")}>
+              <TrendingUp className="mr-2 h-4 w-4" />
+              Données Publiques
+            </Button>
+            <Button variant="ghost" onClick={() => navigate("/actualites")}>
+              <Newspaper className="mr-2 h-4 w-4" />
+              Actualités
+            </Button>
+            <Button variant="ghost" onClick={() => navigate("/sensibilisation")}>
+              <Heart className="mr-2 h-4 w-4" />
+              Sensibilisation
+            </Button>
+            <Button variant="ghost" onClick={() => navigate("/registre-documents")}>
+              <FileText className="mr-2 h-4 w-4" />
+              Registre Public
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      {/* Investment Opportunities */}
+      <section className="py-20 px-4 bg-background">
         <div className="container mx-auto max-w-6xl">
-          <div className="flex flex-col lg:flex-row items-center gap-12">
-            <div className="flex-1 text-center lg:text-left">
-              <div className="flex items-center gap-3 justify-center lg:justify-start mb-6">
-                <Fish className="h-16 w-16" />
-                <h1 className="text-5xl lg:text-6xl font-bold">PÊCHE GABON</h1>
-              </div>
-              <p className="text-xl lg:text-2xl mb-8 text-white/90">
-                Plateforme Nationale de Gestion des Ressources Halieutiques
-              </p>
-              <p className="text-lg mb-8 text-white/80">
-                Solution intégrée pour le suivi des captures, la gestion des licences,
-                la surveillance maritime et l'analyse des données du secteur de la pêche au Gabon.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-                <Button
-                  size="lg"
-                  onClick={() => navigate("/demo")}
-                  className="bg-white text-primary hover:bg-white/90"
-                >
-                  Mode Démonstration
-                  <ArrowRight className="ml-2 h-5 w-5" />
-                </Button>
-                <Button
-                  size="lg"
-                  variant="outline"
-                  onClick={() => navigate("/auth")}
-                  className="border-white text-white hover:bg-white/10"
-                >
-                  Connexion
-                </Button>
-                <Button
-                  size="lg"
-                  variant="secondary"
-                  onClick={() => navigate("/registre-documents")}
-                  className="border-white"
-                >
-                  <FileText className="mr-2 h-5 w-5" />
-                  Registre Public
-                </Button>
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold mb-4">Opportunités d'Investissement</h2>
+            <p className="text-xl text-muted-foreground">
+              Un secteur en pleine croissance avec un cadre réglementaire moderne
+            </p>
+          </div>
+          
+          <div className="grid lg:grid-cols-2 gap-8 mb-16">
+            <div className="relative overflow-hidden rounded-lg shadow-elevated group">
+              <img 
+                src={artisanalImage} 
+                alt="Pêche artisanale" 
+                className="w-full h-80 object-cover transition-transform group-hover:scale-105"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent flex items-end p-6">
+                <div>
+                  <h3 className="text-2xl font-bold text-white mb-2">Pêche Artisanale</h3>
+                  <p className="text-white/90 mb-4">
+                    Soutien aux communautés locales avec des pratiques durables et un suivi CPUE en temps réel
+                  </p>
+                  <Button variant="secondary" size="sm" onClick={() => navigate("/donnees-publiques")}>
+                    En savoir plus
+                  </Button>
+                </div>
               </div>
             </div>
-            <div className="flex-1">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-white/10 backdrop-blur-sm p-6 rounded-lg">
-                  <Waves className="h-8 w-8 mb-3" />
-                  <h3 className="font-semibold mb-2">Pêche Artisanale</h3>
-                  <p className="text-sm text-white/80">Suivi des captures et CPUE</p>
-                </div>
-                <div className="bg-white/10 backdrop-blur-sm p-6 rounded-lg">
-                  <Shield className="h-8 w-8 mb-3" />
-                  <h3 className="font-semibold mb-2">Surveillance</h3>
-                  <p className="text-sm text-white/80">Infractions et conformité</p>
-                </div>
-                <div className="bg-white/10 backdrop-blur-sm p-6 rounded-lg">
-                  <BarChart3 className="h-8 w-8 mb-3" />
-                  <h3 className="font-semibold mb-2">Analytics</h3>
-                  <p className="text-sm text-white/80">Dashboards temps réel</p>
-                </div>
-                <div className="bg-white/10 backdrop-blur-sm p-6 rounded-lg">
-                  <Users className="h-8 w-8 mb-3" />
-                  <h3 className="font-semibold mb-2">RBAC</h3>
-                  <p className="text-sm text-white/80">10 rôles utilisateurs</p>
+
+            <div className="relative overflow-hidden rounded-lg shadow-elevated group">
+              <img 
+                src={industrialImage} 
+                alt="Pêche industrielle" 
+                className="w-full h-80 object-cover transition-transform group-hover:scale-105"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent flex items-end p-6">
+                <div>
+                  <h3 className="text-2xl font-bold text-white mb-2">Pêche Industrielle</h3>
+                  <p className="text-white/90 mb-4">
+                    Infrastructure moderne et réglementations conformes aux standards internationaux
+                  </p>
+                  <Button variant="secondary" size="sm" onClick={() => navigate("/donnees-publiques")}>
+                    En savoir plus
+                  </Button>
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Key Features */}
+      <section className="py-20 px-4 bg-card">
+        <div className="container mx-auto max-w-6xl">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold mb-4">Un Écosystème Digital Complet</h2>
+            <p className="text-xl text-muted-foreground">
+              Transparence, traçabilité et excellence opérationnelle
+            </p>
+          </div>
+          
+          <div className="grid md:grid-cols-3 gap-8 mb-12">
+            <div className="relative overflow-hidden rounded-lg bg-background p-6 shadow-card hover:shadow-elevated transition-shadow">
+              <div className="aspect-video mb-4 overflow-hidden rounded-lg">
+                <img 
+                  src={surveillanceImage} 
+                  alt="Surveillance maritime" 
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
+                  <Shield className="h-6 w-6 text-primary" />
+                </div>
+                <h3 className="text-xl font-semibold">Conformité & Surveillance</h3>
+              </div>
+              <p className="text-muted-foreground">
+                Système de surveillance maritime avancé garantissant la conformité réglementaire 
+                et la protection des ressources
+              </p>
+            </div>
+            
+            <div className="relative overflow-hidden rounded-lg bg-background p-6 shadow-card hover:shadow-elevated transition-shadow">
+              <div className="aspect-video mb-4 overflow-hidden rounded-lg">
+                <img 
+                  src={investorsImage} 
+                  alt="Analytics" 
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-12 h-12 bg-secondary/10 rounded-full flex items-center justify-center">
+                  <BarChart3 className="h-6 w-6 text-secondary" />
+                </div>
+                <h3 className="text-xl font-semibold">Données en Temps Réel</h3>
+              </div>
+              <p className="text-muted-foreground">
+                Tableaux de bord et analytics avancés pour une prise de décision éclairée 
+                basée sur des données fiables
+              </p>
+            </div>
+            
+            <div className="relative overflow-hidden rounded-lg bg-background p-6 shadow-card hover:shadow-elevated transition-shadow">
+              <div className="aspect-video mb-4 overflow-hidden rounded-lg">
+                <img 
+                  src={marketImage} 
+                  alt="Économie" 
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-12 h-12 bg-accent/10 rounded-full flex items-center justify-center">
+                  <TrendingUp className="h-6 w-6 text-accent" />
+                </div>
+                <h3 className="text-xl font-semibold">Croissance Économique</h3>
+              </div>
+              <p className="text-muted-foreground">
+                Un marché dynamique créant de la valeur pour les communautés locales 
+                et les investisseurs internationaux
+              </p>
             </div>
           </div>
         </div>

@@ -10,6 +10,9 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import Admin from "./pages/Admin";
+import DonneesPubliques from "./pages/DonneesPubliques";
+import Actualites from "./pages/Actualites";
+import Sensibilisation from "./pages/Sensibilisation";
 import Demo from "./pages/Demo";
 import Captures from "./pages/Captures";
 import MonCompte from "./pages/MonCompte";
@@ -51,10 +54,13 @@ function App() {
         <BrowserRouter>
           <AuthProvider>
           <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/demo" element={<Demo />} />
-            <Route path="/registre-documents" element={<PublicDocumentsRegistry />} />
+          <Route path="/" element={<Index />} />
+          <Route path="/auth" element={<Auth />} />
+          <Route path="/demo" element={<Demo />} />
+          <Route path="/registre-documents" element={<PublicDocumentsRegistry />} />
+          <Route path="/donnees-publiques" element={<DonneesPubliques />} />
+          <Route path="/actualites" element={<Actualites />} />
+          <Route path="/sensibilisation" element={<Sensibilisation />} />
             <Route
               path="/dashboard"
               element={
