@@ -401,7 +401,8 @@ export const useVoiceInteraction = () => {
         continuousModeToastShownRef.current = true;
       }
       
-      // Démarrer directement l'écoute sans salutation
+      // Jouer la salutation puis démarrer l'écoute
+      await playGreeting();
       startListening();
     } else if (voiceState === 'listening') {
       stopListening();
@@ -435,6 +436,18 @@ export const useVoiceInteraction = () => {
     });
   };
 
+  const cancelInteraction = () => {
+    if (currentAudio) {
+      currentAudio.pause();
+      currentAudio.src = '';
+    }
+    if (mediaRecorder && mediaRecorder.state === 'recording') {
+      mediaRecorder.stop();
+    }
+    setVoiceState('idle');
+    unifiedToast.info("Interaction annulée", "La conversation a été interrompue");
+  };
+
   return {
     voiceState,
     handleInteraction,
@@ -445,5 +458,7 @@ export const useVoiceInteraction = () => {
     continuousMode,
     continuousModePaused,
     toggleContinuousPause,
+    stopListening,
+    cancelInteraction,
   };
 };

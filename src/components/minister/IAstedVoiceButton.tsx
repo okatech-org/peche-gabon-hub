@@ -1,6 +1,7 @@
 import { useRef, useEffect } from 'react';
 import { IAstedButton } from './IAstedButton';
 import { IAstedListeningOverlay } from './IAstedListeningOverlay';
+import { IAstedVoiceControls } from './IAstedVoiceControls';
 import { useVoiceInteraction } from '@/hooks/useVoiceInteraction';
 
 interface IAstedVoiceButtonProps {
@@ -9,7 +10,19 @@ interface IAstedVoiceButtonProps {
 }
 
 export const IAstedVoiceButton = ({ className = '', size = 'md' }: IAstedVoiceButtonProps) => {
-  const { voiceState, handleInteraction, isListening, isThinking, isSpeaking, audioLevel, continuousMode, continuousModePaused, toggleContinuousPause } = useVoiceInteraction();
+  const { 
+    voiceState, 
+    handleInteraction, 
+    isListening, 
+    isThinking, 
+    isSpeaking, 
+    audioLevel, 
+    continuousMode, 
+    continuousModePaused, 
+    toggleContinuousPause,
+    stopListening,
+    cancelInteraction
+  } = useVoiceInteraction();
   const lastClickTime = useRef<number>(0);
   const clickTimeout = useRef<NodeJS.Timeout | null>(null);
   const clickCount = useRef<number>(0);
@@ -67,6 +80,14 @@ export const IAstedVoiceButton = ({ className = '', size = 'md' }: IAstedVoiceBu
       <IAstedListeningOverlay 
         audioLevel={audioLevel}
         isVisible={isListening}
+      />
+      
+      {/* Contrôles vocaux */}
+      <IAstedVoiceControls
+        voiceState={voiceState}
+        onStop={stopListening}
+        onCancel={cancelInteraction}
+        onRestart={handleInteraction}
       />
     </>
   );
