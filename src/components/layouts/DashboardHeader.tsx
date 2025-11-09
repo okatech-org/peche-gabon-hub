@@ -18,6 +18,11 @@ export const DashboardHeader = ({ roleConfig }: DashboardHeaderProps) => {
   const navigate = useNavigate();
   const IconComponent = roleConfig.icon;
 
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/auth');
+  };
+
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center gap-4 px-4">
@@ -64,7 +69,7 @@ export const DashboardHeader = ({ roleConfig }: DashboardHeaderProps) => {
           <Button
             variant="outline"
             size="icon"
-            onClick={signOut}
+            onClick={handleSignOut}
             title="Déconnexion"
           >
             <LogOut className="h-4 w-4" />
