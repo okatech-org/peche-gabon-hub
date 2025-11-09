@@ -34,7 +34,10 @@ const Index = () => {
         <div className="relative container mx-auto max-w-6xl py-24 px-4">
           <div className="max-w-2xl">
             <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-6 mb-6">
-              <Logo size="xl" className="drop-shadow-lg h-40 w-40 md:h-48 md:w-48 lg:h-64 lg:w-64 flex-shrink-0 animate-[pulse_3s_ease-in-out_infinite]" />
+              <div className="relative">
+                <div className="absolute inset-0 bg-primary/30 rounded-full blur-2xl animate-pulse" />
+                <Logo size="xl" className="relative drop-shadow-2xl h-40 w-40 md:h-48 md:w-48 lg:h-64 lg:w-64 flex-shrink-0 animate-[pulse_3s_ease-in-out_infinite] shadow-[0_0_40px_rgba(59,130,246,0.6)]" />
+              </div>
               <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-white whitespace-nowrap">{t("hero.title")}</h1>
             </div>
             <p className="text-2xl lg:text-3xl mb-6 text-primary font-semibold">
