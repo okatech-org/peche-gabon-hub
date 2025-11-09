@@ -124,7 +124,7 @@ export default function Carte() {
 
   // Token Mapbox depuis les variables d'environnement (configuré dans les secrets du projet)
   const mapboxToken = useMemo(
-    () => import.meta.env.VITE_MAPBOX_TOKEN || "pk.eyJ1IjoibG92YWJsZS1kZXYiLCJhIjoiY2x4anExeWN6MDdmYzJrcXptbXN4dDZ0ZSJ9.5K6P4BTFQS2bJTjG8KWz0g",
+    () => import.meta.env.VITE_MAPBOX_TOKEN || "pk.eyJ1Ijoib2thdGVjaCIsImEiOiJjbWhzM3dnOWowYnBjMm1zaGJsbmJrMGR3In0.yYvhLCZKtUKd4RNPfYQvIw",
     []
   );
 
