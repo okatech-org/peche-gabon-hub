@@ -27,6 +27,9 @@ export const ProtectedRoute = ({ children, allowedRoles }: ProtectedRouteProps) 
     const hasAccess = allowedRoles.some(role => roles.includes(role as any));
     if (!hasAccess) {
       // Rediriger vers le dashboard approprié selon le rôle
+      if (roles.includes('super_admin' as any)) {
+        return <Navigate to="/superadmin-dashboard" replace />;
+      }
       if (roles.includes('ministre' as any)) {
         return <Navigate to="/minister-dashboard" replace />;
       }
