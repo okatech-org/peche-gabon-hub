@@ -3,12 +3,12 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { MinisterSidebar } from "@/components/minister/MinisterSidebar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import ExportPDFButton from "@/components/minister/ExportPDFButton";
 import { GlobalSearch } from "@/components/minister/GlobalSearch";
 import { useState } from "react";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { Home, ChevronRight } from "lucide-react";
+import { LogOut } from "lucide-react";
 import { Toaster } from "@/components/ui/toaster";
+import { useAuth } from "@/hooks/useAuth";
 
 // Breadcrumb mapping pour navigation intuitive
 const breadcrumbMap: Record<string, { label: string; icon?: any }[]> = {
@@ -31,14 +31,13 @@ const breadcrumbMap: Record<string, { label: string; icon?: any }[]> = {
 export default function MinisterLayout() {
   const location = useLocation();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [filters, setFilters] = useState({
     annee: new Date().getFullYear().toString(),
     mois: "tous",
     province: "tous",
     typePeche: "tous",
   });
-
-  const breadcrumbs = breadcrumbMap[location.pathname] || [];
 
   return (
     <SidebarProvider defaultOpen={true}>
@@ -47,58 +46,36 @@ export default function MinisterLayout() {
         
         <div className="flex-1 flex flex-col min-w-0">
           {/* Header amélioré avec breadcrumbs */}
-          <header className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60">
-            <div className="flex items-center gap-4 px-4 md:px-6 py-3">
-              <SidebarTrigger className="hover:bg-muted transition-colors rounded-md" />
-              
-              <div className="flex-1 min-w-0">
-                {/* Titre et breadcrumbs */}
-                <div className="flex items-center gap-2 mb-1">
-                  <Button 
-                    variant="ghost" 
-                    size="sm"
-                    className="h-7 px-2 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all rounded-md group"
-                    onClick={() => navigate('/minister-dashboard')}
-                  >
-                    <Home className="h-3.5 w-3.5 group-hover:scale-110 transition-transform" />
-                  </Button>
-                  
-                  {breadcrumbs.map((crumb, index) => (
-                    <div key={index} className="flex items-center gap-2 animate-fade-in" style={{ animationDelay: `${index * 50}ms` }}>
-                      <ChevronRight className="h-3 w-3 text-muted-foreground" />
-                      <span className={`text-sm transition-colors ${index === breadcrumbs.length - 1 ? 'font-semibold text-foreground' : 'text-muted-foreground hover:text-foreground'}`}>
-                        {crumb.label}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-                
-                <div className="hidden md:block">
-                  <h1 className="text-lg md:text-xl font-bold truncate bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
-                    Tableau de Bord Exécutif
-                  </h1>
-                  <p className="text-xs md:text-sm text-muted-foreground truncate">
-                    Vue stratégique du secteur halieutique
-                  </p>
-                </div>
+          <header className="sticky top-0 z-50 border-b border-border/50 bg-background/95 backdrop-blur-md">
+            <div className="flex items-center gap-3 px-4 md:px-6 py-2.5">
+              <SidebarTrigger className="hover:bg-muted transition-colors rounded-md p-2" />
+              <div className="hidden lg:block flex-1 max-w-md">
+                <GlobalSearch />
               </div>
 
               {/* Actions header */}
-              <div className="flex items-center gap-2">
-                <div className="hidden lg:block w-64">
-                  <GlobalSearch />
+              <div className="flex items-center gap-2 ml-auto">
+                <div className="flex items-center gap-1.5 text-xs">
+                  <span className="text-muted-foreground hidden md:inline">{user?.email}</span>
+                  <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20 font-medium text-xs">
+                    ministre
+                  </Badge>
                 </div>
-                
-                <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20 hidden sm:flex font-medium shadow-sm">
-                  Ministre
-                </Badge>
                 <ThemeToggle />
-                <ExportPDFButton filters={filters} />
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => navigate('/')}
+                  className="gap-1.5 text-xs hover:bg-muted"
+                >
+                  Retour
+                  <LogOut className="h-3.5 w-3.5" />
+                </Button>
               </div>
             </div>
             
             {/* Barre de recherche mobile */}
-            <div className="lg:hidden px-4 pb-3">
+            <div className="lg:hidden px-4 pb-2.5">
               <GlobalSearch />
             </div>
           </header>
