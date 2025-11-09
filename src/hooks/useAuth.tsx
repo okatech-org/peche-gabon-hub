@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
 type UserRole = 'pecheur' | 'agent_collecte' | 'gestionnaire_coop' | 'inspecteur' | 
-  'direction_provinciale' | 'direction_centrale' | 'admin' | 'armateur_pi' | 
+  'direction_provinciale' | 'direction_centrale' | 'admin' | 'super_admin' | 'armateur_pi' | 
   'observateur_pi' | 'analyste' | 'ministre' | 'dgpa' | 'anpa' | 'agasa' | 
   'dgmm' | 'oprag' | 'dgddi' | 'anpn' | 'corep' | 'partenaire_international';
 
@@ -98,7 +98,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         });
         
         const userRoles = data || [];
-        if (userRoles.includes('ministre')) {
+        if (userRoles.includes('super_admin')) {
+          navigate("/superadmin-dashboard");
+        } else if (userRoles.includes('ministre')) {
           navigate("/minister-dashboard");
         } else if (userRoles.includes('dgpa')) {
           navigate("/dgpa-dashboard");

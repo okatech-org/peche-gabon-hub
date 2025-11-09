@@ -27,6 +27,7 @@ const roleLabels: Record<string, string> = {
   direction_provinciale: "Direction Provinciale",
   direction_centrale: "Direction Centrale",
   admin: "Administrateur",
+  super_admin: "Super Administrateur",
   armateur_pi: "Armateur Pêche Industrielle",
   observateur_pi: "Observateur Pêche Industrielle",
   analyste: "Analyste",

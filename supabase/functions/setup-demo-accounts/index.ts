@@ -58,7 +58,8 @@ const demoAccounts: DemoAccount[] = [
   { email: 'analyste@demo.ga', password: 'Demo2025!', firstName: 'Thomas', lastName: 'Analyste', role: 'analyste' },
   
   // Administration système
-  { email: 'admin@demo.ga', password: 'Demo2025!', firstName: 'Super', lastName: 'Admin', role: 'admin' },
+  { email: 'superadmin@demo.ga', password: 'Demo2025!', firstName: 'Super', lastName: 'Admin', role: 'super_admin' },
+  { email: 'admin@demo.ga', password: 'Demo2025!', firstName: 'Système', lastName: 'Admin', role: 'admin' },
 ]
 
 Deno.serve(async (req) => {

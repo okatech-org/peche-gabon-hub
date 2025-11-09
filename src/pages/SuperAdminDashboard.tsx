@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Server, Activity, FileText, Rocket, Database, Code, Shield, Network } from "lucide-react";
+import { Server, Activity, FileText, Rocket, Database, Code, Shield, Network, HardDrive } from "lucide-react";
 import { SystemMonitoring } from "@/components/superadmin/SystemMonitoring";
 import { LogsViewer } from "@/components/superadmin/LogsViewer";
 import { PerformanceMetrics } from "@/components/superadmin/PerformanceMetrics";
 import { DeploymentTools } from "@/components/superadmin/DeploymentTools";
 import { DatabaseManager } from "@/components/superadmin/DatabaseManager";
+import { BackupManager } from "@/components/superadmin/BackupManager";
 import { SecurityPanel } from "@/components/superadmin/SecurityPanel";
 
 const SuperAdminDashboard = () => {
@@ -55,6 +56,10 @@ const SuperAdminDashboard = () => {
               <Rocket className="h-4 w-4" />
               Déploiement
             </TabsTrigger>
+            <TabsTrigger value="backup" className="gap-2">
+              <HardDrive className="h-4 w-4" />
+              Backups
+            </TabsTrigger>
             <TabsTrigger value="security" className="gap-2">
               <Shield className="h-4 w-4" />
               Sécurité
@@ -79,6 +84,10 @@ const SuperAdminDashboard = () => {
 
           <TabsContent value="deployment" className="space-y-6">
             <DeploymentTools />
+          </TabsContent>
+
+          <TabsContent value="backup" className="space-y-6">
+            <BackupManager />
           </TabsContent>
 
           <TabsContent value="security" className="space-y-6">

@@ -402,6 +402,98 @@ export type Database = {
         }
         Relationships: []
       }
+      backup_configuration: {
+        Row: {
+          actif: boolean | null
+          compression_activee: boolean | null
+          cree_le: string | null
+          derniere_execution: string | null
+          frequence: string
+          heure_execution: string
+          id: string
+          jour_mois: number | null
+          jour_semaine: number | null
+          modifie_le: string | null
+          notification_email: string | null
+          prochaine_execution: string | null
+          retention_jours: number
+          tables_a_exclure: string[] | null
+        }
+        Insert: {
+          actif?: boolean | null
+          compression_activee?: boolean | null
+          cree_le?: string | null
+          derniere_execution?: string | null
+          frequence: string
+          heure_execution?: string
+          id?: string
+          jour_mois?: number | null
+          jour_semaine?: number | null
+          modifie_le?: string | null
+          notification_email?: string | null
+          prochaine_execution?: string | null
+          retention_jours?: number
+          tables_a_exclure?: string[] | null
+        }
+        Update: {
+          actif?: boolean | null
+          compression_activee?: boolean | null
+          cree_le?: string | null
+          derniere_execution?: string | null
+          frequence?: string
+          heure_execution?: string
+          id?: string
+          jour_mois?: number | null
+          jour_semaine?: number | null
+          modifie_le?: string | null
+          notification_email?: string | null
+          prochaine_execution?: string | null
+          retention_jours?: number
+          tables_a_exclure?: string[] | null
+        }
+        Relationships: []
+      }
+      backup_restaurations: {
+        Row: {
+          backup_id: string | null
+          date_restauration: string | null
+          duree_secondes: number | null
+          erreur_message: string | null
+          id: string
+          metadata: Json | null
+          restaure_par: string | null
+          statut: string
+        }
+        Insert: {
+          backup_id?: string | null
+          date_restauration?: string | null
+          duree_secondes?: number | null
+          erreur_message?: string | null
+          id?: string
+          metadata?: Json | null
+          restaure_par?: string | null
+          statut: string
+        }
+        Update: {
+          backup_id?: string | null
+          date_restauration?: string | null
+          duree_secondes?: number | null
+          erreur_message?: string | null
+          id?: string
+          metadata?: Json | null
+          restaure_par?: string | null
+          statut?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "backup_restaurations_backup_id_fkey"
+            columns: ["backup_id"]
+            isOneToOne: false
+            referencedRelation: "database_backups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bareme_taxes: {
         Row: {
           actif: boolean
@@ -911,6 +1003,60 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      database_backups: {
+        Row: {
+          cree_le: string | null
+          cree_par: string | null
+          description: string | null
+          duree_creation_secondes: number | null
+          erreur_message: string | null
+          hash_backup: string | null
+          id: string
+          metadata: Json | null
+          nom: string
+          peut_restaurer: boolean | null
+          statut: string
+          storage_path: string | null
+          tables_incluses: string[] | null
+          taille_mo: number | null
+          type_backup: string
+        }
+        Insert: {
+          cree_le?: string | null
+          cree_par?: string | null
+          description?: string | null
+          duree_creation_secondes?: number | null
+          erreur_message?: string | null
+          hash_backup?: string | null
+          id?: string
+          metadata?: Json | null
+          nom: string
+          peut_restaurer?: boolean | null
+          statut?: string
+          storage_path?: string | null
+          tables_incluses?: string[] | null
+          taille_mo?: number | null
+          type_backup: string
+        }
+        Update: {
+          cree_le?: string | null
+          cree_par?: string | null
+          description?: string | null
+          duree_creation_secondes?: number | null
+          erreur_message?: string | null
+          hash_backup?: string | null
+          id?: string
+          metadata?: Json | null
+          nom?: string
+          peut_restaurer?: boolean | null
+          statut?: string
+          storage_path?: string | null
+          tables_incluses?: string[] | null
+          taille_mo?: number | null
+          type_backup?: string
+        }
+        Relationships: []
       }
       demo_feedbacks: {
         Row: {
@@ -4422,6 +4568,7 @@ export type Database = {
         Args: { _action_type: string; _description: string; _metadata?: Json }
         Returns: string
       }
+      nettoyer_vieux_backups: { Args: never; Returns: number }
       user_institution: { Args: never; Returns: string }
     }
     Enums: {

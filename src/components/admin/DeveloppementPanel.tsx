@@ -75,6 +75,7 @@ const roleLabels: Record<string, string> = {
   inspecteur: "Inspecteur",
   observateur_pi: "Observateur PI",
   analyste: "Analyste",
+  super_admin: "Super Admin",
   admin: "Administrateur",
 };
 
@@ -282,6 +283,7 @@ export const DeveloppementPanel = () => {
             <SelectItem value="inspecteur">Inspecteur</SelectItem>
             <SelectItem value="observateur_pi">Observateur PI</SelectItem>
             <SelectItem value="analyste">Analyste</SelectItem>
+            <SelectItem value="super_admin">Super Admin</SelectItem>
             <SelectItem value="admin">Administrateur</SelectItem>
           </SelectContent>
         </Select>
