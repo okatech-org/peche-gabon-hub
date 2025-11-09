@@ -14,6 +14,8 @@ import Dashboard from "./pages/Dashboard";
 import Admin from "./pages/Admin";
 import PecheurLayout from "./pages/pecheur/PecheurLayout";
 import PecheurOverview from "./pages/pecheur/PecheurOverview";
+import InspecteurLayout from "./pages/inspecteur/InspecteurLayout";
+import InspecteurOverview from "./pages/inspecteur/InspecteurOverview";
 import DonneesPubliques from "./pages/DonneesPubliques";
 import Actualites from "./pages/Actualites";
 import Sensibilisation from "./pages/Sensibilisation";
@@ -230,6 +232,16 @@ function App() {
                 </ProtectedRoute>
               }
             />
+            <Route
+              path="/inspecteur-dashboard"
+              element={
+                <ProtectedRoute allowedRoles={['inspecteur', 'admin']}>
+                  <InspecteurLayout />
+                </ProtectedRoute>
+              }
+            >
+              <Route index element={<InspecteurOverview />} />
+            </Route>
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

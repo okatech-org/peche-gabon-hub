@@ -57,6 +57,9 @@ export const ProtectedRoute = ({ children, allowedRoles }: ProtectedRouteProps) 
       if (roles.includes('gestionnaire_coop' as any)) {
         return <Navigate to="/cooperative-dashboard" replace />;
       }
+      if (roles.includes('inspecteur' as any)) {
+        return <Navigate to="/inspecteur-dashboard" replace />;
+      }
       if (roles.includes('admin' as any)) {
         return <Navigate to="/admin" replace />;
       }

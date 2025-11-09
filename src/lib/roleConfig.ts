@@ -195,7 +195,7 @@ export const roleConfigs: Record<AppRole, RoleConfig> = {
     icon: Eye,
     color: 'from-red-500 to-rose-600',
     accentColor: 'red',
-    dashboardRoute: '/dashboard',
+    dashboardRoute: '/inspecteur-dashboard',
     category: 'controle',
   },
   observateur_pi: {
