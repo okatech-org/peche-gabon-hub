@@ -874,6 +874,7 @@ export type Database = {
           statut: string | null
           telephone: string | null
           updated_at: string
+          user_id: string | null
         }
         Insert: {
           adresse?: string | null
@@ -886,6 +887,7 @@ export type Database = {
           statut?: string | null
           telephone?: string | null
           updated_at?: string
+          user_id?: string | null
         }
         Update: {
           adresse?: string | null
@@ -898,6 +900,7 @@ export type Database = {
           statut?: string | null
           telephone?: string | null
           updated_at?: string
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -2179,6 +2182,92 @@ export type Database = {
           },
         ]
       }
+      paiements_groupes_taxes: {
+        Row: {
+          cooperative_id: string
+          created_at: string | null
+          date_paiement: string
+          gestionnaire_id: string
+          id: string
+          mode_paiement: string | null
+          montant_total: number
+          notes: string | null
+          reference_paiement: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          cooperative_id: string
+          created_at?: string | null
+          date_paiement?: string
+          gestionnaire_id: string
+          id?: string
+          mode_paiement?: string | null
+          montant_total: number
+          notes?: string | null
+          reference_paiement?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          cooperative_id?: string
+          created_at?: string | null
+          date_paiement?: string
+          gestionnaire_id?: string
+          id?: string
+          mode_paiement?: string | null
+          montant_total?: number
+          notes?: string | null
+          reference_paiement?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "paiements_groupes_taxes_cooperative_id_fkey"
+            columns: ["cooperative_id"]
+            isOneToOne: false
+            referencedRelation: "cooperatives"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      paiements_taxes_detail: {
+        Row: {
+          created_at: string | null
+          id: string
+          montant_paye: number
+          paiement_groupe_id: string
+          taxe_capture_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          montant_paye: number
+          paiement_groupe_id: string
+          taxe_capture_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          montant_paye?: number
+          paiement_groupe_id?: string
+          taxe_capture_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "paiements_taxes_detail_paiement_groupe_id_fkey"
+            columns: ["paiement_groupe_id"]
+            isOneToOne: false
+            referencedRelation: "paiements_groupes_taxes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "paiements_taxes_detail_taxe_capture_id_fkey"
+            columns: ["taxe_capture_id"]
+            isOneToOne: false
+            referencedRelation: "taxes_captures"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       parties_prenantes: {
         Row: {
           actif: boolean | null
@@ -2223,6 +2312,44 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      pecheurs_cooperatives: {
+        Row: {
+          cooperative_id: string
+          created_at: string | null
+          date_adhesion: string | null
+          id: string
+          pecheur_user_id: string
+          statut: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          cooperative_id: string
+          created_at?: string | null
+          date_adhesion?: string | null
+          id?: string
+          pecheur_user_id: string
+          statut?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          cooperative_id?: string
+          created_at?: string | null
+          date_adhesion?: string | null
+          id?: string
+          pecheur_user_id?: string
+          statut?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pecheurs_cooperatives_cooperative_id_fkey"
+            columns: ["cooperative_id"]
+            isOneToOne: false
+            referencedRelation: "cooperatives"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       pirogues: {
         Row: {

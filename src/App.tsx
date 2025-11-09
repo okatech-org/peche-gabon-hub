@@ -36,6 +36,7 @@ import DGMMDashboard from "./pages/DGMMDashboard";
 import OPRAGDashboard from "./pages/OPRAGDashboard";
 import ANPNDashboard from "./pages/ANPNDashboard";
 import ArmeurDashboard from "./pages/ArmeurDashboard";
+import CooperativeDashboard from "./pages/CooperativeDashboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -175,6 +176,14 @@ function App() {
               element={
                 <ProtectedRoute allowedRoles={['armateur_pi', 'admin']}>
                   <ArmeurDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/cooperative-dashboard"
+              element={
+                <ProtectedRoute allowedRoles={['gestionnaire_coop', 'admin']}>
+                  <CooperativeDashboard />
                 </ProtectedRoute>
               }
             />

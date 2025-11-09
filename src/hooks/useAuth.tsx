@@ -114,6 +114,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           navigate("/anpn-dashboard");
         } else if (userRoles.includes('armateur_pi')) {
           navigate("/armeur-dashboard");
+        } else if (userRoles.includes('gestionnaire_coop')) {
+          navigate("/cooperative-dashboard");
         } else if (userRoles.includes('admin')) {
           navigate("/admin");
         } else {
