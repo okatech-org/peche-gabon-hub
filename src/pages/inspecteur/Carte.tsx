@@ -181,10 +181,25 @@ export default function Carte() {
         });
 
         map.current.on("error", (e) => {
-          logger.error("❌ Erreur Mapbox:", e);
-          setErrorMsg("Erreur lors du chargement de la carte. Vérifiez la clé API Mapbox.");
-          setIsLoading(false);
-          toast.error("Erreur de chargement de la carte");
+          // Mapbox déclenche parfois des "non-fatal errors" (ex: tuiles manquantes)
+          // On n'affiche l'overlay que si l'erreur est critique (token invalide) OU si la carte n'a pas encore fini de charger
+          const err: any = (e as any)?.error;
+          const message: string = typeof err === 'string' ? err : err?.message || '';
+          const status = err?.status || err?.response?.status;
+          const tokenError = /access token|unauthorized|forbidden|invalid token/i.test(message) || [401,403].includes(status);
+          const beforeLoaded = map.current && !map.current.loaded();
+
+          if (tokenError || beforeLoaded) {
+            logger.error("❌ Erreur Mapbox critique:", e);
+            setErrorMsg(tokenError
+              ? "Clé API Mapbox invalide ou manquante. Mettez à jour le secret et rafraîchissez."
+              : "Erreur lors du chargement de la carte. Veuillez réessayer.");
+            setIsLoading(false);
+            if (tokenError) toast.error("Clé API Mapbox invalide ou manquante");
+          } else {
+            // Bruit réduit: log en warning sans bloquer l'affichage
+            logger.warn?.("⚠️ Erreur Mapbox non critique (ignorée)", e);
+          }
         });
 
       } catch (error) {
