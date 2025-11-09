@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { AudioWaveform } from "./AudioWaveform";
 import { IAstedHistory } from "./IAstedHistory";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 interface Message {
   role: 'user' | 'assistant';
@@ -35,6 +36,8 @@ export const IAstedChat = () => {
   const [audioStream, setAudioStream] = useState<MediaStream | null>(null);
   const [recordingStartTime, setRecordingStartTime] = useState<number | null>(null);
   const [recordingDuration, setRecordingDuration] = useState(0);
+  const [audioPreview, setAudioPreview] = useState<{ blob: Blob; url: string; duration: number } | null>(null);
+  const [showAudioPreview, setShowAudioPreview] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [showHistory, setShowHistory] = useState(false);
@@ -48,6 +51,15 @@ export const IAstedChat = () => {
   useEffect(() => {
     loadConversations();
   }, []);
+
+  // Cleanup audio preview URL on unmount or when audioPreview changes
+  useEffect(() => {
+    return () => {
+      if (audioPreview) {
+        URL.revokeObjectURL(audioPreview.url);
+      }
+    };
+  }, [audioPreview]);
 
   const loadConversations = async () => {
     const { data, error } = await supabase
@@ -338,7 +350,12 @@ export const IAstedChat = () => {
         }
         
         const audioBlob = new Blob(chunks, { type: 'audio/webm' });
-        await transcribeAudio(audioBlob);
+        const audioUrl = URL.createObjectURL(audioBlob);
+        
+        // Show preview instead of immediate transcription
+        setAudioPreview({ blob: audioBlob, url: audioUrl, duration });
+        setShowAudioPreview(true);
+        
         stream.getTracks().forEach(track => track.stop());
         setAudioStream(null);
         setRecordingStartTime(null);
@@ -442,6 +459,30 @@ export const IAstedChat = () => {
     } else {
       startRecording();
     }
+  };
+
+  const handleValidateAudio = async () => {
+    if (!audioPreview) return;
+    
+    setShowAudioPreview(false);
+    await transcribeAudio(audioPreview.blob);
+    
+    // Clean up
+    URL.revokeObjectURL(audioPreview.url);
+    setAudioPreview(null);
+  };
+
+  const handleDiscardAudio = () => {
+    if (audioPreview) {
+      URL.revokeObjectURL(audioPreview.url);
+      setAudioPreview(null);
+    }
+    setShowAudioPreview(false);
+    
+    toast({
+      title: "Enregistrement supprimé",
+      description: "Vous pouvez faire un nouvel enregistrement.",
+    });
   };
 
   return (
@@ -615,6 +656,59 @@ export const IAstedChat = () => {
           iAsted a accès à toute la base de données du système de pêche gabonais
         </p>
       </div>
+
+      {/* Audio Preview Dialog */}
+      <Dialog open={showAudioPreview} onOpenChange={setShowAudioPreview}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Aperçu de l'enregistrement</DialogTitle>
+            <DialogDescription>
+              Écoutez votre enregistrement avant de le transcrire. Vous pouvez le valider ou réenregistrer.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            {audioPreview && (
+              <>
+                <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <Mic className="h-4 w-4 text-primary" />
+                    <span className="text-sm font-medium">
+                      Durée : {audioPreview.duration.toFixed(1)}s
+                    </span>
+                  </div>
+                </div>
+                
+                <div className="w-full">
+                  <audio 
+                    controls 
+                    src={audioPreview.url} 
+                    className="w-full"
+                    preload="auto"
+                  />
+                </div>
+              </>
+            )}
+          </div>
+
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <Button
+              variant="outline"
+              onClick={handleDiscardAudio}
+              className="w-full sm:w-auto"
+            >
+              Réenregistrer
+            </Button>
+            <Button
+              onClick={handleValidateAudio}
+              className="w-full sm:w-auto"
+              disabled={isLoading}
+            >
+              {isLoading ? "Transcription..." : "Valider et transcrire"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 };
