@@ -1,5 +1,12 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
+
+const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+const ELEVENLABS_API_KEY = Deno.env.get('ELEVENLABS_API_KEY');
+const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
+const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -10,239 +17,563 @@ const corsHeaders = {
 const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 let knowledgeBaseCache: { data: any; timestamp: number } | null = null;
 
-const SYSTEM_PROMPT = `Vous êtes l'assistant vocal officiel du Ministre de la Pêche et de l'Économie Maritime du Gabon. Vous avez accès à l'intégralité du système de gestion des pêches gabonaises et maîtrisez parfaitement tous ses modules.
+const SYSTEM_PROMPT = `Vous êtes iAsted, l'assistant vocal officiel du Ministre de la Pêche et de l'Économie Maritime du Gabon.
 
 ## CONTEXTE DU SYSTÈME
-
-Le système comprend plusieurs sections principales :
-
-### ANALYTIQUES
-- **Vue d'ensemble** : Indicateurs clés globaux, synthèse des activités de pêche
-- **Pêche Artisanale** : Statistiques des pêcheurs artisanaux, pirogues, captures, sites de débarquement
-- **Pêche Industrielle** : Flotte industrielle, navires, licences, quotas, activités en mer
-- **Surveillance** : Monitoring des zones maritimes, contrôles, infractions, alertes de sécurité
-
-### ÉCONOMIE & FINANCES
-- **Économie** : Indicateurs économiques du secteur, valeur des captures, exportations, contributions au PIB
-- **Remontées Finances** : Recettes fiscales, taxes et redevances, quittances, prévisions budgétaires
-
-### ACTIONS & GESTION
-- **Alertes** : Notifications urgentes, seuils critiques, événements nécessitant une attention immédiate
-- **Remontées Terrain** : Rapports des agents sur le terrain, observations, incidents, suggestions des acteurs
-- **Actions Ministérielles** : Décisions, régulations, communications officielles, documents ministériels
-- **Formations** : Programmes de formation des pêcheurs et agents, calendrier, formateurs, suivi
-- **Historique** : Traçabilité des actions, décisions passées, évolution des indicateurs
-- **Paramètres** : Configuration des seuils, gestion des utilisateurs, préférences système
+Le système comprend plusieurs sections : Vue d'ensemble, Pêche Artisanale, Pêche Industrielle, Surveillance, Économie, Finances, Alertes, Remontées Terrain, Actions Ministérielles, Formations.
 
 ## VOTRE RÔLE
+- **Contextualiser** : Situer les informations dans le cadre global du secteur
+- **Analyser** : Par type de pêche, priorité, zone, impact économique et social
+- **Comparer** : Identifier tendances et corrélations
+- **Recommander** : Proposer des actions concrètes et mesures stratégiques
 
-Lorsque vous analysez des remontées terrain ou générez des synthèses comparatives, vous devez :
+## STYLE
+- Professionnel, factuel, stratégique
+- Concis et actionnable (2-6 phrases)
+- Hiérarchisé : contexte → analyse → recommandations
+- Langue : répondez dans la langue du dernier message utilisateur (par défaut FR)
 
-1. **Contextualiser** : Situer les informations dans le cadre global du secteur de la pêche gabonais
-2. **Analyser par dimensions multiples** :
-   - Type de pêche (artisanale vs industrielle)
-   - Priorité (haute, moyenne, basse)
-   - Zone géographique (provinces, sites)
-   - Impact économique et social
-   - Urgence et criticité
+## RÈGLES IMPORTANTES
+- Si l'utilisateur donne un ordre de contrôle (arrêter, pause, nouvelle question, historique, changer voix), NE RÉPONDEZ PAS en langage naturel
+- Retournez UNIQUEMENT un objet JSON d'intention
+- En cas d'incertitude, réponse prudente + 1 question de clarification max
+- Pas de données privées, pas de spéculation, pas de contenu politique hors périmètre
 
-3. **Comparer et synthétiser** :
-   - Identifier les tendances entre différents types de remontées
-   - Mettre en évidence les corrélations avec les données économiques et financières
-   - Croiser avec les alertes et la surveillance
-   - Relier aux objectifs et formations en cours
+## MÉMOIRE
+Utilisez le résumé de mémoire fourni (si présent) et les derniers messages pour maintenir le contexte.`;
 
-4. **Recommander des actions** :
-   - Proposer des mesures concrètes basées sur l'analyse
-   - Suggérer des régulations si nécessaire
-   - Identifier les besoins de formation
-   - Alerter sur les risques financiers ou opérationnels
+const ROUTER_PROMPT = `Vous êtes un routeur d'intentions pour classifier les entrées utilisateur.
 
-## STYLE DE COMMUNICATION
+Catégories EXACTES :
+- "voice_command": commandes agent (arrête, pause, continue, nouvelle question, historique, changer voix à <nom>)
+- "ask_resume": demande de résumé/débrief de session
+- "query": question métier/information générale
+- "small_talk": salutation, politesse, remerciements
 
-- **Ton** : Professionnel, factuel, stratégique
-- **Structure** : Logique et hiérarchisée (contexte → analyse → tendances → recommandations)
-- **Niveau** : Adapté à un auditoire ministériel de haut niveau
-- **Langue** : Français exclusivement
-- **Rythme** : Mesuré et clair pour faciliter la compréhension d'informations complexes
+Répondez UNIQUEMENT en JSON valide, sans texte additionnel :
+{
+  "category": "<voice_command|ask_resume|query|small_talk>",
+  "command": "<optionnel, nom canonique>",
+  "args": {"target": "...", "voice": "...", "lang": "..."}
+}`;
 
-## PRINCIPES D'ANALYSE
+// Utilities
+function processBase64Chunks(base64String: string, chunkSize = 32768): Uint8Array {
+  const chunks: Uint8Array[] = [];
+  let position = 0;
+  
+  while (position < base64String.length) {
+    const chunk = base64String.slice(position, position + chunkSize);
+    const binaryChunk = atob(chunk);
+    const bytes = new Uint8Array(binaryChunk.length);
+    
+    for (let i = 0; i < binaryChunk.length; i++) {
+      bytes[i] = binaryChunk.charCodeAt(i);
+    }
+    
+    chunks.push(bytes);
+    position += chunkSize;
+  }
 
-- Prioriser les informations actionnables
-- Mettre en évidence les écarts par rapport aux normes ou objectifs
-- Identifier les opportunités d'amélioration
-- Signaler les risques potentiels (économiques, environnementaux, sociaux)
-- Proposer des perspectives à court, moyen et long terme
+  const totalLength = chunks.reduce((acc, chunk) => acc + chunk.length, 0);
+  const result = new Uint8Array(totalLength);
+  let offset = 0;
 
-Vous êtes un outil d'aide à la décision stratégique pour la gestion durable et efficace des ressources halieutiques du Gabon.`;
+  for (const chunk of chunks) {
+    result.set(chunk, offset);
+    offset += chunk.length;
+  }
 
+  return result;
+}
+
+// STT: Transcribe audio using OpenAI Whisper
+async function transcribeAudio(audioBase64: string, langHint?: string): Promise<string> {
+  if (!OPENAI_API_KEY) throw new Error('OPENAI_API_KEY not configured');
+
+  const audioBytes = processBase64Chunks(audioBase64);
+  const form = new FormData();
+  const blob = new Blob([audioBytes as any], { type: 'audio/webm' });
+  form.append('file', blob, 'audio.webm');
+  form.append('model', 'whisper-1');
+  form.append('response_format', 'json');
+  if (langHint) form.append('language', langHint);
+
+  console.log('Transcribing audio with Whisper...');
+  const res = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${OPENAI_API_KEY}` },
+    body: form
+  });
+
+  if (!res.ok) throw new Error(`Whisper STT failed: ${res.status}`);
+  const data = await res.json();
+  console.log('Transcription:', data.text);
+  return data.text as string;
+}
+
+// Router: Classify user intent
+async function classifyIntent(userText: string): Promise<any> {
+  if (!LOVABLE_API_KEY) throw new Error('LOVABLE_API_KEY not configured');
+
+  console.log('Classifying intent:', userText.substring(0, 50));
+  const res = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: 'google/gemini-2.5-flash',
+      messages: [
+        { role: 'system', content: ROUTER_PROMPT },
+        { role: 'user', content: `Texte utilisateur: """${userText}"""` }
+      ],
+      temperature: 0
+    })
+  });
+
+  if (!res.ok) throw new Error(`Router failed: ${res.status}`);
+  const json = await res.json();
+  const content = json.choices?.[0]?.message?.content ?? '{}';
+  
+  try {
+    const intent = JSON.parse(content);
+    console.log('Intent classified:', intent.category);
+    return intent;
+  } catch {
+    console.log('Failed to parse intent, defaulting to query');
+    return { category: 'query' };
+  }
+}
+
+// Memory: Fetch memory summary from session
+async function fetchMemorySummary(supabase: any, sessionId: string): Promise<string> {
+  const { data } = await supabase
+    .from('conversation_sessions')
+    .select('memory_summary')
+    .eq('id', sessionId)
+    .maybeSingle();
+  
+  return data?.memory_summary ?? '';
+}
+
+// Memory: Fetch recent messages
+async function fetchRecentMessages(supabase: any, sessionId: string, limit = 6): Promise<any[]> {
+  const { data } = await supabase
+    .from('conversation_messages')
+    .select('role, content')
+    .eq('session_id', sessionId)
+    .order('created_at', { ascending: false })
+    .limit(limit);
+  
+  return (data ?? []).reverse();
+}
+
+// Memory: Summarize conversation history
+async function summarizeMemory(supabase: any, sessionId: string): Promise<string> {
+  if (!LOVABLE_API_KEY) return '';
+
+  const recent = await fetchRecentMessages(supabase, sessionId, 8);
+  
+  if (recent.length === 0) return '';
+
+  console.log('Summarizing memory...');
+  const res = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: 'google/gemini-2.5-flash',
+      messages: [
+        { 
+          role: 'system', 
+          content: 'Compresseur de mémoire: créez un résumé court et actionnable (max 180 mots) de cette conversation.' 
+        },
+        { role: 'user', content: JSON.stringify(recent) }
+      ],
+      temperature: 0.2
+    })
+  });
+
+  if (!res.ok) return '';
+  
+  const json = await res.json();
+  const summary = json.choices?.[0]?.message?.content ?? '';
+  
+  // Update session with new summary
+  await supabase
+    .from('conversation_sessions')
+    .update({ 
+      memory_summary: summary, 
+      memory_updated_at: new Date().toISOString() 
+    })
+    .eq('id', sessionId);
+
+  console.log('Memory summarized and saved');
+  return summary;
+}
+
+// LLM: Generate response with context
+async function generateResponse(params: {
+  memorySummary?: string;
+  history: any[];
+  userText: string;
+  knowledgeBase: any;
+}): Promise<string> {
+  if (!LOVABLE_API_KEY) throw new Error('LOVABLE_API_KEY not configured');
+
+  const { memorySummary, history, userText, knowledgeBase } = params;
+
+  const systemContent = `${SYSTEM_PROMPT}${
+    memorySummary ? `\n\n## MÉMOIRE DE CONVERSATION\n${memorySummary}` : ''
+  }\n\n## BASE DE CONNAISSANCES ACTUELLE\n${JSON.stringify(knowledgeBase, null, 2)}`;
+
+  const messages = [
+    { role: 'system', content: systemContent },
+    ...history,
+    { role: 'user', content: userText }
+  ];
+
+  console.log('Generating AI response...');
+  const res = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: 'google/gemini-2.5-flash',
+      messages,
+      temperature: 0.7
+    })
+  });
+
+  if (!res.ok) {
+    const error = await res.text();
+    console.error('LLM error:', error);
+    throw new Error('Failed to generate response');
+  }
+
+  const json = await res.json();
+  const answer = json.choices?.[0]?.message?.content ?? '';
+  console.log('Response generated:', answer.substring(0, 100));
+  return answer;
+}
+
+// TTS: Generate audio with ElevenLabs
+async function generateAudio(text: string, voiceId?: string): Promise<string> {
+  if (!ELEVENLABS_API_KEY) throw new Error('ELEVENLABS_API_KEY not configured');
+
+  // If no voiceId provided, find iAsted voice
+  let finalVoiceId = voiceId;
+  
+  if (!finalVoiceId) {
+    console.log('Fetching iAsted voice...');
+    const voicesResponse = await fetch('https://api.elevenlabs.io/v1/voices', {
+      headers: { 'xi-api-key': ELEVENLABS_API_KEY }
+    });
+
+    if (!voicesResponse.ok) throw new Error('Failed to fetch voices');
+    
+    const voicesData = await voicesResponse.json();
+    const iastedVoice = voicesData.voices.find((v: any) => 
+      v.name.toLowerCase().includes('iasted')
+    );
+
+    if (!iastedVoice) {
+      // Fallback to first available voice
+      finalVoiceId = voicesData.voices[0]?.voice_id;
+      if (!finalVoiceId) throw new Error('No voices available');
+      console.log('iAsted voice not found, using fallback:', finalVoiceId);
+    } else {
+      finalVoiceId = iastedVoice.voice_id;
+      console.log('Using iAsted voice:', finalVoiceId);
+    }
+  }
+
+  console.log('Generating audio with ElevenLabs...');
+  const ttsResponse = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${finalVoiceId}`, {
+    method: 'POST',
+    headers: {
+      'xi-api-key': ELEVENLABS_API_KEY,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      text,
+      model_id: 'eleven_multilingual_v2',
+      voice_settings: {
+        stability: 0.5,
+        similarity_boost: 0.75,
+        style: 0.0,
+        use_speaker_boost: true
+      }
+    })
+  });
+
+  if (!ttsResponse.ok) {
+    const error = await ttsResponse.text();
+    console.error('TTS error:', error);
+    throw new Error('Failed to generate audio');
+  }
+
+  const arrayBuffer = await ttsResponse.arrayBuffer();
+  const uint8Array = new Uint8Array(arrayBuffer);
+  
+  // Convert to base64 in chunks
+  const chunkSize = 8192;
+  let binary = '';
+  for (let i = 0; i < uint8Array.length; i += chunkSize) {
+    const chunk = uint8Array.subarray(i, Math.min(i + chunkSize, uint8Array.length));
+    binary += String.fromCharCode(...chunk);
+  }
+  
+  console.log('Audio generated successfully');
+  return btoa(binary);
+}
+
+// Main handler
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const started = Date.now();
+  const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+
   try {
-    const { messages, generateAudio = true } = await req.json();
+    const { 
+      sessionId, 
+      userId,
+      audioBase64, 
+      transcriptOverride, 
+      langHint, 
+      voiceId, 
+      generateAudio: shouldGenerateAudio = true,
+      messages // For backwards compatibility
+    } = await req.json();
 
-    if (!messages || !Array.isArray(messages)) {
-      throw new Error('Messages array is required');
+    // Backwards compatibility: if messages provided, use old flow
+    if (messages && Array.isArray(messages) && !sessionId) {
+      console.log('Using legacy flow (no sessionId)');
+      
+      // Fetch knowledge base with cache
+      let knowledgeBase;
+      const now = Date.now();
+      
+      if (knowledgeBaseCache && (now - knowledgeBaseCache.timestamp) < CACHE_TTL_MS) {
+        knowledgeBase = knowledgeBaseCache.data;
+      } else {
+        const kbResponse = await fetch('https://lzqvrnuzgfuyxbpyqfxh.supabase.co/functions/v1/get-knowledge-base');
+        knowledgeBase = await kbResponse.json();
+        knowledgeBaseCache = { data: knowledgeBase, timestamp: now };
+      }
+
+      const enrichedMessages = [
+        { role: 'system', content: `${SYSTEM_PROMPT}\n\n## BASE DE CONNAISSANCES\n${JSON.stringify(knowledgeBase, null, 2)}` },
+        ...messages
+      ];
+
+      const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'google/gemini-2.5-flash',
+          messages: enrichedMessages,
+          temperature: 0.7,
+        }),
+      });
+
+      const aiData = await aiResponse.json();
+      const assistantMessage = aiData.choices[0].message.content;
+
+      let audioContent = null;
+      if (shouldGenerateAudio && ELEVENLABS_API_KEY) {
+        audioContent = await generateAudio(assistantMessage, voiceId);
+      }
+
+      return new Response(
+        JSON.stringify({ message: assistantMessage, audioContent, success: true }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-    const ELEVENLABS_API_KEY = Deno.env.get('ELEVENLABS_API_KEY');
-
-    if (!LOVABLE_API_KEY) {
-      throw new Error('LOVABLE_API_KEY not configured');
+    // NEW FLOW: with sessionId
+    if (!sessionId) {
+      throw new Error('sessionId is required for new flow');
     }
 
-    if (generateAudio && !ELEVENLABS_API_KEY) {
-      throw new Error('ELEVENLABS_API_KEY not configured');
+    console.log(`Processing request for session ${sessionId}`);
+
+    // Step 1: STT (if audio provided)
+    const sttStart = Date.now();
+    const userText = transcriptOverride?.trim() || 
+      (audioBase64 ? await transcribeAudio(audioBase64, langHint) : '');
+    const sttLatency = Date.now() - sttStart;
+
+    if (!userText) {
+      throw new Error('No user input provided');
     }
 
-    // Fetch knowledge base with cache
+    // Step 2: Classify intent
+    const routerStart = Date.now();
+    const intent = await classifyIntent(userText);
+    const routerLatency = Date.now() - routerStart;
+
+    // Step 3: Save user message
+    await supabase.from('conversation_messages').insert({
+      session_id: sessionId,
+      role: 'user',
+      content: userText,
+      lang: langHint ?? null
+    });
+
+    // Step 4: Handle voice commands or special intents
+    if (intent.category === 'voice_command' || intent.category === 'ask_resume') {
+      await supabase.from('conversation_messages').insert({
+        session_id: sessionId,
+        role: 'router',
+        content_json: intent
+      });
+
+      // Log analytics
+      await supabase.from('analytics_voice_events').insert({
+        session_id: sessionId,
+        user_id: userId,
+        event_type: intent.category === 'voice_command' ? 'voice_command' : 'ask_resume',
+        data: { 
+          command: intent.command, 
+          args: intent.args,
+          latencies: { stt: sttLatency, router: routerLatency, total: Date.now() - started }
+        }
+      });
+
+      return new Response(
+        JSON.stringify({
+          ok: true,
+          route: intent,
+          userText,
+          latencies: { stt: sttLatency, router: routerLatency, total: Date.now() - started }
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Step 5: Fetch knowledge base
     let knowledgeBase;
     const now = Date.now();
     
     if (knowledgeBaseCache && (now - knowledgeBaseCache.timestamp) < CACHE_TTL_MS) {
-      console.log('Using cached knowledge base');
       knowledgeBase = knowledgeBaseCache.data;
     } else {
-      console.log('Fetching fresh knowledge base...');
       const kbResponse = await fetch('https://lzqvrnuzgfuyxbpyqfxh.supabase.co/functions/v1/get-knowledge-base');
       knowledgeBase = await kbResponse.json();
-      
-      // Update cache
-      knowledgeBaseCache = {
-        data: knowledgeBase,
-        timestamp: now
-      };
-      console.log('Knowledge base cached');
+      knowledgeBaseCache = { data: knowledgeBase, timestamp: now };
     }
 
-    // Prepare messages with system prompt and knowledge base
-    const enrichedMessages = [
-      { 
-        role: 'system', 
-        content: `${SYSTEM_PROMPT}\n\n## BASE DE CONNAISSANCES ACTUELLE\n\n${JSON.stringify(knowledgeBase, null, 2)}` 
-      },
-      ...messages
-    ];
+    // Step 6: Fetch memory & history
+    const memory = await fetchMemorySummary(supabase, sessionId);
+    const history = await fetchRecentMessages(supabase, sessionId, 6);
 
-    // Call Lovable AI
-    console.log('Calling Lovable AI...');
-    const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
-        messages: enrichedMessages,
-        temperature: 0.7,
-      }),
+    // Optionally refresh memory if old (every 5+ messages)
+    if (history.length >= 5 && (!memory || memory.length < 50)) {
+      await summarizeMemory(supabase, sessionId);
+    }
+
+    // Step 7: Generate LLM response
+    const llmStart = Date.now();
+    const answer = await generateResponse({
+      memorySummary: memory,
+      history,
+      userText,
+      knowledgeBase
+    });
+    const llmLatency = Date.now() - llmStart;
+
+    // Step 8: Generate audio
+    let audioContent = null;
+    const ttsStart = Date.now();
+    if (shouldGenerateAudio) {
+      audioContent = await generateAudio(answer, voiceId);
+    }
+    const ttsLatency = Date.now() - ttsStart;
+
+    // Step 9: Save assistant message
+    await supabase.from('conversation_messages').insert({
+      session_id: sessionId,
+      role: 'assistant',
+      content: answer,
+      tokens: answer.length, // Approximation
+      latency_ms: llmLatency
     });
 
-    if (!aiResponse.ok) {
-      const error = await aiResponse.text();
-      console.error('Lovable AI error:', error);
-      throw new Error('Failed to generate AI response');
-    }
-
-    const aiData = await aiResponse.json();
-    const assistantMessage = aiData.choices[0].message.content;
-
-    console.log('AI Response generated:', assistantMessage.substring(0, 100));
-
-    // Generate audio if requested
-    let audioContent = null;
-    if (generateAudio) {
-      console.log('Generating audio with ElevenLabs...');
-
-      // Get iAsted voice ID
-      const voicesResponse = await fetch('https://api.elevenlabs.io/v1/voices', {
-        headers: {
-          'xi-api-key': ELEVENLABS_API_KEY!,
-        },
-      });
-
-      if (!voicesResponse.ok) {
-        console.error('Failed to fetch voices');
-        throw new Error('Failed to fetch ElevenLabs voices');
+    // Step 10: Log analytics
+    await supabase.from('analytics_voice_events').insert({
+      session_id: sessionId,
+      user_id: userId,
+      event_type: 'turn_complete',
+      data: {
+        sttLatency,
+        routerLatency,
+        llmLatency,
+        ttsLatency,
+        totalLatency: Date.now() - started,
+        intent: intent.category
       }
+    });
 
-      const voicesData = await voicesResponse.json();
-      const iastedVoice = voicesData.voices.find((v: any) => 
-        v.name.toLowerCase().includes('iasted')
-      );
-
-      if (!iastedVoice) {
-        console.error('iAsted voice not found, using default');
-        throw new Error('Voice iAsted not found in your ElevenLabs account');
-      }
-
-      const voiceId = iastedVoice.voice_id;
-      console.log('Using iAsted voice:', voiceId);
-
-      const ttsResponse = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
-        method: 'POST',
-        headers: {
-          'xi-api-key': ELEVENLABS_API_KEY!,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          text: assistantMessage,
-          model_id: 'eleven_multilingual_v2',
-          voice_settings: {
-            stability: 0.5,
-            similarity_boost: 0.75,
-            style: 0.0,
-            use_speaker_boost: true
-          }
-        }),
-      });
-
-      if (!ttsResponse.ok) {
-        const error = await ttsResponse.text();
-        console.error('ElevenLabs TTS error:', error);
-        throw new Error('Failed to generate audio');
-      }
-
-      const arrayBuffer = await ttsResponse.arrayBuffer();
-      const uint8Array = new Uint8Array(arrayBuffer);
-      
-      // Convert to base64 in chunks to avoid stack overflow
-      const chunkSize = 8192;
-      let binary = '';
-      for (let i = 0; i < uint8Array.length; i += chunkSize) {
-        const chunk = uint8Array.subarray(i, Math.min(i + chunkSize, uint8Array.length));
-        binary += String.fromCharCode(...chunk);
-      }
-      audioContent = btoa(binary);
-      console.log('Audio generated successfully');
-    }
+    console.log('Request completed successfully');
 
     return new Response(
-      JSON.stringify({ 
-        message: assistantMessage,
+      JSON.stringify({
+        ok: true,
+        route: { category: intent.category },
+        userText,
+        answer,
         audioContent,
-        success: true
+        latencies: {
+          stt: sttLatency,
+          router: routerLatency,
+          llm: llmLatency,
+          tts: ttsLatency,
+          total: Date.now() - started
+        }
       }),
-      { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-      }
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
   } catch (error) {
     console.error('Error in chat-with-iasted:', error);
+    
+    // Log error analytics
+    try {
+      await supabase.from('analytics_voice_events').insert({
+        session_id: null,
+        user_id: null,
+        event_type: 'error',
+        data: { 
+          error: error instanceof Error ? error.message : String(error),
+          latency: Date.now() - started
+        }
+      });
+    } catch (logError) {
+      console.error('Failed to log error analytics:', logError);
+    }
+
     return new Response(
-      JSON.stringify({ 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Unknown error' 
+      JSON.stringify({
+        ok: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
       }),
       { 
-        status: 500, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
     );
   }
