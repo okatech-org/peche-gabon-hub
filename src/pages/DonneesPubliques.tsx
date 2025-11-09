@@ -38,11 +38,10 @@ const DonneesPubliques = () => {
       <section className="bg-gradient-ocean text-white py-16 px-4">
         <div className="container mx-auto max-w-6xl">
           <h2 className="text-4xl lg:text-5xl font-bold mb-4">
-            Transparence & Données Ouvertes
+            {t("publicData.hero.title")}
           </h2>
           <p className="text-xl text-white/90 max-w-3xl">
-            Accédez aux données officielles du secteur halieutique gabonais. 
-            Des informations fiables pour vos études, analyses et décisions d'investissement.
+            {t("publicData.hero.description")}
           </p>
         </div>
       </section>
@@ -55,14 +54,14 @@ const DonneesPubliques = () => {
               <CardHeader className="pb-3">
                 <div className="flex items-center gap-2">
                   <Fish className="h-5 w-5 text-primary" />
-                  <CardTitle className="text-sm font-medium">Captures Totales</CardTitle>
+                  <CardTitle className="text-sm font-medium">{t("publicData.stats.totalCaptures")}</CardTitle>
                 </div>
               </CardHeader>
               <CardContent>
                 <p className="text-3xl font-bold text-primary">
                   {stats.captures_totales_kg ? `${(parseInt(String(stats.captures_totales_kg)) / 1000).toFixed(1)}T` : "N/A"}
                 </p>
-                <p className="text-xs text-muted-foreground mt-1">Année en cours</p>
+                <p className="text-xs text-muted-foreground mt-1">{t("publicData.stats.currentYear")}</p>
               </CardContent>
             </Card>
 
@@ -70,7 +69,7 @@ const DonneesPubliques = () => {
               <CardHeader className="pb-3">
                 <div className="flex items-center gap-2">
                   <DollarSign className="h-5 w-5 text-secondary" />
-                  <CardTitle className="text-sm font-medium">Recettes Totales</CardTitle>
+                  <CardTitle className="text-sm font-medium">{t("publicData.stats.totalRevenue")}</CardTitle>
                 </div>
               </CardHeader>
               <CardContent>
@@ -85,14 +84,14 @@ const DonneesPubliques = () => {
               <CardHeader className="pb-3">
                 <div className="flex items-center gap-2">
                   <Ship className="h-5 w-5 text-accent" />
-                  <CardTitle className="text-sm font-medium">Licences Actives</CardTitle>
+                  <CardTitle className="text-sm font-medium">{t("publicData.stats.activeLicenses")}</CardTitle>
                 </div>
               </CardHeader>
               <CardContent>
                 <p className="text-3xl font-bold text-accent">
                   {stats.nb_licences_actives || "N/A"}
                 </p>
-                <p className="text-xs text-muted-foreground mt-1">Professionnels</p>
+                <p className="text-xs text-muted-foreground mt-1">{t("publicData.stats.professionals")}</p>
               </CardContent>
             </Card>
 
@@ -100,14 +99,14 @@ const DonneesPubliques = () => {
               <CardHeader className="pb-3">
                 <div className="flex items-center gap-2">
                   <Users className="h-5 w-5 text-primary" />
-                  <CardTitle className="text-sm font-medium">Pêcheurs</CardTitle>
+                  <CardTitle className="text-sm font-medium">{t("publicData.stats.fishermen")}</CardTitle>
                 </div>
               </CardHeader>
               <CardContent>
                 <p className="text-3xl font-bold text-primary">
                   {stats.nb_pecheurs || "N/A"}
                 </p>
-                <p className="text-xs text-muted-foreground mt-1">Enregistrés</p>
+                <p className="text-xs text-muted-foreground mt-1">{t("publicData.stats.registered")}</p>
               </CardContent>
             </Card>
           </div>
@@ -117,95 +116,95 @@ const DonneesPubliques = () => {
       {/* Data Categories */}
       <section className="py-12 px-4">
         <div className="container mx-auto max-w-6xl">
-          <h2 className="text-3xl font-bold mb-8">Catégories de Données</h2>
+          <h2 className="text-3xl font-bold mb-8">{t("publicData.categories.title")}</h2>
           
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             <Card className="hover:shadow-elevated transition-shadow">
               <CardHeader>
-                <CardTitle>Statistiques de Captures</CardTitle>
+                <CardTitle>{t("publicData.categories.captures")}</CardTitle>
                 <CardDescription>
-                  Données détaillées sur les captures par espèce, zone et période
+                  {t("publicData.categories.capturesDesc")}
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <Button variant="outline" className="w-full">
                   <Download className="mr-2 h-4 w-4" />
-                  Télécharger CSV
+                  {t("common.download")} CSV
                 </Button>
               </CardContent>
             </Card>
 
             <Card className="hover:shadow-elevated transition-shadow">
               <CardHeader>
-                <CardTitle>Données Financières</CardTitle>
+                <CardTitle>{t("publicData.categories.financial")}</CardTitle>
                 <CardDescription>
-                  Recettes, taxes et indicateurs économiques du secteur
+                  {t("publicData.categories.financialDesc")}
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <Button variant="outline" className="w-full">
                   <Download className="mr-2 h-4 w-4" />
-                  Télécharger CSV
+                  {t("common.download")} CSV
                 </Button>
               </CardContent>
             </Card>
 
             <Card className="hover:shadow-elevated transition-shadow">
               <CardHeader>
-                <CardTitle>Licences & Conformité</CardTitle>
+                <CardTitle>{t("publicData.categories.licenses")}</CardTitle>
                 <CardDescription>
-                  État des licences et taux de conformité réglementaire
+                  {t("publicData.categories.licensesDesc")}
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <Button variant="outline" className="w-full">
                   <Download className="mr-2 h-4 w-4" />
-                  Télécharger CSV
+                  {t("common.download")} CSV
                 </Button>
               </CardContent>
             </Card>
 
             <Card className="hover:shadow-elevated transition-shadow">
               <CardHeader>
-                <CardTitle>Flotte de Pêche</CardTitle>
+                <CardTitle>{t("publicData.categories.fleet")}</CardTitle>
                 <CardDescription>
-                  Recensement des navires et pirogues en activité
+                  {t("publicData.categories.fleetDesc")}
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <Button variant="outline" className="w-full">
                   <Download className="mr-2 h-4 w-4" />
-                  Télécharger CSV
+                  {t("common.download")} CSV
                 </Button>
               </CardContent>
             </Card>
 
             <Card className="hover:shadow-elevated transition-shadow">
               <CardHeader>
-                <CardTitle>Espèces Marines</CardTitle>
+                <CardTitle>{t("publicData.categories.species")}</CardTitle>
                 <CardDescription>
-                  Catalogue des espèces avec statut de conservation
+                  {t("publicData.categories.speciesDesc")}
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <Button variant="outline" className="w-full">
                   <Download className="mr-2 h-4 w-4" />
-                  Télécharger CSV
+                  {t("common.download")} CSV
                 </Button>
               </CardContent>
             </Card>
 
             <Card className="hover:shadow-elevated transition-shadow">
               <CardHeader>
-                <CardTitle>Surveillance Maritime</CardTitle>
+                <CardTitle>{t("publicData.categories.surveillance")}</CardTitle>
                 <CardDescription>
-                  Rapports d'inspections et infractions constatées
+                  {t("publicData.categories.surveillanceDesc")}
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <Button variant="outline" className="w-full">
                   <Download className="mr-2 h-4 w-4" />
-                  Télécharger CSV
+                  {t("common.download")} CSV
                 </Button>
               </CardContent>
             </Card>
@@ -217,17 +216,16 @@ const DonneesPubliques = () => {
       <section className="py-16 px-4 bg-card">
         <div className="container mx-auto max-w-4xl text-center">
           <TrendingUp className="h-16 w-16 text-primary mx-auto mb-6" />
-          <h2 className="text-3xl font-bold mb-4">Investir dans le Secteur Halieutique Gabonais</h2>
+          <h2 className="text-3xl font-bold mb-4">{t("publicData.investment.title")}</h2>
           <p className="text-lg text-muted-foreground mb-8">
-            Le Gabon offre un cadre stable et transparent pour les investissements dans la pêche. 
-            Contactez-nous pour découvrir les opportunités disponibles.
+            {t("publicData.investment.description")}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button size="lg" onClick={() => navigate("/auth")}>
-              Créer un Compte Professionnel
+              {t("publicData.investment.createAccount")}
             </Button>
             <Button size="lg" variant="outline">
-              Télécharger le Guide d'Investissement
+              {t("publicData.investment.downloadGuide")}
             </Button>
           </div>
         </div>

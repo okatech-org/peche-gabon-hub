@@ -100,12 +100,11 @@ const Actualites = () => {
           <div className="flex items-center gap-4 mb-4">
             <Newspaper className="h-12 w-12" />
             <h2 className="text-4xl lg:text-5xl font-bold">
-              Actualités du Secteur
+              {t("news.hero.title")}
             </h2>
           </div>
           <p className="text-xl text-white/90 max-w-3xl">
-            Suivez les dernières nouvelles, réglementations et développements 
-            du secteur halieutique gabonais.
+            {t("news.hero.description")}
           </p>
         </div>
       </section>
@@ -140,7 +139,7 @@ const Actualites = () => {
                     {article.excerpt}
                   </CardDescription>
                   <Button variant="link" className="mt-4 p-0">
-                    Lire la suite →
+                    {t("news.readMore")} →
                   </Button>
                 </CardContent>
               </Card>
@@ -150,7 +149,7 @@ const Actualites = () => {
           {/* Load More */}
           <div className="text-center mt-12">
             <Button variant="outline" size="lg">
-              Charger plus d'articles
+              {t("news.loadMore")}
             </Button>
           </div>
         </div>
@@ -159,18 +158,17 @@ const Actualites = () => {
       {/* Newsletter Signup */}
       <section className="py-16 px-4 bg-card">
         <div className="container mx-auto max-w-4xl text-center">
-          <h2 className="text-3xl font-bold mb-4">Restez Informé</h2>
+          <h2 className="text-3xl font-bold mb-4">{t("news.newsletter.title")}</h2>
           <p className="text-lg text-muted-foreground mb-8">
-            Inscrivez-vous à notre newsletter pour recevoir les dernières actualités 
-            directement dans votre boîte mail.
+            {t("news.newsletter.description")}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
             <input
               type="email"
-              placeholder="Votre adresse email"
+              placeholder={t("news.newsletter.placeholder")}
               className="flex-1 px-4 py-2 rounded-md border border-input bg-background"
             />
-            <Button>S'inscrire</Button>
+            <Button>{t("news.newsletter.subscribe")}</Button>
           </div>
         </div>
       </section>

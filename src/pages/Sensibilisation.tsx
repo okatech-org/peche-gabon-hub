@@ -36,12 +36,11 @@ const Sensibilisation = () => {
           <div className="flex items-center gap-4 mb-4">
             <Heart className="h-12 w-12" />
             <h2 className="text-4xl lg:text-5xl font-bold">
-              Pêche Durable
+              {t("awareness.hero.title")}
             </h2>
           </div>
           <p className="text-xl text-white/90 max-w-3xl">
-            Ensemble pour préserver nos ressources marines et garantir un avenir 
-            durable aux générations futures.
+            {t("awareness.hero.description")}
           </p>
         </div>
       </section>
@@ -53,12 +52,11 @@ const Sensibilisation = () => {
             <Card className="shadow-elevated bg-primary/5">
               <CardHeader>
                 <Fish className="h-12 w-12 text-primary mb-4" />
-                <CardTitle>Pêche Responsable</CardTitle>
+                <CardTitle>{t("awareness.responsible.title")}</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">
-                  Respecter les tailles minimales, les quotas et les périodes de repos biologique 
-                  pour assurer la régénération des espèces.
+                  {t("awareness.responsible.description")}
                 </p>
               </CardContent>
             </Card>
@@ -66,12 +64,11 @@ const Sensibilisation = () => {
             <Card className="shadow-elevated bg-secondary/5">
               <CardHeader>
                 <Waves className="h-12 w-12 text-secondary mb-4" />
-                <CardTitle>Protection des Écosystèmes</CardTitle>
+                <CardTitle>{t("awareness.ecosystem.title")}</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">
-                  Préserver les zones de reproduction, les mangroves et les habitats marins 
-                  essentiels à la biodiversité.
+                  {t("awareness.ecosystem.description")}
                 </p>
               </CardContent>
             </Card>
@@ -79,12 +76,11 @@ const Sensibilisation = () => {
             <Card className="shadow-elevated bg-accent/5">
               <CardHeader>
                 <AlertTriangle className="h-12 w-12 text-accent mb-4" />
-                <CardTitle>Lutte contre la Pêche Illégale</CardTitle>
+                <CardTitle>{t("awareness.illegal.title")}</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">
-                  Signaler les activités suspectes et respecter les réglementations 
-                  pour protéger nos ressources communes.
+                  {t("awareness.illegal.description")}
                 </p>
               </CardContent>
             </Card>
@@ -95,14 +91,14 @@ const Sensibilisation = () => {
       {/* Educational Content */}
       <section className="py-12 px-4">
         <div className="container mx-auto max-w-6xl">
-          <h2 className="text-3xl font-bold mb-8">Bonnes Pratiques</h2>
+          <h2 className="text-3xl font-bold mb-8">{t("awareness.practices.title")}</h2>
           
           <div className="grid lg:grid-cols-2 gap-8">
             <Card>
               <CardHeader>
                 <BookOpen className="h-10 w-10 text-primary mb-4" />
-                <CardTitle>Pour les Pêcheurs</CardTitle>
-                <CardDescription>Adoptez des pratiques durables au quotidien</CardDescription>
+                <CardTitle>{t("awareness.practices.fishermen")}</CardTitle>
+                <CardDescription>{t("awareness.practices.fishermenDesc")}</CardDescription>
               </CardHeader>
               <CardContent>
                 <ul className="space-y-3">
@@ -133,8 +129,8 @@ const Sensibilisation = () => {
             <Card>
               <CardHeader>
                 <Users className="h-10 w-10 text-secondary mb-4" />
-                <CardTitle>Pour les Consommateurs</CardTitle>
-                <CardDescription>Consommez de manière responsable</CardDescription>
+                <CardTitle>{t("awareness.practices.consumers")}</CardTitle>
+                <CardDescription>{t("awareness.practices.consumersDesc")}</CardDescription>
               </CardHeader>
               <CardContent>
                 <ul className="space-y-3">
@@ -171,10 +167,9 @@ const Sensibilisation = () => {
           <div className="flex items-start gap-4">
             <AlertTriangle className="h-12 w-12 text-destructive flex-shrink-0 mt-1" />
             <div>
-              <h2 className="text-3xl font-bold mb-4">Espèces Menacées</h2>
+              <h2 className="text-3xl font-bold mb-4">{t("awareness.threatened.title")}</h2>
               <p className="text-lg mb-6">
-                Certaines espèces marines sont en danger critique. Leur pêche est strictement 
-                réglementée ou interdite. Respectons ces mesures pour préserver notre patrimoine marin.
+                {t("awareness.threatened.description")}
               </p>
               <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <Card>
@@ -183,7 +178,7 @@ const Sensibilisation = () => {
                   </CardHeader>
                   <CardContent>
                     <span className="text-xs bg-destructive/20 text-destructive px-2 py-1 rounded">
-                      Pêche Interdite
+                      {t("awareness.threatened.forbidden")}
                     </span>
                   </CardContent>
                 </Card>
@@ -193,7 +188,7 @@ const Sensibilisation = () => {
                   </CardHeader>
                   <CardContent>
                     <span className="text-xs bg-destructive/20 text-destructive px-2 py-1 rounded">
-                      Pêche Interdite
+                      {t("awareness.threatened.forbidden")}
                     </span>
                   </CardContent>
                 </Card>
@@ -203,7 +198,7 @@ const Sensibilisation = () => {
                   </CardHeader>
                   <CardContent>
                     <span className="text-xs bg-destructive/20 text-destructive px-2 py-1 rounded">
-                      Protégée
+                      {t("awareness.threatened.protected")}
                     </span>
                   </CardContent>
                 </Card>
@@ -213,7 +208,7 @@ const Sensibilisation = () => {
                   </CardHeader>
                   <CardContent>
                     <span className="text-xs bg-destructive/20 text-destructive px-2 py-1 rounded">
-                      Protégée
+                      {t("awareness.threatened.protected")}
                     </span>
                   </CardContent>
                 </Card>
@@ -226,47 +221,47 @@ const Sensibilisation = () => {
       {/* Resources */}
       <section className="py-16 px-4">
         <div className="container mx-auto max-w-6xl">
-          <h2 className="text-3xl font-bold mb-8 text-center">Ressources & Documentation</h2>
+          <h2 className="text-3xl font-bold mb-8 text-center">{t("awareness.resources.title")}</h2>
           
           <div className="grid md:grid-cols-3 gap-6">
             <Card className="hover:shadow-elevated transition-shadow">
               <CardHeader>
-                <CardTitle>Guide du Pêcheur Responsable</CardTitle>
+                <CardTitle>{t("awareness.resources.guide")}</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground mb-4">
-                  Manuel complet des bonnes pratiques de pêche durable
+                  {t("awareness.resources.guideDesc")}
                 </p>
                 <Button variant="outline" className="w-full">
-                  Télécharger PDF
+                  {t("awareness.resources.downloadPdf")}
                 </Button>
               </CardContent>
             </Card>
 
             <Card className="hover:shadow-elevated transition-shadow">
               <CardHeader>
-                <CardTitle>Réglementation en Vigueur</CardTitle>
+                <CardTitle>{t("awareness.resources.regulations")}</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground mb-4">
-                  Toutes les règles et lois sur la pêche au Gabon
+                  {t("awareness.resources.regulationsDesc")}
                 </p>
                 <Button variant="outline" className="w-full">
-                  Consulter
+                  {t("awareness.resources.consult")}
                 </Button>
               </CardContent>
             </Card>
 
             <Card className="hover:shadow-elevated transition-shadow">
               <CardHeader>
-                <CardTitle>Calendrier des Formations</CardTitle>
+                <CardTitle>{t("awareness.resources.calendar")}</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground mb-4">
-                  Participez aux sessions de formation gratuite
+                  {t("awareness.resources.calendarDesc")}
                 </p>
                 <Button variant="outline" className="w-full">
-                  Voir le calendrier
+                  {t("awareness.resources.viewCalendar")}
                 </Button>
               </CardContent>
             </Card>
@@ -277,17 +272,16 @@ const Sensibilisation = () => {
       {/* CTA */}
       <section className="py-16 px-4 bg-gradient-sunset text-white">
         <div className="container mx-auto max-w-4xl text-center">
-          <h2 className="text-3xl font-bold mb-4">Agissons Ensemble</h2>
+          <h2 className="text-3xl font-bold mb-4">{t("awareness.cta.title")}</h2>
           <p className="text-xl mb-8 text-white/90">
-            Chaque geste compte pour préserver nos océans. Rejoignez le mouvement 
-            pour une pêche durable au Gabon.
+            {t("awareness.cta.description")}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button size="lg" variant="secondary" onClick={() => navigate("/auth")}>
-              S'engager
+              {t("awareness.cta.engage")}
             </Button>
             <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10">
-              Signaler une Infraction
+              {t("awareness.cta.report")}
             </Button>
           </div>
         </div>

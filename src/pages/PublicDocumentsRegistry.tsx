@@ -44,6 +44,7 @@ interface Document {
 
 export default function PublicDocumentsRegistry() {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [documents, setDocuments] = useState<Document[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -151,7 +152,7 @@ ${doc.destinataires && doc.destinataires.length > 0 ? `\nDestinataires:\n${doc.d
             className="gap-2"
           >
             <Home className="h-4 w-4" />
-            Retour à l'accueil
+            {t("registry.backHome")}
           </Button>
           
           <Button
@@ -159,17 +160,17 @@ ${doc.destinataires && doc.destinataires.length > 0 ? `\nDestinataires:\n${doc.d
             className="gap-2"
           >
             <Bell className="h-4 w-4" />
-            S'abonner aux notifications
+            {t("registry.subscribe")}
           </Button>
         </div>
 
         {/* En-tête */}
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold mb-2 text-foreground">
-            Registre Public des Documents Ministériels
+            {t("registry.title")}
           </h1>
           <p className="text-muted-foreground text-lg">
-            Transparence Administrative - Ministère de la Pêche et de l'Aquaculature
+            {t("registry.subtitle")}
           </p>
         </div>
 
@@ -178,17 +179,17 @@ ${doc.destinataires && doc.destinataires.length > 0 ? `\nDestinataires:\n${doc.d
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Search className="h-5 w-5" />
-              Rechercher des documents
+              {t("registry.search.title")}
             </CardTitle>
             <CardDescription>
-              Recherchez parmi {documents.length} document(s) publié(s)
+              {t("registry.search.description").replace("{count}", String(documents.length))}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex flex-col md:flex-row gap-4">
               <div className="flex-1">
                 <Input
-                  placeholder="Rechercher par titre, objet, référence ou contenu..."
+                  placeholder={t("registry.search.placeholder")}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full"
@@ -201,7 +202,7 @@ ${doc.destinataires && doc.destinataires.length > 0 ? `\nDestinataires:\n${doc.d
                     <SelectValue placeholder="Type de document" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">Tous les types</SelectItem>
+                    <SelectItem value="all">{t("registry.search.allTypes")}</SelectItem>
                     {TYPE_DOCUMENTS.map((type) => (
                       <SelectItem key={type.value} value={type.value}>
                         {type.label}
@@ -212,7 +213,7 @@ ${doc.destinataires && doc.destinataires.length > 0 ? `\nDestinataires:\n${doc.d
               </div>
             </div>
             <div className="mt-4 text-sm text-muted-foreground">
-              {filteredDocuments.length} document(s) trouvé(s)
+              {t("registry.search.resultsCount").replace("{count}", String(filteredDocuments.length))}
             </div>
           </CardContent>
         </Card>
@@ -220,15 +221,15 @@ ${doc.destinataires && doc.destinataires.length > 0 ? `\nDestinataires:\n${doc.d
         {/* Liste des documents */}
         {loading ? (
           <div className="text-center py-12">
-            <p className="text-muted-foreground">Chargement des documents...</p>
+            <p className="text-muted-foreground">{t("registry.loading")}</p>
           </div>
         ) : filteredDocuments.length === 0 ? (
           <div className="text-center py-12">
             <FileText className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
             <p className="text-muted-foreground">
               {searchTerm || filterType !== "all"
-                ? "Aucun document ne correspond à votre recherche"
-                : "Aucun document publié pour le moment"}
+                ? t("registry.noResults")
+                : t("registry.noDocuments")}
             </p>
           </div>
         ) : (
@@ -257,7 +258,7 @@ ${doc.destinataires && doc.destinataires.length > 0 ? `\nDestinataires:\n${doc.d
                       className="shrink-0"
                     >
                       <Download className="h-4 w-4 mr-2" />
-                      Télécharger
+                      {t("registry.downloadBtn")}
                     </Button>
                   </div>
                 </CardHeader>
@@ -273,7 +274,7 @@ ${doc.destinataires && doc.destinataires.length > 0 ? `\nDestinataires:\n${doc.d
                       <div className="flex items-center gap-2">
                         <Calendar className="h-4 w-4" />
                         <span>
-                          Publié le{" "}
+                          {t("registry.published")}{" "}
                           {format(new Date(doc.date_publication), "dd MMMM yyyy", {
                             locale: fr,
                           })}
@@ -281,13 +282,13 @@ ${doc.destinataires && doc.destinataires.length > 0 ? `\nDestinataires:\n${doc.d
                       </div>
                       {doc.signataires && doc.signataires.length > 0 && (
                         <div>
-                          <span className="font-medium">Signataires:</span>{" "}
+                          <span className="font-medium">{t("registry.signatories")}:</span>{" "}
                           {doc.signataires.map((s: any) => s.nom).join(", ")}
                         </div>
                       )}
                       {doc.destinataires && doc.destinataires.length > 0 && (
                         <div>
-                          <span className="font-medium">Destinataires:</span>{" "}
+                          <span className="font-medium">{t("registry.recipients")}:</span>{" "}
                           {doc.destinataires.join(", ")}
                         </div>
                       )}
