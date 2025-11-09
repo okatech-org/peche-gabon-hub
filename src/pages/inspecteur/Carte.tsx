@@ -124,15 +124,35 @@ export default function Carte() {
   const [showHeatmap, setShowHeatmap] = useState(false);
   const [heatmapFilter, setHeatmapFilter] = useState<string>("tous");
 
-  // Token Mapbox depuis les variables d'environnement (configuré dans les secrets du projet)
-  const mapboxToken = useMemo(
-    () => import.meta.env.VITE_MAPBOX_TOKEN || "pk.eyJ1Ijoib2thdGVjaCIsImEiOiJjbWhzM3dnOWowYnBjMm1zaGJsbmJrMGR3In0.yYvhLCZKtUKd4RNPfYQvIw",
-    []
-  );
+  // Token Mapbox récupéré dynamiquement via une fonction backend (sécurisé)
+  const [mapboxToken, setMapboxToken] = useState<string | null>(null);
+
+  // Récupérer le token depuis l'edge function
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const { data, error } = await (await import("@/integrations/supabase/client")).supabase
+          .functions.invoke("get-mapbox-token");
+        if (error || !data?.token) {
+          console.error("Token Mapbox manquant", error);
+          setErrorMsg("Clé Mapbox introuvable. Mettez à jour le secret et rafraîchissez.");
+          setIsLoading(false);
+          return;
+        }
+        if (mounted) setMapboxToken(data.token);
+      } catch (e) {
+        console.error("Erreur récupération token Mapbox:", e);
+        setErrorMsg("Impossible de récupérer la clé Mapbox.");
+        setIsLoading(false);
+      }
+    })();
+    return () => { mounted = false };
+  }, []);
 
   // Initialiser la carte une seule fois
   useEffect(() => {
-    if (!mapContainer.current || map.current) return;
+    if (!mapContainer.current || map.current || !mapboxToken) return;
 
     console.log("🗺️ Initialisation de la carte Mapbox...");
     console.log("Token présent:", mapboxToken ? "✅ Oui" : "❌ Non");
