@@ -6,6 +6,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
 import { Mic, Send, Volume2, VolumeX, Bot, User } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { AudioWaveform } from "./AudioWaveform";
 
 interface Message {
   role: 'user' | 'assistant';
@@ -22,6 +23,7 @@ export const IAstedChat = () => {
   const [currentAudio, setCurrentAudio] = useState<HTMLAudioElement | null>(null);
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
   const [audioChunks, setAudioChunks] = useState<Blob[]>([]);
+  const [audioStream, setAudioStream] = useState<MediaStream | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
@@ -111,7 +113,16 @@ export const IAstedChat = () => {
 
   const startRecording = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true
+        } 
+      });
+      
+      setAudioStream(stream);
+      
       const recorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
       const chunks: Blob[] = [];
 
@@ -125,6 +136,7 @@ export const IAstedChat = () => {
         const audioBlob = new Blob(chunks, { type: 'audio/webm' });
         await transcribeAudio(audioBlob);
         stream.getTracks().forEach(track => track.stop());
+        setAudioStream(null);
       };
 
       recorder.start();
@@ -146,6 +158,10 @@ export const IAstedChat = () => {
       mediaRecorder.stop();
       setIsRecording(false);
       setMediaRecorder(null);
+    }
+    if (audioStream) {
+      audioStream.getTracks().forEach(track => track.stop());
+      setAudioStream(null);
     }
   };
 
@@ -292,6 +308,8 @@ export const IAstedChat = () => {
             </Button>
           </div>
         )}
+
+        <AudioWaveform isRecording={isRecording} audioStream={audioStream} />
 
         <div className="flex gap-2">
           <Textarea
