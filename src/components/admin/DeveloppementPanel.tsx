@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -19,8 +19,20 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { FileText, Clock, CheckCircle, Archive, Loader2 } from "lucide-react";
+import { FileText, Clock, CheckCircle, Archive, Loader2, BarChart3 } from "lucide-react";
 import { toast } from "sonner";
+import { 
+  BarChart, 
+  Bar, 
+  PieChart as RechartsPieChart, 
+  Pie, 
+  Cell, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  ResponsiveContainer 
+} from "recharts";
 
 const statusColors = {
   nouveau: "bg-blue-500",
@@ -41,6 +53,36 @@ const typeLabels = {
   mission: "Mission",
   besoin: "Besoin",
   amelioration: "Amélioration",
+};
+
+const roleLabels: Record<string, string> = {
+  ministre: "Ministère",
+  dgpa: "Gestion portuaire",
+  anpa: "Contrôle quotas",
+  agasa: "Standards & Qualité",
+  dgmm: "Affaires maritimes",
+  oprag: "Recherche halieutique",
+  anpn: "Conservation",
+  corep: "Promotion développement",
+  pecheur: "Pêcheur Artisanal",
+  cooperative: "Coopérative",
+  armateur_pi: "Armement Industriel",
+  inspecteur: "Inspecteur",
+  admin: "Administrateur",
+};
+
+const COLORS = {
+  role: "#3b82f6",
+  mission: "#10b981",
+  besoin: "#f59e0b",
+  amelioration: "#8b5cf6",
+  ministre: "#9333ea",
+  dgpa: "#0ea5e9",
+  pecheur: "#06b6d4",
+  cooperative: "#6366f1",
+  armateur_pi: "#475569",
+  inspecteur: "#ef4444",
+  admin: "#1f2937",
 };
 
 export const DeveloppementPanel = () => {
@@ -98,6 +140,42 @@ export const DeveloppementPanel = () => {
   const groupByStatus = (status: string) =>
     filteredFeedbacks?.filter((f) => f.statut === status) || [];
 
+  // Calcul des statistiques
+  const stats = useMemo(() => {
+    if (!feedbacks) return null;
+
+    const total = feedbacks.length;
+    const byStatus = {
+      nouveau: feedbacks.filter((f) => f.statut === "nouveau").length,
+      en_cours: feedbacks.filter((f) => f.statut === "en_cours").length,
+      traite: feedbacks.filter((f) => f.statut === "traite").length,
+      archive: feedbacks.filter((f) => f.statut === "archive").length,
+    };
+
+    // Distribution par type
+    const byType = Object.keys(typeLabels).map((type) => ({
+      name: typeLabels[type as keyof typeof typeLabels],
+      value: feedbacks.filter((f) => f.type_feedback === type).length,
+      fill: COLORS[type as keyof typeof COLORS] || "#6366f1",
+    }));
+
+    // Distribution par rôle
+    const roleCount: Record<string, number> = {};
+    feedbacks.forEach((f) => {
+      roleCount[f.role_demo] = (roleCount[f.role_demo] || 0) + 1;
+    });
+    
+    const byRole = Object.entries(roleCount)
+      .map(([role, count]) => ({
+        name: roleLabels[role] || role,
+        value: count,
+        fill: COLORS[role as keyof typeof COLORS] || "#6366f1",
+      }))
+      .sort((a, b) => b.value - a.value);
+
+    return { total, byStatus, byType, byRole };
+  }, [feedbacks]);
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center p-8">
@@ -114,6 +192,62 @@ export const DeveloppementPanel = () => {
           Base de connaissance et cahier des charges des métiers de la pêche
         </p>
       </div>
+
+      {/* Statistiques générales */}
+      {stats && (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Total Remontées
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold">{stats.total}</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Nouveaux
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-blue-500">{stats.byStatus.nouveau}</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                En cours
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-yellow-500">{stats.byStatus.en_cours}</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Traités
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-green-500">{stats.byStatus.traite}</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Archivés
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-gray-500">{stats.byStatus.archive}</div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       <div className="flex gap-4">
         <Select value={selectedRole} onValueChange={setSelectedRole}>
@@ -145,8 +279,12 @@ export const DeveloppementPanel = () => {
         </Select>
       </div>
 
-      <Tabs defaultValue="nouveau" className="space-y-4">
+      <Tabs defaultValue="statistiques" className="space-y-4">
         <TabsList>
+          <TabsTrigger value="statistiques" className="gap-2">
+            <BarChart3 className="h-4 w-4" />
+            Statistiques
+          </TabsTrigger>
           <TabsTrigger value="nouveau" className="gap-2">
             <Clock className="h-4 w-4" />
             Nouveaux ({groupByStatus("nouveau").length})
@@ -164,6 +302,110 @@ export const DeveloppementPanel = () => {
             Archivés ({groupByStatus("archive").length})
           </TabsTrigger>
         </TabsList>
+        
+        <TabsContent value="statistiques">
+          {stats && (
+            <div className="grid gap-6 md:grid-cols-2">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Distribution par Type</CardTitle>
+                  <CardDescription>
+                    Répartition des remontées selon leur type
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <RechartsPieChart>
+                      <Pie
+                        data={stats.byType}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        label={({ name, value, percent }) =>
+                          `${name}: ${value} (${(percent * 100).toFixed(0)}%)`
+                        }
+                        outerRadius={80}
+                        fill="#8884d8"
+                        dataKey="value"
+                      >
+                        {stats.byType.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.fill} />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                    </RechartsPieChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Distribution par Rôle</CardTitle>
+                  <CardDescription>
+                    Nombre de remontées par rôle démonstration
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={stats.byRole}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis 
+                        dataKey="name" 
+                        angle={-45}
+                        textAnchor="end"
+                        height={100}
+                        fontSize={12}
+                      />
+                      <YAxis />
+                      <Tooltip />
+                      <Bar dataKey="value" fill="#8884d8">
+                        {stats.byRole.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.fill} />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+
+              <Card className="md:col-span-2">
+                <CardHeader>
+                  <CardTitle>Répartition par Statut</CardTitle>
+                  <CardDescription>
+                    État d'avancement des remontées d'information
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ResponsiveContainer width="100%" height={250}>
+                    <BarChart
+                      data={[
+                        { name: "Nouveau", value: stats.byStatus.nouveau, fill: "#3b82f6" },
+                        { name: "En cours", value: stats.byStatus.en_cours, fill: "#eab308" },
+                        { name: "Traité", value: stats.byStatus.traite, fill: "#10b981" },
+                        { name: "Archivé", value: stats.byStatus.archive, fill: "#6b7280" },
+                      ]}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="name" />
+                      <YAxis />
+                      <Tooltip />
+                      <Bar dataKey="value">
+                        {[
+                          { fill: "#3b82f6" },
+                          { fill: "#eab308" },
+                          { fill: "#10b981" },
+                          { fill: "#6b7280" },
+                        ].map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.fill} />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+        </TabsContent>
 
         {["nouveau", "en_cours", "traite", "archive"].map((status) => (
           <TabsContent key={status} value={status}>
