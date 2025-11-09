@@ -25,12 +25,15 @@ export const useVoiceInteraction = () => {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [messages, setMessages] = useState<VoiceInteractionMessage[]>([]);
   const [selectedVoiceId, setSelectedVoiceId] = useState<string | null>(null);
+  const [silenceDetected, setSilenceDetected] = useState<boolean>(false);
+  const [silenceTimeRemaining, setSilenceTimeRemaining] = useState<number>(0);
   const continuousModeToastShownRef = useRef<boolean>(false);
   const audioContextRef = useRef<AudioContext | null>(null);
   const playbackAudioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const animationFrameRef = useRef<number | null>(null);
   const silenceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const silenceCountdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const lastSoundTimeRef = useRef<number>(Date.now());
   const { toast } = useToast();
   const { user } = useAuth();
@@ -55,6 +58,9 @@ export const useVoiceInteraction = () => {
       }
       if (silenceTimerRef.current) {
         clearTimeout(silenceTimerRef.current);
+      }
+      if (silenceCountdownIntervalRef.current) {
+        clearInterval(silenceCountdownIntervalRef.current);
       }
     };
   }, [currentAudio]);
@@ -243,19 +249,45 @@ export const useVoiceInteraction = () => {
     // Silence detection: if level is above threshold, update last sound time
     if (normalizedLevel > silenceThreshold) {
       lastSoundTimeRef.current = Date.now();
+      setSilenceDetected(false);
+      setSilenceTimeRemaining(0);
       
-      // Clear any existing silence timer
+      // Clear any existing silence timer and countdown
       if (silenceTimerRef.current) {
         clearTimeout(silenceTimerRef.current);
         silenceTimerRef.current = null;
+      }
+      if (silenceCountdownIntervalRef.current) {
+        clearInterval(silenceCountdownIntervalRef.current);
+        silenceCountdownIntervalRef.current = null;
       }
     } else {
       // Check if enough time has passed since last sound
       const timeSinceLastSound = Date.now() - lastSoundTimeRef.current;
       
-      // If we've been silent long enough and no timer is running, stop listening
-      if (timeSinceLastSound >= silenceDuration && !silenceTimerRef.current) {
+      // Start silence detection visual feedback after 300ms of silence
+      if (timeSinceLastSound >= 300 && !silenceDetected) {
+        setSilenceDetected(true);
+        setSilenceTimeRemaining(silenceDuration);
+        
+        // Start countdown display
+        if (!silenceCountdownIntervalRef.current) {
+          silenceCountdownIntervalRef.current = setInterval(() => {
+            const remaining = silenceDuration - (Date.now() - lastSoundTimeRef.current);
+            if (remaining > 0) {
+              setSilenceTimeRemaining(Math.max(0, remaining));
+            }
+          }, 50);
+        }
+      }
+      
+      // If we've been silent long enough, stop listening
+      if (timeSinceLastSound >= silenceDuration) {
         console.log('Silence detected, stopping recording');
+        if (silenceCountdownIntervalRef.current) {
+          clearInterval(silenceCountdownIntervalRef.current);
+          silenceCountdownIntervalRef.current = null;
+        }
         stopListening();
         return;
       }
@@ -300,7 +332,12 @@ export const useVoiceInteraction = () => {
         if (audioContextRef.current) {
           audioContextRef.current.close();
         }
+        if (silenceCountdownIntervalRef.current) {
+          clearInterval(silenceCountdownIntervalRef.current);
+        }
         setAudioLevel(0);
+        setSilenceDetected(false);
+        setSilenceTimeRemaining(0);
       };
 
       recorder.start();
@@ -310,6 +347,8 @@ export const useVoiceInteraction = () => {
       
       // Reset silence detection
       lastSoundTimeRef.current = Date.now();
+      setSilenceDetected(false);
+      setSilenceTimeRemaining(0);
       
       // Start analyzing audio level
       analyzeAudioLevel();
@@ -335,12 +374,18 @@ export const useVoiceInteraction = () => {
 
   const stopListening = () => {
     if (mediaRecorder && mediaRecorder.state === 'recording') {
-      // Clear silence timer
+      // Clear silence timer and countdown
       if (silenceTimerRef.current) {
         clearTimeout(silenceTimerRef.current);
         silenceTimerRef.current = null;
       }
+      if (silenceCountdownIntervalRef.current) {
+        clearInterval(silenceCountdownIntervalRef.current);
+        silenceCountdownIntervalRef.current = null;
+      }
       
+      setSilenceDetected(false);
+      setSilenceTimeRemaining(0);
       mediaRecorder.stop();
       setVoiceState('thinking');
     }
@@ -651,5 +696,8 @@ export const useVoiceInteraction = () => {
     messages,
     selectedVoiceId,
     setSelectedVoiceId,
+    silenceDetected,
+    silenceTimeRemaining,
+    silenceDuration,
   };
 };

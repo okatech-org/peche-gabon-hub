@@ -16,13 +16,16 @@ export const IAstedVoiceButton = ({ className = '', size = 'md' }: IAstedVoiceBu
     handleInteraction, 
     isListening, 
     isThinking, 
-    isSpeaking, 
-    audioLevel, 
-    continuousMode, 
-    continuousModePaused, 
+    isSpeaking,
+    audioLevel,
+    continuousMode,
+    continuousModePaused,
     toggleContinuousPause,
     stopListening,
-    cancelInteraction
+    cancelInteraction,
+    silenceDetected,
+    silenceTimeRemaining,
+    silenceDuration,
   } = useVoiceInteraction();
   const lastClickTime = useRef<number>(0);
   const clickTimeout = useRef<NodeJS.Timeout | null>(null);
@@ -122,6 +125,9 @@ export const IAstedVoiceButton = ({ className = '', size = 'md' }: IAstedVoiceBu
       <IAstedListeningOverlay 
         audioLevel={audioLevel}
         isVisible={isListening}
+        silenceDetected={silenceDetected}
+        silenceTimeRemaining={silenceTimeRemaining}
+        silenceDuration={silenceDuration}
       />
       
       {/* Contrôles vocaux */}

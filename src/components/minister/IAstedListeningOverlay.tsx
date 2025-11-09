@@ -1,12 +1,21 @@
 import { useEffect, useState } from 'react';
-import { Mic } from 'lucide-react';
+import { Mic, Clock } from 'lucide-react';
 
 interface IAstedListeningOverlayProps {
   audioLevel: number;
   isVisible: boolean;
+  silenceDetected: boolean;
+  silenceTimeRemaining: number;
+  silenceDuration: number;
 }
 
-export const IAstedListeningOverlay = ({ audioLevel, isVisible }: IAstedListeningOverlayProps) => {
+export const IAstedListeningOverlay = ({ 
+  audioLevel, 
+  isVisible, 
+  silenceDetected, 
+  silenceTimeRemaining,
+  silenceDuration 
+}: IAstedListeningOverlayProps) => {
   const [pulseScale, setPulseScale] = useState(1);
 
   useEffect(() => {
@@ -19,6 +28,10 @@ export const IAstedListeningOverlay = ({ audioLevel, isVisible }: IAstedListenin
   }, [audioLevel, isVisible]);
 
   if (!isVisible) return null;
+
+  const silenceProgress = silenceTimeRemaining > 0 
+    ? (silenceTimeRemaining / silenceDuration) * 100 
+    : 0;
 
   return (
     <div className="fixed inset-0 z-[9998] bg-background/80 backdrop-blur-sm animate-in fade-in duration-300 flex items-center justify-center">
@@ -71,12 +84,38 @@ export const IAstedListeningOverlay = ({ audioLevel, isVisible }: IAstedListenin
         {/* Message */}
         <div className="text-center animate-in slide-in-from-bottom duration-700">
           <h2 className="text-4xl font-bold text-foreground mb-2 tracking-tight">
-            Je vous écoute Excellence
+            {silenceDetected ? "Détection de silence..." : "Je vous écoute Excellence"}
           </h2>
           <p className="text-muted-foreground text-lg">
-            Parlez maintenant...
+            {silenceDetected 
+              ? `Envoi dans ${(silenceTimeRemaining / 1000).toFixed(1)}s` 
+              : "Parlez maintenant..."}
           </p>
         </div>
+
+        {/* Indicateur de silence avec compte à rebours */}
+        {silenceDetected && (
+          <div className="flex flex-col items-center gap-3 animate-in slide-in-from-bottom duration-300">
+            <div className="flex items-center gap-2 text-warning">
+              <Clock className="w-5 h-5 animate-pulse" />
+              <span className="text-sm font-medium">Silence détecté</span>
+            </div>
+            
+            {/* Barre de progression du silence */}
+            <div className="w-64 h-2 bg-muted rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-gradient-to-r from-warning to-destructive transition-all duration-100 rounded-full"
+                style={{ 
+                  width: `${100 - silenceProgress}%`,
+                }}
+              />
+            </div>
+            
+            <p className="text-xs text-muted-foreground">
+              L'enregistrement s'arrête automatiquement
+            </p>
+          </div>
+        )}
 
         {/* Indicateur d'activité */}
         <div className="flex gap-2 animate-in slide-in-from-bottom duration-1000">
