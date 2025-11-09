@@ -18,6 +18,7 @@ import Captures from "./pages/Captures";
 import MonCompte from "./pages/MonCompte";
 import MesTaxes from "./pages/MesTaxes";
 import PecheurRemontees from "./pages/PecheurRemontees";
+import UserSettings from "./pages/UserSettings";
 import MinisterLayout from "./pages/minister/MinisterLayout";
 import Overview from "./pages/minister/Overview";
 import ArtisanalFishing from "./pages/minister/ArtisanalFishing";
@@ -98,6 +99,14 @@ function App() {
               element={
                 <ProtectedRoute allowedRoles={['pecheur']}>
                   <MonCompte />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/parametres"
+              element={
+                <ProtectedRoute>
+                  <UserSettings />
                 </ProtectedRoute>
               }
             />

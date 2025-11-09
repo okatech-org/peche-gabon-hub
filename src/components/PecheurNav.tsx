@@ -2,7 +2,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
-import { Fish, User, LayoutDashboard, LogOut, MessageSquare, Receipt } from "lucide-react";
+import { Fish, User, LayoutDashboard, LogOut, MessageSquare, Receipt, Settings } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
 export const PecheurNav = () => {
@@ -16,6 +16,7 @@ export const PecheurNav = () => {
     { path: "/mes-taxes", label: "Mes Taxes", icon: Receipt },
     { path: "/mes-remontees", label: "Mes Remontées", icon: MessageSquare },
     { path: "/mon-compte", label: "Mon Compte", icon: User },
+    { path: "/parametres", label: "Paramètres", icon: Settings },
   ];
 
   return (

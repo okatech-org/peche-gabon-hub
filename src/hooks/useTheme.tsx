@@ -4,7 +4,7 @@ type Theme = "light" | "dark";
 
 export const useTheme = () => {
   const [theme, setTheme] = useState<Theme>(() => {
-    // Récupérer le thème du localStorage ou utiliser dark par défaut
+    // Priorité: localStorage > DB > dark par défaut (géré au login)
     const stored = localStorage.getItem("theme") as Theme;
     return stored || "dark";
   });
@@ -15,7 +15,7 @@ export const useTheme = () => {
     root.classList.remove("light", "dark");
     root.classList.add(theme);
     
-    // Sauvegarder dans le localStorage
+    // Sauvegarder dans localStorage pour accès rapide
     localStorage.setItem("theme", theme);
   }, [theme]);
 

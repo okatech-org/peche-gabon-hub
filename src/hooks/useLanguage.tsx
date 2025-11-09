@@ -607,12 +607,13 @@ const detectBrowserLanguage = (): Language => {
 
 export const LanguageProvider = ({ children }: { children: ReactNode }) => {
   const [language, setLanguageState] = useState<Language>(() => {
+    // Priorité: localStorage > DB > détection navigateur (géré au login)
     const saved = localStorage.getItem("language");
-    // Si aucune langue n'est sauvegardée, détecter la langue du navigateur
     return (saved as Language) || detectBrowserLanguage();
   });
 
   useEffect(() => {
+    // Sauvegarder dans localStorage pour accès rapide
     localStorage.setItem("language", language);
     // Mettre à jour la direction du texte pour l'arabe
     document.documentElement.dir = language === "ar" ? "rtl" : "ltr";
