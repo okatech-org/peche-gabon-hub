@@ -15,6 +15,7 @@ export const useVoiceInteraction = () => {
   const [silenceDuration, setSilenceDuration] = useState<number>(2000);
   const [silenceThreshold, setSilenceThreshold] = useState<number>(10);
   const [continuousMode, setContinuousMode] = useState<boolean>(false);
+  const [continuousModePaused, setContinuousModePaused] = useState<boolean>(false);
   const continuousModeToastShownRef = useRef<boolean>(false);
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
@@ -363,8 +364,8 @@ export const useVoiceInteraction = () => {
         setVoiceState('idle');
         setCurrentAudio(null);
         
-        // Si le mode continu est activé, redémarrer l'écoute automatiquement
-        if (continuousMode) {
+        // Si le mode continu est activé ET non en pause, redémarrer l'écoute automatiquement
+        if (continuousMode && !continuousModePaused) {
           console.log('Mode continu activé, redémarrage de l\'écoute...');
           setTimeout(() => {
             startListening();
@@ -415,6 +416,26 @@ export const useVoiceInteraction = () => {
     }
   };
 
+  const toggleContinuousPause = () => {
+    setContinuousModePaused(prev => {
+      const newPaused = !prev;
+      if (newPaused) {
+        unifiedToast.info(
+          "Mode continu en pause",
+          "L'écoute automatique est suspendue",
+          3000
+        );
+      } else {
+        unifiedToast.success(
+          "Mode continu repris",
+          "L'écoute automatique va reprendre après la prochaine réponse",
+          3000
+        );
+      }
+      return newPaused;
+    });
+  };
+
   return {
     voiceState,
     handleInteraction,
@@ -423,5 +444,7 @@ export const useVoiceInteraction = () => {
     isSpeaking: voiceState === 'speaking',
     audioLevel,
     continuousMode,
+    continuousModePaused,
+    toggleContinuousPause,
   };
 };

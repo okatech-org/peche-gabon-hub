@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Mic, MessageCircle, Brain, X, Repeat } from 'lucide-react';
+import { Mic, MessageCircle, Brain, X, Repeat, Pause, Play } from 'lucide-react';
 import { AudioLevelIndicator } from './AudioLevelIndicator';
 
 interface IAstedButtonProps {
@@ -12,6 +12,8 @@ interface IAstedButtonProps {
   isInterfaceOpen?: boolean;
   audioLevel?: number;
   continuousMode?: boolean;
+  continuousModePaused?: boolean;
+  onToggleContinuousPause?: () => void;
 }
 
 interface Shockwave {
@@ -1019,7 +1021,9 @@ export const IAstedButton: React.FC<IAstedButtonProps> = ({
   voiceProcessing = false, 
   isInterfaceOpen = false,
   audioLevel = 0,
-  continuousMode = false
+  continuousMode = false,
+  continuousModePaused = false,
+  onToggleContinuousPause
 }) => {
   const [shockwaves, setShockwaves] = useState<Shockwave[]>([]);
   const [isClicked, setIsClicked] = useState(false);
@@ -1188,11 +1192,35 @@ export const IAstedButton: React.FC<IAstedButtonProps> = ({
         
         {/* Badge Mode Continu - visible toujours quand activé */}
         {continuousMode && (
-          <div
-            className="absolute -top-3 -left-3 z-[9999] w-10 h-10 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 shadow-lg flex items-center justify-center animate-in fade-in zoom-in"
-            title="Mode conversation continue actif"
-          >
-            <Repeat className="h-5 w-5 text-white animate-pulse" />
+          <div className="absolute -top-3 -left-3 z-[9999] flex items-center gap-1">
+            <div
+              className={`w-10 h-10 rounded-full shadow-lg flex items-center justify-center animate-in fade-in zoom-in ${
+                continuousModePaused 
+                  ? 'bg-gradient-to-br from-amber-500 to-orange-600' 
+                  : 'bg-gradient-to-br from-green-500 to-emerald-600'
+              }`}
+              title={continuousModePaused ? "Mode continu en pause" : "Mode conversation continue actif"}
+            >
+              <Repeat className={`h-5 w-5 text-white ${!continuousModePaused && 'animate-pulse'}`} />
+            </div>
+            
+            {/* Bouton Pause/Play */}
+            {onToggleContinuousPause && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onToggleContinuousPause();
+                }}
+                className="w-8 h-8 rounded-full bg-background border-2 border-primary shadow-md hover:scale-110 transition-transform flex items-center justify-center"
+                title={continuousModePaused ? "Reprendre le mode continu" : "Mettre en pause le mode continu"}
+              >
+                {continuousModePaused ? (
+                  <Play className="h-4 w-4 text-primary" />
+                ) : (
+                  <Pause className="h-4 w-4 text-primary" />
+                )}
+              </button>
+            )}
           </div>
         )}
         

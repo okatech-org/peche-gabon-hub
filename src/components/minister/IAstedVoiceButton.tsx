@@ -8,7 +8,7 @@ interface IAstedVoiceButtonProps {
 }
 
 export const IAstedVoiceButton = ({ className = '', size = 'md' }: IAstedVoiceButtonProps) => {
-  const { voiceState, handleInteraction, isListening, isThinking, isSpeaking, audioLevel, continuousMode } = useVoiceInteraction();
+  const { voiceState, handleInteraction, isListening, isThinking, isSpeaking, audioLevel, continuousMode, continuousModePaused, toggleContinuousPause } = useVoiceInteraction();
   const lastClickTime = useRef<number>(0);
   const clickTimeout = useRef<NodeJS.Timeout | null>(null);
   const clickCount = useRef<number>(0);
@@ -57,6 +57,8 @@ export const IAstedVoiceButton = ({ className = '', size = 'md' }: IAstedVoiceBu
       isInterfaceOpen={false}
       audioLevel={audioLevel}
       continuousMode={continuousMode}
+      continuousModePaused={continuousModePaused}
+      onToggleContinuousPause={toggleContinuousPause}
     />
   );
 };
