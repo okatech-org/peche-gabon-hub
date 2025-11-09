@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Mic, MessageCircle, Brain } from 'lucide-react';
+import { Mic, MessageCircle, Brain, X } from 'lucide-react';
 import { AudioLevelIndicator } from './AudioLevelIndicator';
 
 interface IAstedButtonProps {
@@ -1170,6 +1170,18 @@ export const IAstedButton: React.FC<IAstedButtonProps> = ({
             level={audioLevel} 
             size={size === 'sm' ? 56 : size === 'lg' ? 100 : 80} 
           />
+        )}
+        
+        {/* Stop Button - visible seulement quand iAsted parle */}
+        {voiceSpeaking && (
+          <button
+            onClick={onClick}
+            className="absolute -top-2 -right-2 z-[9999] w-8 h-8 rounded-full bg-destructive hover:bg-destructive/90 shadow-lg flex items-center justify-center transition-all duration-200 animate-in fade-in zoom-in cursor-pointer"
+            style={{ pointerEvents: 'all' }}
+            title="Arrêter la réponse vocale"
+          >
+            <X className="h-4 w-4 text-destructive-foreground" />
+          </button>
         )}
         
         <div className="perspective">
