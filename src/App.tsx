@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { LoadingScreen } from "@/components/LoadingScreen";
+import { PageTransition } from "@/components/PageTransition";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
@@ -59,7 +60,8 @@ function App() {
         {isLoading && <LoadingScreen onLoadingComplete={() => setIsLoading(false)} />}
         <BrowserRouter>
           <AuthProvider>
-          <Routes>
+            <PageTransition>
+              <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/demo" element={<Demo />} />
@@ -220,6 +222,7 @@ function App() {
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
+            </PageTransition>
           </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>
