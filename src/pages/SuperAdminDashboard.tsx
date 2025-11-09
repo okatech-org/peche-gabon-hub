@@ -13,6 +13,7 @@ import { DatabaseManager } from "@/components/superadmin/DatabaseManager";
 import { BackupManager } from "@/components/superadmin/BackupManager";
 import { SecurityPanel } from "@/components/superadmin/SecurityPanel";
 import { DeveloppementPanel } from "@/components/admin/DeveloppementPanel";
+import KnowledgeBase from "./superadmin/KnowledgeBase";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
 const SuperAdminDashboard = () => {
@@ -99,6 +100,7 @@ const SuperAdminDashboard = () => {
               <Route path="/backup" element={<BackupManager />} />
               <Route path="/security" element={<SecurityPanel />} />
               <Route path="/developpement" element={<DeveloppementPanel />} />
+              <Route path="/knowledge-base" element={<KnowledgeBase />} />
             </Routes>
           </main>
         </div>

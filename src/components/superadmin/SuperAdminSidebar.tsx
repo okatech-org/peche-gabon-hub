@@ -20,6 +20,7 @@ import {
   Shield,
   Code,
   Server,
+  BookOpen,
 } from "lucide-react";
 
 const menuItems = [
@@ -44,6 +45,12 @@ const menuItems = [
     items: [
       { title: "Sécurité", url: "/superadmin-dashboard/security", icon: Shield },
       { title: "Développement", url: "/superadmin-dashboard/developpement", icon: Code },
+    ],
+  },
+  {
+    group: "Intelligence",
+    items: [
+      { title: "Base de Connaissance", url: "/superadmin-dashboard/knowledge-base", icon: BookOpen },
     ],
   },
 ];
