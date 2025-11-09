@@ -750,62 +750,72 @@ export function RemonteesInstitutionnellesDashboard() {
             </TabsList>
 
             <TabsContent value="repartition" className="space-y-4">
-              <div className="grid md:grid-cols-2 gap-6">
-                {/* Graphique circulaire */}
-                <div className="h-80">
-                  <h3 className="text-lg font-semibold mb-4 text-center">
-                    Répartition par Institution
-                  </h3>
-                  <ResponsiveContainer width="100%" height="100%">
-                    <RechartsPieChart>
-                      <Pie
-                        data={pieData}
-                        cx="50%"
-                        cy="50%"
-                        labelLine={false}
-                        label={({ name, percentage }) => `${name} (${percentage}%)`}
-                        outerRadius={80}
-                        fill="#8884d8"
-                        dataKey="value"
-                      >
-                        {pieData.map((_, index) => (
-                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                        ))}
-                      </Pie>
-                      <Tooltip
-                        formatter={(value: number) => `${value.toLocaleString()} FCFA`}
-                      />
-                      <Legend />
-                    </RechartsPieChart>
-                  </ResponsiveContainer>
+              <div className="grid lg:grid-cols-3 gap-4">
+                {/* Graphique circulaire - prend 1 colonne */}
+                <div className="lg:col-span-1">
+                  <Card className="h-full">
+                    <CardContent className="pt-6">
+                      <h3 className="text-base font-semibold mb-3 text-center">
+                        Répartition par Institution
+                      </h3>
+                      <div className="h-64">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <RechartsPieChart>
+                            <Pie
+                              data={pieData}
+                              cx="50%"
+                              cy="50%"
+                              labelLine={false}
+                              label={({ percentage }) => `${percentage}%`}
+                              outerRadius={70}
+                              fill="#8884d8"
+                              dataKey="value"
+                            >
+                              {pieData.map((_, index) => (
+                                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                              ))}
+                            </Pie>
+                            <Tooltip
+                              formatter={(value: number) => `${value.toLocaleString()} FCFA`}
+                            />
+                            <Legend 
+                              layout="horizontal" 
+                              verticalAlign="bottom" 
+                              align="center"
+                              wrapperStyle={{ fontSize: '11px' }}
+                            />
+                          </RechartsPieChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </CardContent>
+                  </Card>
                 </div>
 
-                {/* Tableau récapitulatif */}
-                <div>
-                  <h3 className="text-lg font-semibold mb-4">Montants par Institution</h3>
-                  <div className="space-y-4">
+                {/* Cartes institutions - prend 2 colonnes en grid de 2x3 */}
+                <div className="lg:col-span-2">
+                  <div className="grid sm:grid-cols-2 gap-3 h-full">
                     {stats.map((stat, index) => (
-                      <Card key={index}>
-                        <CardContent className="pt-4">
+                      <Card key={index} className="hover:shadow-md transition-shadow">
+                        <CardContent className="pt-4 pb-3">
                           <div className="space-y-2">
-                            <div className="flex items-center justify-between">
-                              <span className="font-semibold">{stat.institution}</span>
-                              <Badge>{stat.pourcentage}%</Badge>
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="font-semibold text-sm line-clamp-1">{stat.institution}</span>
+                              <Badge variant="secondary" className="ml-2 shrink-0">{stat.pourcentage}%</Badge>
                             </div>
-                            <div className="text-sm text-muted-foreground">
+                            <div className="text-xs text-muted-foreground capitalize">
                               {stat.type_institution.replace("_", " ")}
                             </div>
-                            <div className="text-lg font-bold text-primary">
+                            <div className="text-base font-bold text-primary">
                               {stat.montant_total.toLocaleString()} FCFA
                             </div>
-                            <div className="grid grid-cols-2 gap-2 text-sm">
-                              <div>
+                            <div className="flex gap-3 text-xs pt-1 border-t">
+                              <div className="flex-1">
                                 <span className="text-muted-foreground">Payé: </span>
                                 <span className="font-medium text-green-600">
                                   {stat.montant_paye.toLocaleString()}
                                 </span>
                               </div>
-                              <div>
+                              <div className="flex-1">
                                 <span className="text-muted-foreground">Planifié: </span>
                                 <span className="font-medium text-orange-600">
                                   {stat.montant_planifie.toLocaleString()}
