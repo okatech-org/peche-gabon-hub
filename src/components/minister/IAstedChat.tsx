@@ -72,7 +72,8 @@ export const IAstedChat = () => {
       .from('conversations_iasted')
       .insert({
         user_id: user.id,
-        titre
+        titre,
+        tags: [] // Les tags seront générés après
       })
       .select()
       .single();
@@ -84,6 +85,40 @@ export const IAstedChat = () => {
 
     await loadConversations();
     return data.id;
+  };
+
+  const generateTags = async (conversationId: string) => {
+    try {
+      // Récupérer tous les messages de la conversation
+      const { data: messages, error } = await supabase
+        .from('messages_iasted')
+        .select('content')
+        .eq('conversation_id', conversationId)
+        .order('created_at', { ascending: true });
+
+      if (error || !messages || messages.length === 0) return;
+
+      // Concaténer les messages
+      const conversationText = messages.map(m => m.content).join('\n\n');
+
+      // Appeler l'edge function pour analyser les tags
+      const { data: tagData } = await supabase.functions.invoke('analyze-conversation-tags', {
+        body: { conversationText }
+      });
+
+      if (tagData?.success && tagData.tags && tagData.tags.length > 0) {
+        // Mettre à jour les tags de la conversation
+        await supabase
+          .from('conversations_iasted')
+          .update({ tags: tagData.tags })
+          .eq('id', conversationId);
+
+        // Recharger les conversations pour afficher les nouveaux tags
+        await loadConversations();
+      }
+    } catch (error) {
+      console.error('Error generating tags:', error);
+    }
   };
 
   const saveMessage = async (conversationId: string, role: 'user' | 'assistant', content: string, audioUrl?: string) => {
@@ -193,6 +228,11 @@ export const IAstedChat = () => {
         // Sauvegarder le message assistant
         if (currentConvId) {
           await saveMessage(currentConvId, 'assistant', data.message, assistantMessage.audioUrl);
+          
+          // Générer les tags automatiquement après quelques échanges (après le 2ème message assistant)
+          if (messages.length >= 2) {
+            generateTags(currentConvId);
+          }
         }
 
         // Auto-play audio
