@@ -330,6 +330,21 @@ export const useVoiceInteraction = () => {
           
           setLiveTranscript(final + interim);
         };
+
+        recognition.onspeechend = () => {
+          console.log('🗣️ Speech ended detected by WebSpeech, stopping listening');
+          if (voiceState === 'listening') {
+            stopListening();
+          }
+        };
+
+        recognition.onend = () => {
+          console.log('ℹ️ Speech recognition ended');
+          // If listening is still active (edge case), ensure we stop
+          if (voiceState === 'listening') {
+            stopListening();
+          }
+        };
         
         recognition.onerror = (event: any) => {
           console.warn('Speech recognition error:', event.error);
