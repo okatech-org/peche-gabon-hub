@@ -37,6 +37,7 @@ import OPRAGDashboard from "./pages/OPRAGDashboard";
 import ANPNDashboard from "./pages/ANPNDashboard";
 import ArmeurDashboard from "./pages/ArmeurDashboard";
 import CooperativeDashboard from "./pages/CooperativeDashboard";
+import SuperAdminDashboard from "./pages/SuperAdminDashboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -99,6 +100,14 @@ function App() {
               element={
                 <ProtectedRoute allowedRoles={['admin']}>
                   <Admin />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/superadmin-dashboard"
+              element={
+                <ProtectedRoute allowedRoles={['super_admin']}>
+                  <SuperAdminDashboard />
                 </ProtectedRoute>
               }
             />

@@ -86,6 +86,12 @@ const Dashboard = () => {
     return null;
   }
 
+  // Redirection automatique du super admin vers son dashboard technique
+  if (roles.includes('super_admin')) {
+    navigate('/superadmin-dashboard', { replace: true });
+    return null;
+  }
+
   // Redirection automatique du ministre vers son dashboard exécutif
   if (roles.includes('ministre')) {
     navigate('/minister-dashboard', { replace: true });
