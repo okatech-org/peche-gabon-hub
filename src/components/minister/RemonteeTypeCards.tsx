@@ -10,9 +10,13 @@ import {
   ThumbsUp,
   CheckCircle,
   Eye,
-  ChevronRight
+  ChevronRight,
+  FileDown,
+  Volume2,
+  Loader2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useState } from "react";
 
 interface RemonteeType {
   id: string;
@@ -81,9 +85,22 @@ interface RemonteeTypeCardsProps {
   typeCounts?: Record<string, number>;
   newCounts?: Record<string, number>;
   onViewDetails?: (typeId: string) => void;
+  onExportPDF?: (typeId: string) => void;
+  onGenerateAudio?: (typeId: string) => void;
 }
 
-export function RemonteeTypeCards({ selectedType, onTypeSelect, typeCounts, newCounts, onViewDetails }: RemonteeTypeCardsProps) {
+export function RemonteeTypeCards({ 
+  selectedType, 
+  onTypeSelect, 
+  typeCounts, 
+  newCounts, 
+  onViewDetails,
+  onExportPDF,
+  onGenerateAudio 
+}: RemonteeTypeCardsProps) {
+  const [loadingPDF, setLoadingPDF] = useState<string | null>(null);
+  const [loadingAudio, setLoadingAudio] = useState<string | null>(null);
+
   return (
     <div className="grid gap-3 grid-cols-2 md:grid-cols-4 lg:grid-cols-7">
       {remonteeTypes.map((type, index) => {
@@ -157,22 +174,71 @@ export function RemonteeTypeCards({ selectedType, onTypeSelect, typeCounts, newC
               </div>
             </CardContent>
             
-            {/* Bouton Voir détails - visible au hover */}
-            {count > 0 && onViewDetails && type.id !== "tous" && (
-              <div className="absolute bottom-2 left-0 right-0 px-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className="w-full h-7 text-xs"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onViewDetails(type.id);
-                  }}
-                >
-                  <Eye className="h-3 w-3 mr-1" />
-                  Voir détails
-                  <ChevronRight className="h-3 w-3 ml-1" />
-                </Button>
+            {/* Actions - visible au hover */}
+            {count > 0 && type.id !== "tous" && (
+              <div className="absolute bottom-2 left-0 right-0 px-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 space-y-1">
+                {/* Bouton Voir détails */}
+                {onViewDetails && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="w-full h-6 text-[10px] px-2"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onViewDetails(type.id);
+                    }}
+                  >
+                    <Eye className="h-3 w-3 mr-1" />
+                    Voir détails
+                  </Button>
+                )}
+                
+                {/* Actions Export & Audio */}
+                <div className="flex gap-1">
+                  {onExportPDF && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="flex-1 h-6 text-[10px] px-1"
+                      disabled={loadingPDF === type.id}
+                      onClick={async (e) => {
+                        e.stopPropagation();
+                        setLoadingPDF(type.id);
+                        await onExportPDF(type.id);
+                        setLoadingPDF(null);
+                      }}
+                      title="Export PDF"
+                    >
+                      {loadingPDF === type.id ? (
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                      ) : (
+                        <FileDown className="h-3 w-3" />
+                      )}
+                    </Button>
+                  )}
+                  
+                  {onGenerateAudio && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="flex-1 h-6 text-[10px] px-1"
+                      disabled={loadingAudio === type.id}
+                      onClick={async (e) => {
+                        e.stopPropagation();
+                        setLoadingAudio(type.id);
+                        await onGenerateAudio(type.id);
+                        setLoadingAudio(null);
+                      }}
+                      title="Synthèse vocale IA"
+                    >
+                      {loadingAudio === type.id ? (
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                      ) : (
+                        <Volume2 className="h-3 w-3" />
+                      )}
+                    </Button>
+                  )}
+                </div>
               </div>
             )}
           </Card>

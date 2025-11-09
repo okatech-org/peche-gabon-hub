@@ -30,6 +30,7 @@ import { RemonteeTypeDetailDialog } from "./RemonteeTypeDetailDialog";
 import { RemonteesSyntheseGlobale } from "./RemonteesSyntheseGlobale";
 import { RemonteesMap } from "./RemonteesMap";
 import { RemonteeCardEnriched } from "./RemonteeCardEnriched";
+import jsPDF from "jspdf";
 
 interface RemonteeStats {
   total: number;
@@ -192,6 +193,181 @@ export function RemonteesTerrainDashboard() {
 
   const getRemonteesByType = (typeId: string) => {
     return remontees.filter(r => r.type_remontee === typeId);
+  };
+
+  const handleExportPDFByType = async (typeId: string) => {
+    try {
+      const remonteesOfType = getRemonteesByType(typeId);
+      
+      if (remonteesOfType.length === 0) {
+        toast({
+          title: "Aucune remontée",
+          description: "Il n'y a aucune remontée de ce type à exporter",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const pdf = new jsPDF();
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const margin = 20;
+      let y = 20;
+
+      // En-tête
+      pdf.setFontSize(18);
+      pdf.setFont("helvetica", "bold");
+      pdf.text("RAPPORT DE REMONTÉES PAR TYPE", pageWidth / 2, y, { align: "center" });
+      y += 10;
+
+      pdf.setFontSize(12);
+      pdf.setFont("helvetica", "normal");
+      pdf.text(`Type: ${getTypeLabel(typeId)}`, pageWidth / 2, y, { align: "center" });
+      y += 7;
+      pdf.text(`${remonteesOfType.length} remontée(s)`, pageWidth / 2, y, { align: "center" });
+      y += 15;
+
+      // Ligne séparatrice
+      pdf.setDrawColor(200, 200, 200);
+      pdf.line(margin, y, pageWidth - margin, y);
+      y += 10;
+
+      // Liste des remontées
+      remonteesOfType.forEach((remontee, index) => {
+        // Vérifier si on doit ajouter une nouvelle page
+        if (y > pageHeight - 40) {
+          pdf.addPage();
+          y = 20;
+        }
+
+        // Numéro
+        pdf.setFontSize(11);
+        pdf.setFont("helvetica", "bold");
+        pdf.text(`${index + 1}. ${remontee.numero_reference}`, margin, y);
+        y += 7;
+
+        // Titre
+        pdf.setFont("helvetica", "bold");
+        pdf.setFontSize(10);
+        const titreLines = pdf.splitTextToSize(remontee.titre, pageWidth - 2 * margin);
+        pdf.text(titreLines, margin + 5, y);
+        y += titreLines.length * 5 + 3;
+
+        // Description
+        pdf.setFont("helvetica", "normal");
+        pdf.setFontSize(9);
+        const descLines = pdf.splitTextToSize(remontee.description, pageWidth - 2 * margin);
+        pdf.text(descLines, margin + 5, y);
+        y += descLines.length * 4 + 2;
+
+        // Métadonnées
+        pdf.setFontSize(8);
+        pdf.setTextColor(100, 100, 100);
+        pdf.text(`Priorité: ${remontee.niveau_priorite} | Statut: ${remontee.statut} | Date: ${new Date(remontee.created_at).toLocaleDateString('fr-FR')}`, margin + 5, y);
+        y += 8;
+
+        // Ligne de séparation
+        pdf.setDrawColor(230, 230, 230);
+        pdf.line(margin, y, pageWidth - margin, y);
+        y += 8;
+        pdf.setTextColor(0, 0, 0);
+      });
+
+      // Footer
+      const totalPages = pdf.internal.pages.length - 1;
+      for (let i = 1; i <= totalPages; i++) {
+        pdf.setPage(i);
+        pdf.setFontSize(8);
+        pdf.setTextColor(150, 150, 150);
+        pdf.text(`Page ${i}/${totalPages}`, pageWidth / 2, pageHeight - 10, { align: "center" });
+        pdf.text("Document généré automatiquement - Confidentiel", pageWidth / 2, pageHeight - 5, { align: "center" });
+      }
+
+      // Télécharger
+      pdf.save(`Remontees_${getTypeLabel(typeId)}_${new Date().toISOString().split('T')[0]}.pdf`);
+      toast({
+        title: "PDF exporté",
+        description: `${remonteesOfType.length} remontée(s) exportée(s)`,
+      });
+
+    } catch (error) {
+      console.error('Erreur export PDF:', error);
+      toast({
+        title: "Erreur",
+        description: "Erreur lors de l'export PDF",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleGenerateAudioByType = async (typeId: string) => {
+    try {
+      const remonteesOfType = getRemonteesByType(typeId);
+      
+      if (remonteesOfType.length === 0) {
+        toast({
+          title: "Aucune remontée",
+          description: "Il n'y a aucune remontée de ce type",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Créer un résumé textuel des remontées
+      const summary = `Synthèse de ${remonteesOfType.length} remontée${remonteesOfType.length > 1 ? 's' : ''} de type ${getTypeLabel(typeId)}. ${
+        remonteesOfType.slice(0, 3).map((r, i) => 
+          `Remontée ${i + 1}: ${r.titre}. Priorité ${r.niveau_priorite}, statut ${r.statut}.`
+        ).join(' ')
+      }${remonteesOfType.length > 3 ? ` Et ${remonteesOfType.length - 3} autre${remonteesOfType.length - 3 > 1 ? 's' : ''} remontée${remonteesOfType.length - 3 > 1 ? 's' : ''}.` : ''}`;
+
+      // Générer l'audio avec IA
+      const { data: summaryData, error: summaryError } = await supabase.functions.invoke(
+        'generate-remontee-summary',
+        { 
+          body: { 
+            customText: summary,
+            maxDuration: 15 
+          } 
+        }
+      );
+
+      if (summaryError) throw summaryError;
+
+      const { data: audioData, error: audioError } = await supabase.functions.invoke(
+        'generate-audio-summary',
+        { body: { text: summaryData?.summary || summary } }
+      );
+
+      if (audioError) throw audioError;
+      if (!audioData?.success) throw new Error(audioData?.error || 'Erreur génération audio');
+
+      // Créer URL audio et lire
+      const audioBlob = new Blob(
+        [Uint8Array.from(atob(audioData.audioContent), c => c.charCodeAt(0))],
+        { type: 'audio/mpeg' }
+      );
+      const url = URL.createObjectURL(audioBlob);
+
+      const audio = new Audio(url);
+      audio.onended = () => {
+        URL.revokeObjectURL(url);
+      };
+      
+      await audio.play();
+      
+      toast({
+        title: "Lecture en cours",
+        description: "Synthèse vocale des remontées",
+      });
+
+    } catch (error) {
+      console.error('Erreur génération audio:', error);
+      toast({
+        title: "Erreur",
+        description: "Erreur lors de la génération de la synthèse vocale",
+        variant: "destructive",
+      });
+    }
   };
 
   if (loading) {
@@ -361,6 +537,8 @@ export function RemonteesTerrainDashboard() {
           typeCounts={stats.par_type}
           newCounts={stats.nouveaux_par_type}
           onViewDetails={handleViewTypeDetails}
+          onExportPDF={handleExportPDFByType}
+          onGenerateAudio={handleGenerateAudioByType}
         />
       </div>
 

@@ -12,33 +12,44 @@ serve(async (req) => {
   }
 
   try {
-    const { remonteeId } = await req.json();
-
-    if (!remonteeId) {
-      throw new Error('remonteeId est requis');
-    }
+    const { remonteeId, customText, maxDuration } = await req.json();
 
     // Créer le client Supabase
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Récupérer la remontée
-    const { data: remontee, error } = await supabase
-      .from('remontees_terrain')
-      .select('*')
-      .eq('id', remonteeId)
-      .single();
+    let aiPrompt: string;
 
-    if (error) throw error;
+    // Si customText est fourni, l'utiliser directement
+    if (customText) {
+      const duration = maxDuration || 15;
+      const wordCount = Math.floor(duration * 2.7); // ~2.7 mots par seconde en français
+      
+      aiPrompt = `Génère une synthèse vocale professionnelle de ${duration} secondes maximum (environ ${wordCount} mots) pour ce texte:
 
-    // Générer synthèse IA avec Lovable AI
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-    if (!LOVABLE_API_KEY) {
-      throw new Error('LOVABLE_API_KEY non configurée');
-    }
+${customText}
 
-    const aiPrompt = `Génère une synthèse vocale professionnelle de 15 secondes maximum pour cette remontée terrain du secteur de la pêche au Gabon:
+Instructions:
+- Résume l'essentiel en 2-3 phrases courtes
+- Ton professionnel et clair
+- Maximum ${duration} secondes de lecture (~${wordCount} mots)
+- Format pour être lu à voix haute`;
+    } else {
+      // Sinon, récupérer la remontée par ID
+      if (!remonteeId) {
+        throw new Error('remonteeId ou customText est requis');
+      }
+
+      const { data: remontee, error } = await supabase
+        .from('remontees_terrain')
+        .select('*')
+        .eq('id', remonteeId)
+        .single();
+
+      if (error) throw error;
+
+      aiPrompt = `Génère une synthèse vocale professionnelle de 15 secondes maximum pour cette remontée terrain du secteur de la pêche au Gabon:
 
 Type: ${remontee.type_remontee}
 Titre: ${remontee.titre}
@@ -55,6 +66,13 @@ Instructions:
 - Mentionne le type, l'urgence et l'action recommandée
 - Maximum 15 secondes de lecture (~40 mots)
 - Format pour être lu à voix haute`;
+    }
+
+    // Générer synthèse IA avec Lovable AI
+    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+    if (!LOVABLE_API_KEY) {
+      throw new Error('LOVABLE_API_KEY non configurée');
+    }
 
     const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -86,12 +104,11 @@ Instructions:
       JSON.stringify({ 
         success: true, 
         summary,
-        remontee: {
-          id: remontee.id,
-          numero_reference: remontee.numero_reference,
-          titre: remontee.titre,
-          type: remontee.type_remontee,
-        }
+        ...(remonteeId && {
+          remontee: {
+            id: remonteeId,
+          }
+        })
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
