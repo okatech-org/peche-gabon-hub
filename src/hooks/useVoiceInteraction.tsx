@@ -401,8 +401,7 @@ export const useVoiceInteraction = () => {
         continuousModeToastShownRef.current = true;
       }
       
-      // Play greeting first, then start listening
-      await playGreeting();
+      // Démarrer directement l'écoute sans salutation
       startListening();
     } else if (voiceState === 'listening') {
       stopListening();
