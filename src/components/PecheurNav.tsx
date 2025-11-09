@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
 import { Fish, User, LayoutDashboard, LogOut, MessageSquare, Receipt } from "lucide-react";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 export const PecheurNav = () => {
   const navigate = useNavigate();
@@ -43,6 +44,7 @@ export const PecheurNav = () => {
                 {item.label}
               </Button>
             ))}
+            <ThemeToggle />
             <Button variant="outline" onClick={signOut}>
               <LogOut className="h-4 w-4 mr-2" />
               Déconnexion

@@ -18,6 +18,7 @@ import { useNavigate } from "react-router-dom";
 import { PecheurNav } from "@/components/PecheurNav";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 const roleLabels: Record<string, string> = {
   pecheur: "Pêcheur",
@@ -579,6 +580,7 @@ const Dashboard = () => {
                   </Badge>
                 ))}
               </div>
+              <ThemeToggle />
               {roles.includes('admin') && (
                 <Button
                   variant="outline"

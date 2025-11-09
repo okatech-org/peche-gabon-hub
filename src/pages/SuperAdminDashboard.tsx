@@ -13,6 +13,7 @@ import { DatabaseManager } from "@/components/superadmin/DatabaseManager";
 import { BackupManager } from "@/components/superadmin/BackupManager";
 import { SecurityPanel } from "@/components/superadmin/SecurityPanel";
 import { DeveloppementPanel } from "@/components/admin/DeveloppementPanel";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 const SuperAdminDashboard = () => {
   const { user, roles, signOut } = useAuth();
@@ -65,6 +66,7 @@ const SuperAdminDashboard = () => {
                     </Badge>
                   ))}
                 </div>
+                <ThemeToggle />
                 <Button 
                   variant="outline" 
                   size="sm" 

@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import ExportPDFButton from "@/components/minister/ExportPDFButton";
 import { GlobalSearch } from "@/components/minister/GlobalSearch";
 import { useState } from "react";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 export default function MinisterLayout() {
   const location = useLocation();
@@ -40,6 +41,7 @@ export default function MinisterLayout() {
                 <Badge variant="secondary" className="bg-accent hidden sm:flex">
                   Ministre
                 </Badge>
+                <ThemeToggle />
                 <ExportPDFButton filters={filters} />
               </div>
             </div>

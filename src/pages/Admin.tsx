@@ -31,6 +31,7 @@ import { SuiviObjectifsDashboard } from "@/components/admin/SuiviObjectifsDashbo
 import { FinancialExportDashboard } from "@/components/admin/FinancialExportDashboard";
 import { FinancialCompleteDashboard } from "@/components/admin/FinancialCompleteDashboard";
 import { DashboardFinancesPeche } from "@/components/admin/DashboardFinancesPeche";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 const Admin = () => {
   const { user, roles, signOut } = useAuth();
@@ -66,6 +67,7 @@ const Admin = () => {
                     </Badge>
                   ))}
                 </div>
+                <ThemeToggle />
                 <Button variant="outline" size="sm" onClick={() => navigate("/dashboard")}>
                   Retour Dashboard
                 </Button>
