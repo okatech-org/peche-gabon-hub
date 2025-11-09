@@ -34,28 +34,28 @@ export const SecurityPanel = () => {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in">
       <div>
-        <h2 className="text-2xl font-bold text-slate-100">Panneau de Sécurité</h2>
-        <p className="text-slate-400 text-sm mt-1">Surveillance et gestion de la sécurité</p>
+        <h2 className="text-3xl font-bold text-foreground">Security Panel</h2>
+        <p className="text-muted-foreground text-sm mt-1">Surveillance et gestion de la sécurité</p>
       </div>
 
       {/* Security Score */}
-      <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border-slate-700">
+      <Card className="bg-gradient-to-br from-card via-card to-primary/5 border-border/50">
         <CardHeader>
-          <CardTitle className="text-slate-200 flex items-center gap-2">
+          <CardTitle className="text-card-foreground flex items-center gap-2">
             <Shield className="h-5 w-5 text-green-400" />
             Score de Sécurité Global
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex items-center gap-6">
-            <div className="text-5xl font-bold text-slate-100">{securityScore}/100</div>
-            <Badge variant="secondary" className="text-lg px-4 py-2">
+            <div className="text-5xl font-bold text-foreground">{securityScore}/100</div>
+            <Badge className="text-lg px-4 py-2 bg-green-500/20 text-green-400 border-green-500/30">
               {securityScore >= 80 ? "Excellent" : securityScore >= 60 ? "Bon" : "À améliorer"}
             </Badge>
           </div>
-          <div className="mt-4 h-2 bg-slate-900 rounded-full overflow-hidden">
+          <div className="mt-4 h-2 bg-muted rounded-full overflow-hidden">
             <div
               className="h-full bg-gradient-to-r from-green-500 to-emerald-500"
               style={{ width: `${securityScore}%` }}
@@ -65,20 +65,23 @@ export const SecurityPanel = () => {
       </Card>
 
       {/* Security Metrics */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-4">
         {securityMetrics.map((metric) => (
-          <Card key={metric.name} className="bg-slate-800/50 border-slate-700">
+          <Card key={metric.name} className="border-border/50 bg-card backdrop-blur-sm">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-slate-200">
+              <CardTitle className="text-sm font-medium text-card-foreground">
                 {metric.name}
               </CardTitle>
               <metric.icon className={`h-4 w-4 ${metric.color}`} />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-slate-100">{metric.count}</div>
+              <div className="text-2xl font-bold text-foreground">{metric.count}</div>
               <Badge 
-                variant={metric.status === "active" ? "secondary" : "outline"} 
-                className="mt-2"
+                className={`mt-2 ${
+                  metric.status === "active" ? "bg-green-500/20 text-green-400 border-green-500/30" : 
+                  metric.status === "normal" ? "bg-blue-500/20 text-blue-400 border-blue-500/30" : 
+                  "bg-yellow-500/20 text-yellow-400 border-yellow-500/30"
+                }`}
               >
                 {metric.status === "active" ? "Actif" : metric.status === "normal" ? "Normal" : "Attention"}
               </Badge>
@@ -88,10 +91,10 @@ export const SecurityPanel = () => {
       </div>
 
       {/* Security Alerts */}
-      <Card className="bg-slate-800/50 border-slate-700">
+      <Card className="border-border/50 bg-card backdrop-blur-sm">
         <CardHeader>
-          <CardTitle className="text-slate-200">Alertes de Sécurité</CardTitle>
-          <CardDescription className="text-slate-400">
+          <CardTitle className="text-card-foreground">Alertes de Sécurité</CardTitle>
+          <CardDescription className="text-muted-foreground">
             Notifications et événements récents
           </CardDescription>
         </CardHeader>
@@ -101,10 +104,10 @@ export const SecurityPanel = () => {
               key={index}
               className={`${
                 alert.severity === "high" 
-                  ? "bg-red-950/50 border-red-800" 
+                  ? "bg-red-500/10 border-red-500/30" 
                   : alert.severity === "medium"
-                  ? "bg-orange-950/50 border-orange-800"
-                  : "bg-slate-900/50 border-slate-700"
+                  ? "bg-orange-500/10 border-orange-500/30"
+                  : "bg-muted/30 border-border/50"
               }`}
             >
               <AlertTriangle className={`h-4 w-4 ${
@@ -112,11 +115,11 @@ export const SecurityPanel = () => {
                   ? "text-red-400" 
                   : alert.severity === "medium"
                   ? "text-orange-400"
-                  : "text-slate-400"
+                  : "text-muted-foreground"
               }`} />
-              <AlertDescription className="text-slate-200">
+              <AlertDescription className="text-foreground">
                 {alert.message}
-                <span className="block text-xs text-slate-400 mt-1">{alert.timestamp}</span>
+                <span className="block text-xs text-muted-foreground mt-1">{alert.timestamp}</span>
               </AlertDescription>
             </Alert>
           ))}
@@ -124,10 +127,10 @@ export const SecurityPanel = () => {
       </Card>
 
       {/* Recent Security Actions */}
-      <Card className="bg-slate-800/50 border-slate-700">
+      <Card className="border-border/50 bg-card backdrop-blur-sm">
         <CardHeader>
-          <CardTitle className="text-slate-200">Actions Récentes</CardTitle>
-          <CardDescription className="text-slate-400">
+          <CardTitle className="text-card-foreground">Actions Récentes</CardTitle>
+          <CardDescription className="text-muted-foreground">
             Modifications de sécurité effectuées
           </CardDescription>
         </CardHeader>
@@ -136,12 +139,12 @@ export const SecurityPanel = () => {
             {recentActions.map((action, index) => (
               <div
                 key={index}
-                className="flex items-start gap-3 p-3 rounded-lg bg-slate-900/50 border border-slate-700"
+                className="flex items-start gap-3 p-3 rounded-lg bg-muted/30 border border-border/50"
               >
                 <CheckCircle2 className="h-4 w-4 text-green-400 mt-0.5" />
                 <div className="flex-1">
-                  <p className="text-sm text-slate-200">{action.action}</p>
-                  <div className="flex items-center gap-2 mt-1 text-xs text-slate-400">
+                  <p className="text-sm text-foreground">{action.action}</p>
+                  <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
                     <span>{action.user}</span>
                     <span>•</span>
                     <span>{action.timestamp}</span>
@@ -155,9 +158,9 @@ export const SecurityPanel = () => {
 
       {/* Quick Actions */}
       <div className="grid gap-4 md:grid-cols-3">
-        <Card className="bg-slate-800/50 border-slate-700">
+        <Card className="border-border/50 bg-card backdrop-blur-sm">
           <CardHeader>
-            <CardTitle className="text-sm text-slate-200">Permissions</CardTitle>
+            <CardTitle className="text-sm text-card-foreground">Permissions</CardTitle>
           </CardHeader>
           <CardContent>
             <Button variant="outline" size="sm" className="w-full">
@@ -167,9 +170,9 @@ export const SecurityPanel = () => {
           </CardContent>
         </Card>
 
-        <Card className="bg-slate-800/50 border-slate-700">
+        <Card className="border-border/50 bg-card backdrop-blur-sm">
           <CardHeader>
-            <CardTitle className="text-sm text-slate-200">API Keys</CardTitle>
+            <CardTitle className="text-sm text-card-foreground">API Keys</CardTitle>
           </CardHeader>
           <CardContent>
             <Button variant="outline" size="sm" className="w-full">
@@ -179,9 +182,9 @@ export const SecurityPanel = () => {
           </CardContent>
         </Card>
 
-        <Card className="bg-slate-800/50 border-slate-700">
+        <Card className="border-border/50 bg-card backdrop-blur-sm">
           <CardHeader>
-            <CardTitle className="text-sm text-slate-200">Audit</CardTitle>
+            <CardTitle className="text-sm text-card-foreground">Audit</CardTitle>
           </CardHeader>
           <CardContent>
             <Button variant="outline" size="sm" className="w-full">

@@ -78,16 +78,16 @@ export const DeploymentTools = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-slate-100">Outils de Déploiement</h2>
-          <p className="text-slate-400 text-sm mt-1">Gestion des déploiements et versions</p>
+          <h2 className="text-3xl font-bold text-foreground">Deployment Tools</h2>
+          <p className="text-muted-foreground text-sm mt-1">Gestion des déploiements et versions</p>
         </div>
         <Button 
           onClick={handleDeploy} 
           disabled={isDeploying}
-          className="gap-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+          className="gap-2 bg-gradient-to-r from-primary to-accent hover:opacity-90"
         >
           {isDeploying ? (
             <>
@@ -104,19 +104,19 @@ export const DeploymentTools = () => {
       </div>
 
       {/* Statut Actuel */}
-      <Alert className="bg-slate-800/50 border-slate-700">
-        <Rocket className="h-4 w-4 text-blue-400" />
-        <AlertDescription className="text-slate-200">
+      <Alert className="bg-primary/5 border-primary/20">
+        <Rocket className="h-4 w-4 text-primary" />
+        <AlertDescription className="text-foreground">
           <span className="font-semibold">Production:</span> v2.4.1 - Déployé il y a 2h - 
-          <Badge variant="secondary" className="ml-2">Stable</Badge>
+          <Badge className="ml-2 bg-green-500/20 text-green-400 border-green-500/30">Stable</Badge>
         </AlertDescription>
       </Alert>
 
       {/* Historique des Déploiements */}
-      <Card className="bg-slate-800/50 border-slate-700">
+      <Card className="border-border/50 bg-card backdrop-blur-sm">
         <CardHeader>
-          <CardTitle className="text-slate-200">Historique des Déploiements</CardTitle>
-          <CardDescription className="text-slate-400">
+          <CardTitle className="text-card-foreground">Historique des Déploiements</CardTitle>
+          <CardDescription className="text-muted-foreground">
             Derniers déploiements effectués
           </CardDescription>
         </CardHeader>
@@ -125,20 +125,20 @@ export const DeploymentTools = () => {
             {deployments.map((deployment) => (
               <div
                 key={deployment.id}
-                className="flex items-center justify-between p-4 rounded-lg bg-slate-900/50 border border-slate-700"
+                className="flex items-center justify-between p-4 rounded-lg bg-muted/30 border border-border/50"
               >
                 <div className="flex items-center gap-4">
                   {getStatusIcon(deployment.status)}
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="font-mono text-sm font-semibold text-slate-200">
+                      <span className="font-mono text-sm font-semibold text-foreground">
                         {deployment.version}
                       </span>
                       <Badge variant="outline" className="text-xs">
                         {deployment.environment}
                       </Badge>
                     </div>
-                    <div className="flex items-center gap-3 mt-1 text-xs text-slate-400">
+                    <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
                       <span>{deployment.timestamp}</span>
                       <span>•</span>
                       <span>Durée: {deployment.duration}</span>
@@ -148,7 +148,7 @@ export const DeploymentTools = () => {
                   </div>
                 </div>
                 <Badge
-                  variant={deployment.status === "success" ? "secondary" : "destructive"}
+                  className={deployment.status === "success" ? "bg-green-500/20 text-green-400 border-green-500/30" : "bg-red-500/20 text-red-400 border-red-500/30"}
                 >
                   {deployment.status === "success" ? "Succès" : "Échec"}
                 </Badge>
@@ -159,10 +159,10 @@ export const DeploymentTools = () => {
       </Card>
 
       {/* Edge Functions Status */}
-      <Card className="bg-slate-800/50 border-slate-700">
+      <Card className="border-border/50 bg-card backdrop-blur-sm">
         <CardHeader>
-          <CardTitle className="text-slate-200">Edge Functions</CardTitle>
-          <CardDescription className="text-slate-400">
+          <CardTitle className="text-card-foreground">Edge Functions</CardTitle>
+          <CardDescription className="text-muted-foreground">
             Statut des fonctions déployées
           </CardDescription>
         </CardHeader>
@@ -171,13 +171,13 @@ export const DeploymentTools = () => {
             {edgeFunctions.map((func) => (
               <div
                 key={func.name}
-                className="flex items-center justify-between p-4 rounded-lg bg-slate-900/50 border border-slate-700"
+                className="flex items-center justify-between p-4 rounded-lg bg-muted/30 border border-border/50"
               >
                 <div className="flex items-center gap-3">
                   <Package className="h-4 w-4 text-purple-400" />
                   <div>
-                    <code className="text-sm font-mono text-slate-200">{func.name}</code>
-                    <div className="flex items-center gap-2 mt-1 text-xs text-slate-400">
+                    <code className="text-sm font-mono text-foreground">{func.name}</code>
+                    <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
                       <span>v{func.version}</span>
                       <span>•</span>
                       <span>Déployé {func.lastDeploy}</span>
@@ -185,8 +185,7 @@ export const DeploymentTools = () => {
                   </div>
                 </div>
                 <Badge
-                  variant={func.status === "active" ? "secondary" : "outline"}
-                  className="text-xs"
+                  className={func.status === "active" ? "bg-green-500/20 text-green-400 border-green-500/30" : "bg-yellow-500/20 text-yellow-400 border-yellow-500/30"}
                 >
                   {func.status === "active" ? "Actif" : "Attention"}
                 </Badge>
@@ -198,9 +197,9 @@ export const DeploymentTools = () => {
 
       {/* Actions Rapides */}
       <div className="grid gap-4 md:grid-cols-3">
-        <Card className="bg-slate-800/50 border-slate-700">
+        <Card className="border-border/50 bg-card backdrop-blur-sm">
           <CardHeader>
-            <CardTitle className="text-sm text-slate-200">Rollback</CardTitle>
+            <CardTitle className="text-sm text-card-foreground">Rollback</CardTitle>
           </CardHeader>
           <CardContent>
             <Button variant="outline" size="sm" className="w-full">
@@ -209,9 +208,9 @@ export const DeploymentTools = () => {
           </CardContent>
         </Card>
 
-        <Card className="bg-slate-800/50 border-slate-700">
+        <Card className="border-border/50 bg-card backdrop-blur-sm">
           <CardHeader>
-            <CardTitle className="text-sm text-slate-200">Migrations DB</CardTitle>
+            <CardTitle className="text-sm text-card-foreground">Migrations DB</CardTitle>
           </CardHeader>
           <CardContent>
             <Button variant="outline" size="sm" className="w-full">
@@ -221,9 +220,9 @@ export const DeploymentTools = () => {
           </CardContent>
         </Card>
 
-        <Card className="bg-slate-800/50 border-slate-700">
+        <Card className="border-border/50 bg-card backdrop-blur-sm">
           <CardHeader>
-            <CardTitle className="text-sm text-slate-200">Cache</CardTitle>
+            <CardTitle className="text-sm text-card-foreground">Cache</CardTitle>
           </CardHeader>
           <CardContent>
             <Button variant="outline" size="sm" className="w-full">

@@ -209,47 +209,47 @@ export const BackupManager = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-slate-100">Gestion des Backups</h2>
-          <p className="text-slate-400 text-sm mt-1">
+          <h2 className="text-3xl font-bold text-foreground">Backup Manager</h2>
+          <p className="text-muted-foreground text-sm mt-1">
             Sauvegarde et restauration de la base de données
           </p>
         </div>
         <Dialog>
           <DialogTrigger asChild>
-            <Button className="gap-2 bg-gradient-to-r from-blue-600 to-purple-600">
+            <Button className="gap-2 bg-gradient-to-r from-primary to-accent hover:opacity-90">
               <Database className="h-4 w-4" />
               Créer un Backup
             </Button>
           </DialogTrigger>
-          <DialogContent className="bg-slate-800 border-slate-700">
+          <DialogContent className="bg-card border-border">
             <DialogHeader>
-              <DialogTitle className="text-slate-100">Créer un nouveau backup</DialogTitle>
-              <DialogDescription className="text-slate-400">
+              <DialogTitle className="text-foreground">Créer un nouveau backup</DialogTitle>
+              <DialogDescription className="text-muted-foreground">
                 Créer une sauvegarde manuelle de la base de données
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 mt-4">
               <div className="space-y-2">
-                <Label htmlFor="backup-name" className="text-slate-200">Nom du backup</Label>
+                <Label htmlFor="backup-name" className="text-foreground">Nom du backup</Label>
                 <Input
                   id="backup-name"
                   value={newBackupName}
                   onChange={(e) => setNewBackupName(e.target.value)}
                   placeholder="backup-2025-11-09"
-                  className="bg-slate-900 border-slate-700 text-slate-200"
+                  className="bg-muted border-border text-foreground"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="backup-desc" className="text-slate-200">Description (optionnelle)</Label>
+                <Label htmlFor="backup-desc" className="text-foreground">Description (optionnelle)</Label>
                 <Input
                   id="backup-desc"
                   value={newBackupDescription}
                   onChange={(e) => setNewBackupDescription(e.target.value)}
                   placeholder="Backup avant mise à jour majeure"
-                  className="bg-slate-900 border-slate-700 text-slate-200"
+                  className="bg-muted border-border text-foreground"
                 />
               </div>
               <Button
@@ -275,7 +275,7 @@ export const BackupManager = () => {
       </div>
 
       <Tabs defaultValue="backups">
-        <TabsList className="bg-slate-800/50">
+        <TabsList className="bg-muted/50">
           <TabsTrigger value="backups">Liste des Backups</TabsTrigger>
           <TabsTrigger value="config">Configuration Automatique</TabsTrigger>
         </TabsList>
@@ -283,15 +283,15 @@ export const BackupManager = () => {
         <TabsContent value="backups" className="space-y-4">
           {loading ? (
             <div className="text-center py-12">
-              <Clock className="h-12 w-12 animate-spin text-blue-400 mx-auto mb-4" />
-              <p className="text-slate-400">Chargement des backups...</p>
+              <Clock className="h-12 w-12 animate-spin text-primary mx-auto mb-4" />
+              <p className="text-muted-foreground">Chargement des backups...</p>
             </div>
           ) : backups.length === 0 ? (
-            <Card className="bg-slate-800/50 border-slate-700">
+            <Card className="border-border/50 bg-card backdrop-blur-sm">
               <CardContent className="py-12 text-center">
-                <Database className="h-12 w-12 text-slate-600 mx-auto mb-4" />
-                <p className="text-slate-400">Aucun backup disponible</p>
-                <p className="text-slate-500 text-sm mt-2">
+                <Database className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground">Aucun backup disponible</p>
+                <p className="text-muted-foreground text-sm mt-2">
                   Créez votre premier backup pour sécuriser vos données
                 </p>
               </CardContent>
@@ -299,22 +299,22 @@ export const BackupManager = () => {
           ) : (
             <div className="space-y-3">
               {backups.map((backup) => (
-                <Card key={backup.id} className="bg-slate-800/50 border-slate-700">
+                <Card key={backup.id} className="border-border/50 bg-card backdrop-blur-sm">
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between">
                       <div className="flex items-start gap-4 flex-1">
                         {getStatusIcon(backup.statut)}
                         <div className="flex-1">
                           <div className="flex items-center gap-3">
-                            <h3 className="font-semibold text-slate-200">{backup.nom}</h3>
-                            <Badge variant={backup.type_backup === "automatique" ? "secondary" : "outline"}>
+                            <h3 className="font-semibold text-foreground">{backup.nom}</h3>
+                            <Badge className={backup.type_backup === "automatique" ? "bg-green-500/20 text-green-400 border-green-500/30" : "bg-blue-500/20 text-blue-400 border-blue-500/30"}>
                               {backup.type_backup}
                             </Badge>
                           </div>
                           {backup.description && (
-                            <p className="text-sm text-slate-400 mt-1">{backup.description}</p>
+                            <p className="text-sm text-muted-foreground mt-1">{backup.description}</p>
                           )}
-                          <div className="flex items-center gap-4 mt-2 text-xs text-slate-500">
+                          <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
                             <span>{backup.taille_mo.toFixed(1)} MB</span>
                             <span>•</span>
                             <span>{formatDistanceToNow(new Date(backup.cree_le), { addSuffix: true, locale: fr })}</span>
