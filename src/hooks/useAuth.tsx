@@ -124,17 +124,28 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const signOut = async () => {
     try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-      
+      // Use local scope to avoid server 403 when session id is already missing
+      const { error } = await supabase.auth.signOut({ scope: 'local' });
+      if (error && error.name !== 'AuthSessionMissingError') throw error;
+
       toast.success("Déconnexion réussie");
-      // La navigation vers /auth sera gérée par les composants
     } catch (error: any) {
-      toast.error(error.message || "Erreur lors de la déconnexion");
-      throw error;
+      const isMissing = error?.name === 'AuthSessionMissingError' || /Auth session missing/i.test(error?.message || '');
+      if (isMissing) {
+        // Consider as successful logout in preview/multi-frame environments
+        toast.success("Déconnexion réussie");
+      } else {
+        toast.error(error?.message || "Erreur lors de la déconnexion");
+        throw error;
+      }
+    } finally {
+      // Ensure local state is cleared even if server signOut failed
+      setUser(null);
+      setSession(null);
+      setRoles([]);
+      // La navigation vers /auth sera gérée par les composants
     }
   };
-
   return (
     <AuthContext.Provider
       value={{
