@@ -53,27 +53,27 @@ export function SuperAdminSidebar() {
   const isCollapsed = state === "collapsed";
 
   return (
-    <Sidebar collapsible="icon" className="border-r border-slate-700 bg-slate-900">
-      <SidebarContent>
+    <Sidebar collapsible="icon" className="border-r border-slate-800/50 bg-slate-950">
+      <SidebarContent className="bg-slate-950">
         {menuItems.map((section) => (
-          <SidebarGroup key={section.group}>
+          <SidebarGroup key={section.group} className="py-3">
             {!isCollapsed && (
-              <SidebarGroupLabel className="text-slate-400 text-xs uppercase tracking-wider">
+              <SidebarGroupLabel className="text-slate-500 text-[10px] uppercase tracking-widest font-semibold px-3 mb-2">
                 {section.group}
               </SidebarGroupLabel>
             )}
             <SidebarGroupContent>
-              <SidebarMenu>
+              <SidebarMenu className="space-y-1">
                 {section.items.map((item) => (
                   <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton asChild>
+                    <SidebarMenuButton asChild className="px-3">
                       <NavLink
                         to={item.url}
-                        className="hover:bg-slate-800/50 text-slate-300 hover:text-slate-100 transition-colors"
-                        activeClassName="bg-slate-800 text-slate-100 font-medium border-l-2 border-slate-400"
+                        className="flex items-center gap-3 rounded-md px-3 py-2.5 text-slate-400 hover:bg-slate-900/50 hover:text-slate-100 transition-all duration-200 group"
+                        activeClassName="bg-gradient-to-r from-slate-900 to-slate-800/50 text-slate-50 font-medium shadow-sm border-l-2 border-slate-400"
                       >
-                        <item.icon className="h-4 w-4" />
-                        {!isCollapsed && <span className="ml-2">{item.title}</span>}
+                        <item.icon className="h-4 w-4 flex-shrink-0 group-hover:scale-110 transition-transform" />
+                        {!isCollapsed && <span className="text-sm">{item.title}</span>}
                       </NavLink>
                     </SidebarMenuButton>
                   </SidebarMenuItem>

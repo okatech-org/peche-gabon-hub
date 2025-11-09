@@ -19,36 +19,36 @@ const SuperAdminDashboard = () => {
   const navigate = useNavigate();
 
   return (
-    <SidebarProvider>
+    <SidebarProvider defaultOpen={true}>
       <div className="min-h-screen flex w-full bg-gradient-to-br from-slate-950 via-slate-900 to-zinc-950">
         <SuperAdminSidebar />
         
         <div className="flex-1 flex flex-col">
           {/* Header */}
-          <header className="sticky top-0 z-10 border-b border-slate-800 bg-slate-900/80 backdrop-blur-md shadow-lg">
+          <header className="sticky top-0 z-10 border-b border-slate-800/50 bg-slate-950/80 backdrop-blur-xl shadow-2xl">
             <div className="flex h-16 items-center gap-4 px-6">
-              <SidebarTrigger className="text-slate-300 hover:text-slate-100">
+              <SidebarTrigger className="text-slate-400 hover:text-slate-100 hover:bg-slate-900/50 rounded-md p-2 transition-colors">
                 <Menu className="h-5 w-5" />
               </SidebarTrigger>
               
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-gradient-to-br from-slate-800 to-zinc-900 border border-slate-700">
-                  <Server className="h-5 w-5 text-slate-200" />
+                <div className="p-2 rounded-lg bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700/50 shadow-lg">
+                  <Server className="h-5 w-5 text-slate-300" />
                 </div>
                 <div>
-                  <h1 className="text-lg font-bold text-slate-100">Super Admin</h1>
-                  <p className="text-xs text-slate-400">Gestion Technique Complète</p>
+                  <h1 className="text-lg font-bold text-slate-100 tracking-tight">Super Admin</h1>
+                  <p className="text-xs text-slate-500">Gestion Technique Complète</p>
                 </div>
               </div>
 
               <div className="ml-auto flex items-center gap-4">
-                <div className="flex items-center gap-2">
+                <div className="hidden md:flex items-center gap-2">
                   <span className="text-sm text-slate-400">{user?.email}</span>
                   {roles.map((role) => (
                     <Badge 
                       key={role} 
                       variant="outline" 
-                      className="border-slate-600 text-slate-300 bg-slate-800/50"
+                      className="border-slate-700 text-slate-300 bg-slate-900/50 text-xs"
                     >
                       {role}
                     </Badge>
@@ -58,7 +58,7 @@ const SuperAdminDashboard = () => {
                   variant="outline" 
                   size="sm" 
                   onClick={() => navigate("/dashboard")}
-                  className="border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-slate-100"
+                  className="hidden sm:flex border-slate-700 text-slate-300 hover:bg-slate-900 hover:text-slate-100 hover:border-slate-600 transition-all"
                 >
                   Retour Dashboard
                 </Button>
@@ -66,7 +66,7 @@ const SuperAdminDashboard = () => {
                   variant="ghost" 
                   size="sm" 
                   onClick={signOut}
-                  className="text-slate-400 hover:text-slate-100 hover:bg-slate-800"
+                  className="text-slate-400 hover:text-slate-100 hover:bg-slate-900/50"
                 >
                   <LogOut className="h-4 w-4" />
                 </Button>
@@ -75,7 +75,7 @@ const SuperAdminDashboard = () => {
           </header>
 
           {/* Main Content */}
-          <main className="flex-1 overflow-auto p-6">
+          <main className="flex-1 overflow-auto p-4 md:p-6">
             <Routes>
               <Route path="/" element={<Navigate to="/superadmin-dashboard/monitoring" replace />} />
               <Route path="/monitoring" element={<SystemMonitoring />} />
