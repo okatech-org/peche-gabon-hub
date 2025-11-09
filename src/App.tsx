@@ -13,6 +13,7 @@ import Admin from "./pages/Admin";
 import Demo from "./pages/Demo";
 import Captures from "./pages/Captures";
 import MonCompte from "./pages/MonCompte";
+import MesTaxes from "./pages/MesTaxes";
 import PecheurRemontees from "./pages/PecheurRemontees";
 import MinisterLayout from "./pages/minister/MinisterLayout";
 import Overview from "./pages/minister/Overview";
@@ -73,6 +74,14 @@ function App() {
               element={
                 <ProtectedRoute allowedRoles={['pecheur']}>
                   <PecheurRemontees />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/mes-taxes"
+              element={
+                <ProtectedRoute allowedRoles={['pecheur']}>
+                  <MesTaxes />
                 </ProtectedRoute>
               }
             />
