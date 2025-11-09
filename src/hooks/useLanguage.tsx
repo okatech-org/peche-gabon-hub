@@ -584,10 +584,32 @@ const translations: Record<Language, Record<string, string>> = {
   },
 };
 
+// Fonction pour détecter la langue du navigateur et la mapper vers nos langues supportées
+const detectBrowserLanguage = (): Language => {
+  // Récupérer la langue du navigateur
+  const browserLang = navigator.language || navigator.languages?.[0] || "fr";
+  
+  // Extraire le code de langue principal (ex: "en-US" -> "en")
+  const langCode = browserLang.toLowerCase().split("-")[0];
+  
+  // Mapper vers nos langues supportées
+  const languageMap: Record<string, Language> = {
+    fr: "fr",
+    en: "en",
+    zh: "zh",
+    es: "es",
+    ar: "ar",
+  };
+  
+  // Retourner la langue détectée ou français par défaut
+  return languageMap[langCode] || "fr";
+};
+
 export const LanguageProvider = ({ children }: { children: ReactNode }) => {
   const [language, setLanguageState] = useState<Language>(() => {
     const saved = localStorage.getItem("language");
-    return (saved as Language) || "fr";
+    // Si aucune langue n'est sauvegardée, détecter la langue du navigateur
+    return (saved as Language) || detectBrowserLanguage();
   });
 
   useEffect(() => {
