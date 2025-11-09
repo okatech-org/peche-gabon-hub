@@ -35,7 +35,26 @@ const Index = () => {
           <div className="max-w-2xl">
             <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-6 mb-6">
               <div className="relative">
+                {/* Halo lumineux */}
                 <div className="absolute inset-0 bg-primary/30 rounded-full blur-2xl animate-pulse" />
+                
+                {/* Particules flottantes */}
+                <div className="absolute -inset-8 pointer-events-none">
+                  {/* Particule 1 */}
+                  <div className="absolute top-0 left-1/4 w-3 h-3 bg-primary/40 rounded-full blur-sm animate-[float_3s_ease-in-out_infinite]" />
+                  {/* Particule 2 */}
+                  <div className="absolute top-1/4 right-0 w-2 h-2 bg-blue-400/50 rounded-full blur-sm animate-[float_4s_ease-in-out_infinite_0.5s]" />
+                  {/* Particule 3 */}
+                  <div className="absolute bottom-1/4 left-0 w-2.5 h-2.5 bg-cyan-400/40 rounded-full blur-sm animate-[float_3.5s_ease-in-out_infinite_1s]" />
+                  {/* Particule 4 */}
+                  <div className="absolute bottom-0 right-1/4 w-3 h-3 bg-primary/30 rounded-full blur-sm animate-[float_4.5s_ease-in-out_infinite_1.5s]" />
+                  {/* Particule 5 */}
+                  <div className="absolute top-1/2 left-0 w-2 h-2 bg-blue-300/40 rounded-full blur-sm animate-[float_3.8s_ease-in-out_infinite_2s]" />
+                  {/* Particule 6 */}
+                  <div className="absolute top-1/2 right-0 w-2.5 h-2.5 bg-cyan-300/50 rounded-full blur-sm animate-[float_4.2s_ease-in-out_infinite_0.8s]" />
+                </div>
+                
+                {/* Logo */}
                 <Logo size="xl" className="relative drop-shadow-2xl h-40 w-40 md:h-48 md:w-48 lg:h-64 lg:w-64 flex-shrink-0 animate-[pulse_3s_ease-in-out_infinite] shadow-[0_0_40px_rgba(59,130,246,0.6)]" />
               </div>
               <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-white whitespace-nowrap">{t("hero.title")}</h1>
