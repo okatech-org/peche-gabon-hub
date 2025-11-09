@@ -12,6 +12,8 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import Admin from "./pages/Admin";
+import PecheurLayout from "./pages/pecheur/PecheurLayout";
+import PecheurOverview from "./pages/pecheur/PecheurOverview";
 import DonneesPubliques from "./pages/DonneesPubliques";
 import Actualites from "./pages/Actualites";
 import Sensibilisation from "./pages/Sensibilisation";
@@ -68,46 +70,57 @@ function App() {
           <Route path="/donnees-publiques" element={<DonneesPubliques />} />
           <Route path="/actualites" element={<Actualites />} />
           <Route path="/sensibilisation" element={<Sensibilisation />} />
+            {/* Pecheur routes with layout */}
             <Route
               path="/dashboard"
               element={
-                <ProtectedRoute>
-                  <Dashboard />
+                <ProtectedRoute allowedRoles={['pecheur']}>
+                  <PecheurLayout />
                 </ProtectedRoute>
               }
-            />
+            >
+              <Route index element={<PecheurOverview />} />
+            </Route>
             <Route
               path="/captures"
               element={
-                <ProtectedRoute>
-                  <Captures />
+                <ProtectedRoute allowedRoles={['pecheur']}>
+                  <PecheurLayout />
                 </ProtectedRoute>
               }
-            />
+            >
+              <Route index element={<Captures />} />
+            </Route>
             <Route
               path="/mes-remontees"
               element={
                 <ProtectedRoute allowedRoles={['pecheur']}>
-                  <PecheurRemontees />
+                  <PecheurLayout />
                 </ProtectedRoute>
               }
-            />
+            >
+              <Route index element={<PecheurRemontees />} />
+            </Route>
             <Route
               path="/mes-taxes"
               element={
                 <ProtectedRoute allowedRoles={['pecheur']}>
-                  <MesTaxes />
+                  <PecheurLayout />
                 </ProtectedRoute>
               }
-            />
+            >
+              <Route index element={<MesTaxes />} />
+            </Route>
             <Route
               path="/mon-compte"
               element={
                 <ProtectedRoute allowedRoles={['pecheur']}>
-                  <MonCompte />
+                  <PecheurLayout />
                 </ProtectedRoute>
               }
-            />
+            >
+              <Route index element={<MonCompte />} />
+            </Route>
             <Route
               path="/parametres"
               element={
