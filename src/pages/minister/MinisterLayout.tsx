@@ -9,6 +9,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { LogOut } from "lucide-react";
 import { Toaster } from "@/components/ui/toaster";
 import { useAuth } from "@/hooks/useAuth";
+import { IAstedFloatingButton } from "@/components/minister/IAstedFloatingButton";
 
 // Breadcrumb mapping pour navigation intuitive
 const breadcrumbMap: Record<string, { label: string; icon?: any }[]> = {
@@ -116,6 +117,10 @@ export default function MinisterLayout() {
           </footer>
         </div>
       </div>
+      
+      {/* Bouton flottant iAsted - draggable et accessible partout */}
+      <IAstedFloatingButton />
+      
       <Toaster />
     </SidebarProvider>
   );
