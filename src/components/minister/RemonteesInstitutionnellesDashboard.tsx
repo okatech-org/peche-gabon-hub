@@ -9,6 +9,7 @@ import { Loader2, Building2, DollarSign, TrendingUp, Download, PieChart, BarChar
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Cell, Pie, PieChart as RechartsPieChart, ResponsiveContainer, Tooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid, LineChart, Line, Area, AreaChart } from "recharts";
+import { GenererRedistributionsDialog } from "./GenererRedistributionsDialog";
 
 interface RemonteeStats {
   institution: string;
@@ -145,7 +146,7 @@ export function RemonteesInstitutionnellesDashboard() {
   const [loadingPrevisionsTresor, setLoadingPrevisionsTresor] = useState(false);
   const [previsionsParType, setPrevisionsParType] = useState<PrevisionsParType | null>(null);
   const [loadingPrevisionsParType, setLoadingPrevisionsParType] = useState(false);
-  const [generatingRedistributions, setGeneratingRedistributions] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -460,25 +461,9 @@ export function RemonteesInstitutionnellesDashboard() {
     }
   };
 
-  const genererRedistributions = async () => {
-    setGeneratingRedistributions(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('generer-redistributions');
-
-      if (error) throw error;
-
-      toast.success(data.message || "Redistributions générées avec succès");
-      console.log("✅ Résultat:", data);
-      
-      // Recharger les données
-      await loadData();
-      await loadComparaisonAnnuelle();
-    } catch (error) {
-      console.error("❌ Erreur génération redistributions:", error);
-      toast.error("Erreur lors de la génération des redistributions");
-    } finally {
-      setGeneratingRedistributions(false);
-    }
+  const handleRedistributionSuccess = async () => {
+    await loadData();
+    await loadComparaisonAnnuelle();
   };
 
   const genererPrevisionsRemontees = async () => {
@@ -663,15 +648,10 @@ export function RemonteesInstitutionnellesDashboard() {
                 </SelectContent>
               </Select>
               <Button 
-                onClick={genererRedistributions} 
-                disabled={generatingRedistributions}
+                onClick={() => setDialogOpen(true)}
                 variant="outline"
               >
-                {generatingRedistributions ? (
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                ) : (
-                  <Sparkles className="h-4 w-4 mr-2" />
-                )}
+                <Sparkles className="h-4 w-4 mr-2" />
                 Générer Redistributions
               </Button>
               <Button onClick={handleExportPDF} disabled={exporting}>
@@ -2011,6 +1991,12 @@ export function RemonteesInstitutionnellesDashboard() {
           </Tabs>
         </CardContent>
       </Card>
+
+      <GenererRedistributionsDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        onSuccess={handleRedistributionSuccess}
+      />
     </div>
   );
 }

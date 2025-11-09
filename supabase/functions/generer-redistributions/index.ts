@@ -32,7 +32,22 @@ Deno.serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
+    // Récupérer les paramètres de la requête
+    const { montant_total, periode_mois, periode_annee } = await req.json();
+
     console.log('🚀 Début de la génération des redistributions institutionnelles');
+    console.log(`💰 Montant total: ${montant_total} FCFA`);
+    console.log(`📅 Période: ${periode_mois}/${periode_annee}`);
+
+    if (!montant_total || !periode_mois || !periode_annee) {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'Paramètres manquants: montant_total, periode_mois et periode_annee requis'
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      );
+    }
 
     // 1. Récupérer toutes les institutions actives avec leurs pourcentages
     const { data: institutions, error: instError } = await supabase
@@ -47,72 +62,69 @@ Deno.serve(async (req) => {
 
     console.log(`✅ ${institutions?.length || 0} institutions actives trouvées`);
 
-    // 2. Récupérer toutes les quittances payées
-    const { data: quittances, error: quittError } = await supabase
-      .from('quittances')
-      .select('*')
-      .eq('statut', 'paye')
-      .not('date_paiement', 'is', null)
-      .order('date_paiement', { ascending: false });
-
-    if (quittError) {
-      console.error('❌ Erreur quittances:', quittError);
-      throw quittError;
-    }
-
-    console.log(`✅ ${quittances?.length || 0} quittances payées trouvées`);
-
-    if (!quittances || quittances.length === 0) {
+    if (!institutions || institutions.length === 0) {
       return new Response(
         JSON.stringify({
-          success: true,
-          message: 'Aucune quittance payée à redistribuer',
-          redistributions_creees: 0
+          success: false,
+          error: 'Aucune institution active trouvée'
         }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 404 }
       );
     }
 
-    // 3. Pour chaque quittance, créer les redistributions
+    // 2. Vérifier si des redistributions existent déjà pour cette période
+    const { data: existingRemontees } = await supabase
+      .from('remontees_effectives')
+      .select('id')
+      .eq('periode_mois', periode_mois)
+      .eq('periode_annee', periode_annee)
+      .is('quittance_id', null);
+
+    if (existingRemontees && existingRemontees.length > 0) {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: `Des redistributions existent déjà pour la période ${periode_mois}/${periode_annee}`
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 409 }
+      );
+    }
+
+    // 3. Créer les redistributions pour chaque institution
     let totalRedistributions = 0;
     let erreurs = 0;
+    const redistributions = [];
 
-    for (const quittance of quittances as QuittanceData[]) {
-      // Vérifier si des redistributions existent déjà pour cette quittance
-      const { data: existingRemontees } = await supabase
+    for (const institution of institutions as InstitutionData[]) {
+      const montantRedistribue = (montant_total * institution.pourcentage_taxes) / 100;
+
+      const { data: inserted, error: insertError } = await supabase
         .from('remontees_effectives')
-        .select('id')
-        .eq('quittance_id', quittance.id);
+        .insert({
+          institution_id: institution.id,
+          montant_remonte: montantRedistribue,
+          pourcentage_applique: institution.pourcentage_taxes,
+          periode_mois: periode_mois,
+          periode_annee: periode_annee,
+          statut_virement: 'planifie',
+          date_virement: null,
+          quittance_id: null,
+          taxe_id: null
+        })
+        .select()
+        .single();
 
-      if (existingRemontees && existingRemontees.length > 0) {
-        console.log(`⏭️  Redistributions déjà existantes pour quittance ${quittance.id}`);
-        continue;
-      }
-
-      // Créer une redistribution pour chaque institution
-      for (const institution of institutions as InstitutionData[]) {
-        const montantRedistribue = (quittance.montant * institution.pourcentage_taxes) / 100;
-
-        const { error: insertError } = await supabase
-          .from('remontees_effectives')
-          .insert({
-            quittance_id: quittance.id,
-            institution_id: institution.id,
-            montant_remonte: montantRedistribue,
-            pourcentage_applique: institution.pourcentage_taxes,
-            periode_mois: quittance.mois,
-            periode_annee: quittance.annee,
-            statut_virement: 'planifie',
-            date_virement: null
-          });
-
-        if (insertError) {
-          console.error(`❌ Erreur insertion redistribution:`, insertError);
-          erreurs++;
-        } else {
-          totalRedistributions++;
-          console.log(`✅ Redistribution créée: ${montantRedistribue} FCFA pour ${institution.nom_institution}`);
-        }
+      if (insertError) {
+        console.error(`❌ Erreur insertion redistribution:`, insertError);
+        erreurs++;
+      } else {
+        totalRedistributions++;
+        redistributions.push({
+          institution: institution.nom_institution,
+          montant: montantRedistribue,
+          pourcentage: institution.pourcentage_taxes
+        });
+        console.log(`✅ Redistribution créée: ${montantRedistribue} FCFA pour ${institution.nom_institution}`);
       }
     }
 
@@ -124,8 +136,9 @@ Deno.serve(async (req) => {
         message: `${totalRedistributions} redistributions institutionnelles créées avec succès`,
         redistributions_creees: totalRedistributions,
         erreurs: erreurs,
-        quittances_traitees: quittances.length,
-        institutions: institutions?.length || 0
+        redistributions: redistributions,
+        montant_total: montant_total,
+        periode: `${periode_mois}/${periode_annee}`
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
     );
