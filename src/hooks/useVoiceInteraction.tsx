@@ -561,10 +561,12 @@ export const useVoiceInteraction = () => {
           content: chatData.userText
         };
         
+        const audioBase64 = chatData.audio_base64 || chatData.audioContent;
+
         const assistantMessage: VoiceInteractionMessage = {
           role: 'assistant',
           content: chatData.answer,
-          audio_base64: chatData.audio_base64
+          audio_base64: audioBase64
         };
 
         setMessages(prev => [...prev, userMessage, assistantMessage]);
@@ -582,9 +584,9 @@ export const useVoiceInteraction = () => {
         });
 
         // Play audio response
-        if (chatData.audio_base64) {
+        if (audioBase64) {
           console.log('🔊 Playing audio response...');
-          await playAudioResponse(chatData.audio_base64);
+          await playAudioResponse(audioBase64);
         } else {
           console.log('ℹ️ No audio to play, returning to idle');
           setVoiceState('idle');
