@@ -18,32 +18,38 @@ serve(async (req) => {
       throw new Error('Le texte est requis');
     }
 
-    const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
-    if (!OPENAI_API_KEY) {
-      throw new Error('OPENAI_API_KEY non configurée');
+    const ELEVENLABS_API_KEY = Deno.env.get('ELEVENLABS_API_KEY');
+    if (!ELEVENLABS_API_KEY) {
+      throw new Error('ELEVENLABS_API_KEY non configurée');
     }
 
-    console.log('Génération audio pour:', text.substring(0, 100));
+    console.log('Génération audio avec ElevenLabs pour:', text.substring(0, 100));
 
-    // Générer l'audio avec OpenAI TTS
-    const response = await fetch('https://api.openai.com/v1/audio/speech', {
+    // Voix professionnelle masculine française (Roger)
+    const voiceId = 'CwhRBWXzGAHq8TQ4Fs17';
+
+    // Générer l'audio avec ElevenLabs
+    const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${OPENAI_API_KEY}`,
+        'xi-api-key': ELEVENLABS_API_KEY,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'tts-1',
-        input: text,
-        voice: 'onyx', // Voix masculine professionnelle
-        response_format: 'mp3',
-        speed: 1.0,
+        text: text,
+        model_id: 'eleven_multilingual_v2',
+        voice_settings: {
+          stability: 0.5,
+          similarity_boost: 0.75,
+          style: 0.0,
+          use_speaker_boost: true
+        }
       }),
     });
 
     if (!response.ok) {
       const error = await response.text();
-      console.error('OpenAI TTS error:', response.status, error);
+      console.error('ElevenLabs TTS error:', response.status, error);
       throw new Error('Erreur lors de la génération audio');
     }
 
