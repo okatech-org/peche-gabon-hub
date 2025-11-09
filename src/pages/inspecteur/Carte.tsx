@@ -4,6 +4,7 @@ import "mapbox-gl/dist/mapbox-gl.css";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import surveillanceImg from "@/assets/surveillance.jpg";
 import {
   Select,
   SelectContent,
@@ -115,6 +116,9 @@ export default function Carte() {
   
   const [isMapReady, setIsMapReady] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [showFallbackImage, setShowFallbackImage] = useState(false);
+  const [initNonce, setInitNonce] = useState(0);
   const [inspections, setInspections] = useState<Inspection[]>(mockInspections);
   const [filterType, setFilterType] = useState<string>("tous");
   const [filterStatut, setFilterStatut] = useState<string>("tous");
@@ -126,7 +130,7 @@ export default function Carte() {
     []
   );
 
-  // Initialiser la carte une seule fois
+  // Initialiser la carte (une fois + lors d'un retry)
   useEffect(() => {
     if (!mapContainer.current || map.current || !mapboxToken) return;
 
@@ -143,35 +147,27 @@ export default function Carte() {
         zoom: 6,
       });
 
-      map.current.addControl(
-        new mapboxgl.NavigationControl({
-          visualizePitch: true,
-        }),
-        "top-right"
-      );
-
-      map.current.addControl(
-        new mapboxgl.FullscreenControl(),
-        "top-right"
-      );
+      map.current.addControl(new mapboxgl.NavigationControl({ visualizePitch: true }), "top-right");
+      map.current.addControl(new mapboxgl.FullscreenControl(), "top-right");
 
       map.current.on("load", () => {
         console.log("Carte Mapbox chargée avec succès");
+        setErrorMsg(null);
+        setShowFallbackImage(false);
         setIsMapReady(true);
         setIsLoading(false);
-        toast.success("Carte chargée avec succès");
       });
 
       map.current.on("error", (e) => {
         console.error("Erreur Mapbox:", e);
+        setErrorMsg("Erreur lors du chargement des tuiles de carte. Vérifiez le token ou la connexion réseau.");
         setIsLoading(false);
-        toast.error("Erreur lors du chargement de la carte");
       });
 
     } catch (error) {
       console.error("Erreur d'initialisation de la carte:", error);
+      setErrorMsg("Impossible d'initialiser la carte.");
       setIsLoading(false);
-      toast.error("Erreur lors du chargement de la carte");
     }
 
     return () => {
@@ -180,7 +176,7 @@ export default function Carte() {
         map.current = null;
       }
     };
-  }, []); // Pas de dépendances - s'exécute une seule fois
+  }, [initNonce]); // relance via initNonce
 
   // Ajouter les marqueurs
   useEffect(() => {
@@ -408,10 +404,31 @@ export default function Carte() {
             </div>
           </div>
         )}
-        <div
-          ref={mapContainer}
-          className="w-full h-[calc(100vh-280px)] md:h-[600px]"
-        />
+
+        {errorMsg && (
+          <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4">
+            <div className="max-w-md w-full text-center space-y-3">
+              <p className="text-sm text-destructive">{errorMsg}</p>
+              <div className="flex flex-col sm:flex-row gap-2 justify-center">
+                <Button variant="default" onClick={() => { setIsLoading(true); setErrorMsg(null); setInitNonce((n) => n + 1); }}>
+                  Réessayer
+                </Button>
+                <Button variant="outline" onClick={() => setShowFallbackImage(true)}>
+                  Afficher une image
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {showFallbackImage ? (
+          <img src={surveillanceImg} alt="Carte indisponible - Vue de surveillance" className="w-full h-[calc(100vh-280px)] md:h-[600px] object-cover" />
+        ) : (
+          <div
+            ref={mapContainer}
+            className="w-full h-[calc(100vh-280px)] md:h-[600px]"
+          />
+        )}
       </Card>
     </div>
   );
