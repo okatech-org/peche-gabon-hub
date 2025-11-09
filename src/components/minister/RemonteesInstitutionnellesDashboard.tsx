@@ -145,6 +145,7 @@ export function RemonteesInstitutionnellesDashboard() {
   const [loadingPrevisionsTresor, setLoadingPrevisionsTresor] = useState(false);
   const [previsionsParType, setPrevisionsParType] = useState<PrevisionsParType | null>(null);
   const [loadingPrevisionsParType, setLoadingPrevisionsParType] = useState(false);
+  const [generatingRedistributions, setGeneratingRedistributions] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -459,6 +460,27 @@ export function RemonteesInstitutionnellesDashboard() {
     }
   };
 
+  const genererRedistributions = async () => {
+    setGeneratingRedistributions(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('generer-redistributions');
+
+      if (error) throw error;
+
+      toast.success(data.message || "Redistributions générées avec succès");
+      console.log("✅ Résultat:", data);
+      
+      // Recharger les données
+      await loadData();
+      await loadComparaisonAnnuelle();
+    } catch (error) {
+      console.error("❌ Erreur génération redistributions:", error);
+      toast.error("Erreur lors de la génération des redistributions");
+    } finally {
+      setGeneratingRedistributions(false);
+    }
+  };
+
   const genererPrevisionsRemontees = async () => {
     try {
       setLoadingPrevisionsRemontees(true);
@@ -640,6 +662,18 @@ export function RemonteesInstitutionnellesDashboard() {
                   ))}
                 </SelectContent>
               </Select>
+              <Button 
+                onClick={genererRedistributions} 
+                disabled={generatingRedistributions}
+                variant="outline"
+              >
+                {generatingRedistributions ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Sparkles className="h-4 w-4 mr-2" />
+                )}
+                Générer Redistributions
+              </Button>
               <Button onClick={handleExportPDF} disabled={exporting}>
                 {exporting ? (
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />

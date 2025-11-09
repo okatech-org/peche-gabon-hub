@@ -3506,9 +3506,10 @@ export type Database = {
           periode_annee: number
           periode_mois: number
           pourcentage_applique: number
+          quittance_id: string | null
           reference_virement: string | null
           statut_virement: string
-          taxe_id: string
+          taxe_id: string | null
           updated_at: string
         }
         Insert: {
@@ -3520,9 +3521,10 @@ export type Database = {
           periode_annee: number
           periode_mois: number
           pourcentage_applique: number
+          quittance_id?: string | null
           reference_virement?: string | null
           statut_virement?: string
-          taxe_id: string
+          taxe_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -3534,9 +3536,10 @@ export type Database = {
           periode_annee?: number
           periode_mois?: number
           pourcentage_applique?: number
+          quittance_id?: string | null
           reference_virement?: string | null
           statut_virement?: string
-          taxe_id?: string
+          taxe_id?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -3545,6 +3548,13 @@ export type Database = {
             columns: ["institution_id"]
             isOneToOne: false
             referencedRelation: "repartition_institutionnelle"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "remontees_effectives_quittance_id_fkey"
+            columns: ["quittance_id"]
+            isOneToOne: false
+            referencedRelation: "quittances"
             referencedColumns: ["id"]
           },
           {
