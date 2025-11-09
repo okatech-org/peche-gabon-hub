@@ -55,9 +55,9 @@ export default function DailyBriefing() {
     }
   };
 
-  const playBriefing = async () => {
-    if (!briefing?.text) {
-      toast.error("Aucun texte disponible");
+  const playBriefing = () => {
+    if (!briefing?.audio) {
+      toast.error("Aucun audio disponible");
       return;
     }
 
@@ -68,38 +68,24 @@ export default function DailyBriefing() {
         audioRef.current = null;
       }
 
-      setPlaying(true);
-      toast.info("Génération de l'audio avec iAsted...");
+      // Create audio element
+      const audio = new Audio(`data:audio/mpeg;base64,${briefing.audio}`);
+      audioRef.current = audio;
 
-      // Generate audio using iAsted voice
-      const { data, error } = await supabase.functions.invoke('generate-greeting-audio', {
-        body: { text: briefing.text }
-      });
+      audio.onplay = () => setPlaying(true);
+      audio.onended = () => {
+        setPlaying(false);
+        audioRef.current = null;
+      };
+      audio.onerror = () => {
+        setPlaying(false);
+        audioRef.current = null;
+        toast.error("Erreur de lecture audio");
+      };
 
-      if (error) throw error;
-
-      if (data?.audioContent) {
-        // Create audio element with iAsted voice
-        const audio = new Audio(`data:audio/mpeg;base64,${data.audioContent}`);
-        audioRef.current = audio;
-
-        audio.onended = () => {
-          setPlaying(false);
-          audioRef.current = null;
-        };
-        audio.onerror = () => {
-          setPlaying(false);
-          audioRef.current = null;
-          toast.error("Erreur de lecture audio");
-        };
-
-        await audio.play();
-      } else {
-        throw new Error('Aucun audio généré');
-      }
+      audio.play();
     } catch (error) {
       console.error('Error playing audio:', error);
-      setPlaying(false);
       toast.error("Impossible de lire l'audio");
     }
   };

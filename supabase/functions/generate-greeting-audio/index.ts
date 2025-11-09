@@ -1,6 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
-import { encode as base64Encode } from "https://deno.land/std@0.168.0/encoding/base64.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -37,7 +36,7 @@ serve(async (req) => {
       body: JSON.stringify({
         model: 'tts-1',
         input: text,
-        voice: 'alloy', // Voix par défaut fiable
+        voice: 'onyx', // Voix masculine professionnelle
         response_format: 'mp3',
       }),
     });
@@ -48,10 +47,11 @@ serve(async (req) => {
       throw new Error(`Failed to generate speech: ${error}`);
     }
 
-    // Convert audio buffer to base64 using std encoder to avoid stack issues
+    // Convert audio buffer to base64
     const arrayBuffer = await response.arrayBuffer();
-    const bytes = new Uint8Array(arrayBuffer);
-    const base64Audio = base64Encode(bytes.buffer);
+    const base64Audio = btoa(
+      String.fromCharCode(...new Uint8Array(arrayBuffer))
+    );
 
     console.log('Greeting audio generated successfully');
 
