@@ -4408,6 +4408,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      has_super_admin_role: { Args: { user_id: string }; Returns: boolean }
       log_action: {
         Args: {
           _action: string
@@ -4450,6 +4451,26 @@ export type Database = {
         | "artisanale_motorisee"
         | "artisanale_non_motorisee"
         | "semi_industrielle"
+      user_role:
+        | "admin"
+        | "super_admin"
+        | "ministre"
+        | "direction_centrale"
+        | "direction_provinciale"
+        | "dgpa"
+        | "anpa"
+        | "agasa"
+        | "dgmm"
+        | "oprag"
+        | "anpn"
+        | "corep"
+        | "pecheur"
+        | "gestionnaire_coop"
+        | "armateur_pi"
+        | "inspecteur"
+        | "agent_collecte"
+        | "observateur_pi"
+        | "analyste"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -4604,6 +4625,27 @@ export const Constants = {
         "artisanale_motorisee",
         "artisanale_non_motorisee",
         "semi_industrielle",
+      ],
+      user_role: [
+        "admin",
+        "super_admin",
+        "ministre",
+        "direction_centrale",
+        "direction_provinciale",
+        "dgpa",
+        "anpa",
+        "agasa",
+        "dgmm",
+        "oprag",
+        "anpn",
+        "corep",
+        "pecheur",
+        "gestionnaire_coop",
+        "armateur_pi",
+        "inspecteur",
+        "agent_collecte",
+        "observateur_pi",
+        "analyste",
       ],
     },
   },
