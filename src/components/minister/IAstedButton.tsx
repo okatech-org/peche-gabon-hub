@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Mic, MessageCircle, Brain, X } from 'lucide-react';
+import { Mic, MessageCircle, Brain, X, Repeat } from 'lucide-react';
 import { AudioLevelIndicator } from './AudioLevelIndicator';
 
 interface IAstedButtonProps {
@@ -11,6 +11,7 @@ interface IAstedButtonProps {
   voiceProcessing?: boolean;
   isInterfaceOpen?: boolean;
   audioLevel?: number;
+  continuousMode?: boolean;
 }
 
 interface Shockwave {
@@ -1017,7 +1018,8 @@ export const IAstedButton: React.FC<IAstedButtonProps> = ({
   voiceSpeaking = false, 
   voiceProcessing = false, 
   isInterfaceOpen = false,
-  audioLevel = 0 
+  audioLevel = 0,
+  continuousMode = false
 }) => {
   const [shockwaves, setShockwaves] = useState<Shockwave[]>([]);
   const [isClicked, setIsClicked] = useState(false);
@@ -1182,6 +1184,16 @@ export const IAstedButton: React.FC<IAstedButtonProps> = ({
           >
             <X className="h-4 w-4 text-destructive-foreground" />
           </button>
+        )}
+        
+        {/* Badge Mode Continu - visible toujours quand activé */}
+        {continuousMode && (
+          <div
+            className="absolute -top-3 -left-3 z-[9999] w-10 h-10 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 shadow-lg flex items-center justify-center animate-in fade-in zoom-in"
+            title="Mode conversation continue actif"
+          >
+            <Repeat className="h-5 w-5 text-white animate-pulse" />
+          </div>
         )}
         
         <div className="perspective">

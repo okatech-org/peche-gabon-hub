@@ -404,5 +404,6 @@ export const useVoiceInteraction = () => {
     isThinking: voiceState === 'thinking',
     isSpeaking: voiceState === 'speaking',
     audioLevel,
+    continuousMode,
   };
 };
