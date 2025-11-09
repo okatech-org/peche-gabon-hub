@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { logger } from "@/lib/logger";
+import { useMapboxToken } from "@/hooks/useMapboxToken";
 
 interface Inspection {
   id: string;
@@ -125,31 +126,16 @@ export default function Carte() {
   const [showHeatmap, setShowHeatmap] = useState(false);
   const [heatmapFilter, setHeatmapFilter] = useState<string>("tous");
 
-  // Token Mapbox récupéré dynamiquement via une fonction backend (sécurisé)
-  const [mapboxToken, setMapboxToken] = useState<string | null>(null);
+  // Token Mapbox via hook sécurisé
+  const { token: mapboxToken, isLoading: tokenLoading, error: tokenError } = useMapboxToken();
 
-  // Récupérer le token depuis l'edge function
+  // Gérer l'erreur de token via le hook
   useEffect(() => {
-    let mounted = true;
-    (async () => {
-      try {
-        const { data, error } = await (await import("@/integrations/supabase/client")).supabase
-          .functions.invoke("get-mapbox-token");
-        if (error || !data?.token) {
-          logger.error("Token Mapbox manquant", error);
-          setErrorMsg("Clé Mapbox introuvable. Mettez à jour le secret et rafraîchissez.");
-          setIsLoading(false);
-          return;
-        }
-        if (mounted) setMapboxToken(data.token);
-      } catch (e) {
-        logger.error("Erreur récupération token Mapbox:", e);
-        setErrorMsg("Impossible de récupérer la clé Mapbox.");
-        setIsLoading(false);
-      }
-    })();
-    return () => { mounted = false };
-  }, []);
+    if (tokenError) {
+      setErrorMsg(tokenError);
+      setIsLoading(false);
+    }
+  }, [tokenError]);
 
   // Initialiser la carte une seule fois
   useEffect(() => {
@@ -181,25 +167,29 @@ export default function Carte() {
         });
 
         map.current.on("error", (e) => {
-          // Mapbox déclenche parfois des "non-fatal errors" (ex: tuiles manquantes)
-          // On n'affiche l'overlay que si l'erreur est critique (token invalide) OU si la carte n'a pas encore fini de charger
           const err: any = (e as any)?.error;
           const message: string = typeof err === 'string' ? err : err?.message || '';
           const status = err?.status || err?.response?.status;
           const tokenError = /access token|unauthorized|forbidden|invalid token/i.test(message) || [401,403].includes(status);
-          const beforeLoaded = map.current && !map.current.loaded();
+          const styleError = /style|failed to load style|not found/i.test(message);
 
-          if (tokenError || beforeLoaded) {
-            logger.error("❌ Erreur Mapbox critique:", e);
-            setErrorMsg(tokenError
-              ? "Clé API Mapbox invalide ou manquante. Mettez à jour le secret et rafraîchissez."
-              : "Erreur lors du chargement de la carte. Veuillez réessayer.");
+          if (tokenError) {
+            logger.error("❌ Erreur Mapbox (token):", e);
+            setErrorMsg("Clé API Mapbox invalide ou manquante. Mettez à jour le secret et rafraîchissez.");
             setIsLoading(false);
-            if (tokenError) toast.error("Clé API Mapbox invalide ou manquante");
-          } else {
-            // Bruit réduit: log en warning sans bloquer l'affichage
-            logger.warn?.("⚠️ Erreur Mapbox non critique (ignorée)", e);
+            toast.error("Clé API Mapbox invalide ou manquante");
+            return;
           }
+
+          if (styleError && !(map.current && map.current.loaded())) {
+            logger.error("❌ Erreur de style Mapbox avant chargement:", e);
+            setErrorMsg("Erreur lors du chargement du style de la carte. Réessayez.");
+            setIsLoading(false);
+            return;
+          }
+
+          // Bruit réduit: log en warning sans bloquer l'affichage
+          logger.warn?.("⚠️ Erreur Mapbox non critique (ignorée)", e);
         });
 
       } catch (error) {
@@ -673,7 +663,7 @@ export default function Carte() {
 
       {/* Carte */}
       <Card className="overflow-hidden relative">
-        {isLoading && (
+        {(isLoading || tokenLoading) && (
           <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/80 backdrop-blur-sm">
             <div className="text-center space-y-2">
               <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
