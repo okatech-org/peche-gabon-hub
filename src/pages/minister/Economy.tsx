@@ -1,6 +1,6 @@
 import EconomicStats from "@/components/minister/EconomicStats";
 import FiscalStatsMinister from "@/components/minister/FiscalStatsMinister";
-import FiscalDataExplorer from "@/components/minister/FiscalDataExplorer";
+import CSVDataExplorer from "@/components/admin/CSVDataExplorer";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function Economy() {
@@ -23,7 +23,7 @@ export default function Economy() {
         </TabsContent>
         
         <TabsContent value="data" className="mt-6">
-          <FiscalDataExplorer />
+          <CSVDataExplorer />
         </TabsContent>
         
         <TabsContent value="economy" className="mt-6">
