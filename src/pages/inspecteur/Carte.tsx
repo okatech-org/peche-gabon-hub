@@ -117,7 +117,6 @@ export default function Carte() {
   const [isMapReady, setIsMapReady] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [initNonce, setInitNonce] = useState(0);
   const [inspections, setInspections] = useState<Inspection[]>(mockInspections);
   const [filterType, setFilterType] = useState<string>("tous");
   const [filterStatut, setFilterStatut] = useState<string>("tous");
@@ -129,52 +128,59 @@ export default function Carte() {
     []
   );
 
-  // Initialiser la carte (une fois + lors d'un retry)
+  // Initialiser la carte une seule fois
   useEffect(() => {
-    if (!mapContainer.current || map.current || !mapboxToken) return;
+    if (!mapContainer.current || map.current) return;
 
-    console.log("Initialisation de la carte Mapbox...");
-    console.log("Token présent:", mapboxToken ? "Oui" : "Non");
+    console.log("🗺️ Initialisation de la carte Mapbox...");
+    console.log("Token présent:", mapboxToken ? "✅ Oui" : "❌ Non");
 
-    try {
-      mapboxgl.accessToken = mapboxToken;
+    // Petit délai pour s'assurer que le container est bien monté
+    const timer = setTimeout(() => {
+      try {
+        mapboxgl.accessToken = mapboxToken;
 
-      map.current = new mapboxgl.Map({
-        container: mapContainer.current,
-        style: "mapbox://styles/mapbox/streets-v12",
-        center: [9.4673, 0.4162], // Libreville, Gabon
-        zoom: 6,
-      });
+        map.current = new mapboxgl.Map({
+          container: mapContainer.current!,
+          style: "mapbox://styles/mapbox/streets-v12",
+          center: [9.4673, 0.4162], // Libreville, Gabon
+          zoom: 6,
+        });
 
-      map.current.addControl(new mapboxgl.NavigationControl({ visualizePitch: true }), "top-right");
-      map.current.addControl(new mapboxgl.FullscreenControl(), "top-right");
+        map.current.addControl(new mapboxgl.NavigationControl({ visualizePitch: true }), "top-right");
+        map.current.addControl(new mapboxgl.FullscreenControl(), "top-right");
 
-      map.current.on("load", () => {
-        console.log("Carte Mapbox chargée avec succès");
-        setErrorMsg(null);
-        setIsMapReady(true);
+        map.current.on("load", () => {
+          console.log("✅ Carte Mapbox chargée avec succès");
+          setErrorMsg(null);
+          setIsMapReady(true);
+          setIsLoading(false);
+          toast.success("Carte chargée");
+        });
+
+        map.current.on("error", (e) => {
+          console.error("❌ Erreur Mapbox:", e);
+          setErrorMsg("Erreur lors du chargement de la carte. Vérifiez la clé API Mapbox.");
+          setIsLoading(false);
+          toast.error("Erreur de chargement de la carte");
+        });
+
+      } catch (error) {
+        console.error("❌ Erreur d'initialisation:", error);
+        setErrorMsg("Impossible d'initialiser la carte Mapbox.");
         setIsLoading(false);
-      });
-
-      map.current.on("error", (e) => {
-        console.error("Erreur Mapbox:", e);
-        setErrorMsg("Erreur lors du chargement des tuiles de carte. Vérifiez le token ou la connexion réseau.");
-        setIsLoading(false);
-      });
-
-    } catch (error) {
-      console.error("Erreur d'initialisation de la carte:", error);
-      setErrorMsg("Impossible d'initialiser la carte.");
-      setIsLoading(false);
-    }
+        toast.error("Erreur d'initialisation");
+      }
+    }, 100);
 
     return () => {
+      clearTimeout(timer);
       if (map.current) {
         map.current.remove();
         map.current = null;
       }
     };
-  }, [initNonce]); // relance via initNonce
+  }, [mapboxToken]);
 
   // Ajouter les marqueurs
   useEffect(() => {
@@ -417,8 +423,9 @@ export default function Carte() {
                   variant="default" 
                   onClick={() => { 
                     setIsLoading(true); 
-                    setErrorMsg(null); 
-                    setInitNonce((n) => n + 1); 
+                    setErrorMsg(null);
+                    // Forcer un rechargement complet de la page
+                    window.location.reload();
                   }}
                 >
                   Réessayer
