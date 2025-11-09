@@ -53,12 +53,12 @@ export function SuperAdminSidebar() {
   const isCollapsed = state === "collapsed";
 
   return (
-    <Sidebar collapsible="icon" className="border-r border-border/30 bg-[#F5F5F5]">
-      <SidebarContent className="bg-[#F5F5F5] py-4">
+    <Sidebar collapsible="icon" className="border-r border-sidebar-border bg-sidebar">
+      <SidebarContent className="bg-sidebar py-4">
         {menuItems.map((section) => (
           <SidebarGroup key={section.group} className="py-2">
             {!isCollapsed && (
-              <SidebarGroupLabel className="text-[#666666] text-[10px] uppercase tracking-wider font-semibold px-4 mb-2">
+              <SidebarGroupLabel className="text-muted-foreground text-[10px] uppercase tracking-wider font-semibold px-4 mb-2">
                 {section.group}
               </SidebarGroupLabel>
             )}
@@ -69,10 +69,10 @@ export function SuperAdminSidebar() {
                     <SidebarMenuButton asChild>
                       <NavLink
                         to={item.url}
-                        className="flex items-center gap-3 rounded-xl px-4 py-2.5 text-[#666666] hover:bg-white/60 transition-all duration-200 group"
-                        activeClassName="bg-white text-[#1A1A1A] font-medium shadow-[0_2px_8px_rgba(0,0,0,0.08)]"
+                        className="flex items-center gap-3 rounded-xl px-4 py-2.5 text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground transition-all duration-200 group"
+                        activeClassName="bg-primary/10 text-primary font-medium shadow-elevated border border-primary/20"
                       >
-                        <item.icon className="h-[18px] w-[18px] flex-shrink-0" />
+                        <item.icon className="h-[18px] w-[18px] flex-shrink-0 group-hover:scale-110 transition-transform" />
                         {!isCollapsed && <span className="text-[15px]">{item.title}</span>}
                       </NavLink>
                     </SidebarMenuButton>

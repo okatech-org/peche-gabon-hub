@@ -8,114 +8,118 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    /* Nuances de gris neutres */
-    --background: 0 0% 98%;
-    --foreground: 0 0% 15%;
+    /* Sorare Light Theme */
+    --background: 220 20% 97%;
+    --foreground: 220 15% 15%;
 
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 15%;
+    --card-foreground: 220 15% 15%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 15%;
+    --popover-foreground: 220 15% 15%;
 
-    /* Gris foncé pour le branding */
-    --primary: 0 0% 20%;
+    /* Bleu Sorare électrique */
+    --primary: 217 91% 60%;
     --primary-foreground: 0 0% 100%;
-    --primary-hover: 0 0% 15%;
+    --primary-hover: 217 91% 55%;
     
-    /* Gris moyen pour actions secondaires */
-    --secondary: 0 0% 45%;
+    /* Gris foncé élégant */
+    --secondary: 220 15% 25%;
     --secondary-foreground: 0 0% 100%;
-    --secondary-hover: 0 0% 40%;
+    --secondary-hover: 220 15% 20%;
 
-    /* Gris clair pour accents */
-    --accent: 0 0% 60%;
-    --accent-foreground: 0 0% 10%;
-    --accent-hover: 0 0% 55%;
+    /* Accent cyan */
+    --accent: 187 85% 55%;
+    --accent-foreground: 0 0% 100%;
+    --accent-hover: 187 85% 50%;
 
-    --muted: 0 0% 92%;
-    --muted-foreground: 0 0% 40%;
+    --muted: 220 15% 92%;
+    --muted-foreground: 220 10% 45%;
 
-    --destructive: 0 70% 50%;
+    --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 0 0% 88%;
-    --input: 0 0% 88%;
-    --ring: 0 0% 20%;
+    --border: 220 15% 88%;
+    --input: 220 15% 88%;
+    --ring: 217 91% 60%;
 
     --radius: 0.75rem;
 
-    /* Gradients en nuances de gris */
-    --gradient-ocean: linear-gradient(135deg, hsl(0 0% 20%), hsl(0 0% 35%));
-    --gradient-sunset: linear-gradient(135deg, hsl(0 0% 50%), hsl(0 0% 40%));
-    --gradient-subtle: linear-gradient(180deg, hsl(0 0% 98%), hsl(0 0% 96%));
+    /* Gradients Sorare */
+    --gradient-ocean: linear-gradient(135deg, hsl(217 91% 60%), hsl(187 85% 55%));
+    --gradient-sunset: linear-gradient(135deg, hsl(280 70% 60%), hsl(217 91% 60%));
+    --gradient-subtle: linear-gradient(180deg, hsl(220 20% 97%), hsl(220 20% 95%));
     
-    /* Ombres élégantes */
-    --shadow-card: 0 2px 8px -2px hsl(0 0% 70% / 0.15);
-    --shadow-elevated: 0 8px 24px -8px hsl(0 0% 60% / 0.2);
+    /* Ombres prononcées */
+    --shadow-card: 0 4px 16px -4px hsl(217 91% 60% / 0.15);
+    --shadow-elevated: 0 12px 32px -8px hsl(217 91% 60% / 0.25);
     
     /* Transitions fluides */
     --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
-    --sidebar-background: 0 0% 96%;
-    --sidebar-foreground: 0 0% 20%;
-    --sidebar-primary: 0 0% 20%;
+    --sidebar-background: 220 20% 95%;
+    --sidebar-foreground: 220 15% 20%;
+    --sidebar-primary: 217 91% 60%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 0 0% 92%;
-    --sidebar-accent-foreground: 0 0% 20%;
-    --sidebar-border: 0 0% 88%;
-    --sidebar-ring: 0 0% 20%;
+    --sidebar-accent: 220 15% 90%;
+    --sidebar-accent-foreground: 220 15% 20%;
+    --sidebar-border: 220 15% 88%;
+    --sidebar-ring: 217 91% 60%;
   }
 
   .dark {
-    --background: 0 0% 7%;
-    --foreground: 0 0% 98%;
+    /* Sorare Dark Theme - Noir profond avec accents bleus */
+    --background: 220 25% 6%;
+    --foreground: 220 10% 98%;
 
-    --card: 0 0% 12%;
-    --card-foreground: 0 0% 98%;
+    --card: 220 20% 10%;
+    --card-foreground: 220 10% 98%;
 
-    --popover: 0 0% 10%;
-    --popover-foreground: 0 0% 98%;
+    --popover: 220 20% 10%;
+    --popover-foreground: 220 10% 98%;
 
-    --primary: 240 100% 70%;
+    /* Bleu Sorare électrique vif */
+    --primary: 217 91% 60%;
     --primary-foreground: 0 0% 100%;
-    --primary-hover: 240 100% 75%;
+    --primary-hover: 217 91% 65%;
 
-    --secondary: 0 0% 20%;
-    --secondary-foreground: 0 0% 95%;
-    --secondary-hover: 0 0% 25%;
+    /* Gris foncé élégant */
+    --secondary: 220 15% 20%;
+    --secondary-foreground: 220 10% 95%;
+    --secondary-hover: 220 15% 25%;
 
-    --accent: 280 60% 65%;
+    /* Cyan éclatant */
+    --accent: 187 85% 55%;
     --accent-foreground: 0 0% 100%;
-    --accent-hover: 280 60% 70%;
+    --accent-hover: 187 85% 60%;
 
-    --muted: 0 0% 16%;
-    --muted-foreground: 0 0% 60%;
+    --muted: 220 20% 15%;
+    --muted-foreground: 220 10% 60%;
 
-    --destructive: 0 65% 55%;
+    --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 0 0% 20%;
-    --input: 0 0% 16%;
-    --ring: 240 100% 70%;
+    --border: 220 20% 18%;
+    --input: 220 20% 15%;
+    --ring: 217 91% 60%;
 
-    --gradient-ocean: linear-gradient(135deg, hsl(200 80% 50% / 0.15), hsl(240 100% 70% / 0.15));
-    --gradient-sunset: linear-gradient(135deg, hsl(340 70% 60% / 0.15), hsl(20 90% 60% / 0.15));
-    --gradient-subtle: linear-gradient(180deg, hsl(0 0% 7%), hsl(0 0% 10%));
-    --gradient-purple: linear-gradient(135deg, hsl(280 60% 65% / 0.15), hsl(240 100% 70% / 0.15));
-    --gradient-green: linear-gradient(135deg, hsl(160 50% 55% / 0.15), hsl(140 60% 50% / 0.15));
+    /* Gradients premium Sorare */
+    --gradient-ocean: linear-gradient(135deg, hsl(217 91% 60% / 0.2), hsl(187 85% 55% / 0.2));
+    --gradient-sunset: linear-gradient(135deg, hsl(280 70% 60% / 0.2), hsl(217 91% 60% / 0.2));
+    --gradient-subtle: linear-gradient(180deg, hsl(220 25% 6%), hsl(220 20% 10%));
     
-    --shadow-card: 0 4px 16px -4px hsl(0 0% 0% / 0.4);
-    --shadow-elevated: 0 12px 32px -8px hsl(0 0% 0% / 0.6);
+    /* Ombres avec glow bleu */
+    --shadow-card: 0 4px 16px -4px hsl(217 91% 60% / 0.3), 0 0 32px -12px hsl(217 91% 60% / 0.1);
+    --shadow-elevated: 0 12px 32px -8px hsl(217 91% 60% / 0.4), 0 0 48px -16px hsl(217 91% 60% / 0.2);
 
-    --sidebar-background: 0 0% 9%;
-    --sidebar-foreground: 0 0% 90%;
-    --sidebar-primary: 240 100% 70%;
+    --sidebar-background: 220 25% 8%;
+    --sidebar-foreground: 220 10% 95%;
+    --sidebar-primary: 217 91% 60%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 0 0% 14%;
-    --sidebar-accent-foreground: 0 0% 90%;
-    --sidebar-border: 0 0% 16%;
-    --sidebar-ring: 240 100% 70%;
+    --sidebar-accent: 220 20% 15%;
+    --sidebar-accent-foreground: 220 10% 95%;
+    --sidebar-border: 220 20% 18%;
+    --sidebar-ring: 217 91% 60%;
   }
 }
 

@@ -20,7 +20,7 @@ const SuperAdminDashboard = () => {
 
   return (
     <SidebarProvider defaultOpen={true}>
-      <div className="min-h-screen flex w-full bg-[#121212]">
+      <div className="min-h-screen flex w-full bg-background">
         <SuperAdminSidebar />
         
         <div className="flex-1 flex flex-col">
