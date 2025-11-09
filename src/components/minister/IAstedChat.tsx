@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
-import { Mic, Send, Volume2, VolumeX, Bot, User, History, Plus, X, Check } from "lucide-react";
+import { Mic, Send, Volume2, VolumeX, Bot, User, History, Plus, X, Check, BookOpen } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { AudioWaveform } from "./AudioWaveform";
 import { IAstedHistory } from "./IAstedHistory";
@@ -41,6 +41,7 @@ export const IAstedChat = () => {
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
   const audioPreviewRef = useRef<HTMLAudioElement>(null);
   const [isEnhancingAudio, setIsEnhancingAudio] = useState(false);
+  const [isSynthesizing, setIsSynthesizing] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [showHistory, setShowHistory] = useState(false);
@@ -523,6 +524,54 @@ export const IAstedChat = () => {
     }
   };
 
+  const synthesizeConversation = async () => {
+    if (!conversationId) {
+      toast({
+        title: "Aucune conversation active",
+        description: "Commencez une conversation avant de la synthétiser.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (messages.length < 2) {
+      toast({
+        title: "Conversation trop courte",
+        description: "Ajoutez plus de messages avant de synthétiser.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsSynthesizing(true);
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('synthesize-conversation-to-knowledge', {
+        body: { conversationId }
+      });
+
+      if (error) throw error;
+
+      if (data.success) {
+        toast({
+          title: "✅ Synthèse créée",
+          description: `"${data.synthesis.titre}" ajouté à la base de connaissance`,
+        });
+      } else {
+        throw new Error(data.message || 'Failed to synthesize');
+      }
+    } catch (error) {
+      console.error('Error synthesizing conversation:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de synthétiser la conversation.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSynthesizing(false);
+    }
+  };
+
   const enhanceAudioQuality = async (audioBlob: Blob): Promise<Blob> => {
     try {
       const arrayBuffer = await audioBlob.arrayBuffer();
@@ -641,6 +690,19 @@ export const IAstedChat = () => {
             </div>
           </div>
           <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={synthesizeConversation}
+              title="Synthétiser dans la base de connaissance"
+              disabled={!conversationId || messages.length < 2 || isSynthesizing}
+            >
+              {isSynthesizing ? (
+                <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+              ) : (
+                <BookOpen className="h-4 w-4" />
+              )}
+            </Button>
             <Button
               variant="outline"
               size="icon"
