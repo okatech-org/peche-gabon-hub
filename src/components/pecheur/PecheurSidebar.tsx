@@ -81,43 +81,39 @@ export function PecheurSidebar() {
 
   return (
     <Sidebar
-      className={`border-r border-border bg-card ${collapsed ? "w-16" : "w-64"} transition-all duration-300`}
+      className={`border-r border-border bg-card transition-all duration-300`}
       collapsible="icon"
     >
       <SidebarHeader className="border-b border-border p-4">
-        {!collapsed ? (
-          <div className="flex items-center gap-3">
-            <Logo size="sm" />
+        <div className="flex items-center gap-3">
+          <Logo size="sm" />
+          {!collapsed && (
             <div className="flex-1 min-w-0">
               <h2 className="font-bold text-sm truncate">PÊCHE GABON</h2>
               <p className="text-xs text-muted-foreground truncate">Espace Pêcheur</p>
             </div>
-          </div>
-        ) : (
-          <div className="flex items-center justify-center">
-            <Logo size="sm" />
-          </div>
-        )}
+          )}
+        </div>
       </SidebarHeader>
 
       <SidebarContent className="py-4">
         <SidebarGroup>
           <SidebarGroupContent className="px-2">
-            <SidebarMenu className="space-y-1">
+            <SidebarMenu className="space-y-2">
               {navigationItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
                     <NavLink
                       to={item.url}
                       end
-                      className="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 hover:bg-accent/50 group"
-                      activeClassName="bg-primary text-primary-foreground font-medium hover:bg-primary"
-                      title={collapsed ? item.title : undefined}
+                      className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 hover:bg-accent group"
+                      activeClassName="bg-primary text-primary-foreground font-semibold hover:bg-primary shadow-sm"
+                      title={item.title}
                     >
-                      <item.icon className={`${collapsed ? "h-5 w-5" : "h-5 w-5"} flex-shrink-0 group-hover:scale-110 transition-transform`} />
-                      {!collapsed && (
-                        <span className="text-sm">{item.title}</span>
-                      )}
+                      <item.icon className="h-5 w-5 flex-shrink-0 group-hover:scale-110 transition-transform" />
+                      <span className={`text-sm transition-opacity duration-200 ${collapsed ? 'opacity-0 w-0' : 'opacity-100'}`}>
+                        {item.title}
+                      </span>
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -128,14 +124,14 @@ export function PecheurSidebar() {
       </SidebarContent>
 
       <SidebarFooter className="border-t border-border p-3">
-        {!collapsed ? (
-          <div className="space-y-3">
-            <div className="flex items-center gap-3 p-2 rounded-lg bg-muted/30">
-              <Avatar className="h-9 w-9 border-2 border-primary/20">
-                <AvatarFallback className="bg-gradient-to-br from-primary to-primary/80 text-primary-foreground font-semibold text-xs">
-                  {getInitials()}
-                </AvatarFallback>
-              </Avatar>
+        <div className="space-y-3">
+          <div className="flex items-center gap-3 p-2 rounded-lg bg-muted/30">
+            <Avatar className="h-9 w-9 border-2 border-primary/20">
+              <AvatarFallback className="bg-gradient-to-br from-primary to-primary/80 text-primary-foreground font-semibold text-xs">
+                {getInitials()}
+              </AvatarFallback>
+            </Avatar>
+            {!collapsed && (
               <div className="flex-1 min-w-0">
                 <p className="text-xs font-medium truncate">{user?.email}</p>
                 <div className="flex items-center gap-1.5">
@@ -143,35 +139,19 @@ export function PecheurSidebar() {
                   <span className="text-[10px] text-muted-foreground">En ligne</span>
                 </div>
               </div>
-            </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleSignOut}
-              className="w-full justify-start gap-2 h-9 text-xs hover:bg-destructive/10 hover:text-destructive transition-all"
-            >
-              <LogOut className="h-4 w-4" />
-              <span>Déconnexion</span>
-            </Button>
+            )}
           </div>
-        ) : (
-          <div className="flex flex-col items-center gap-2">
-            <Avatar className="h-8 w-8 border-2 border-primary/20">
-              <AvatarFallback className="bg-gradient-to-br from-primary to-primary/80 text-primary-foreground font-semibold text-[10px]">
-                {getInitials()}
-              </AvatarFallback>
-            </Avatar>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleSignOut}
-              className="p-2 hover:bg-destructive/10 hover:text-destructive transition-all"
-              title="Déconnexion"
-            >
-              <LogOut className="h-4 w-4" />
-            </Button>
-          </div>
-        )}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleSignOut}
+            className={`w-full gap-2 h-9 text-xs hover:bg-destructive/10 hover:text-destructive transition-all ${collapsed ? 'justify-center px-2' : 'justify-start'}`}
+            title="Déconnexion"
+          >
+            <LogOut className="h-4 w-4" />
+            {!collapsed && <span>Déconnexion</span>}
+          </Button>
+        </div>
       </SidebarFooter>
     </Sidebar>
   );

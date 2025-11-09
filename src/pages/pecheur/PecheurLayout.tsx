@@ -11,7 +11,7 @@ export default function PecheurLayout() {
   const { user } = useAuth();
 
   return (
-    <SidebarProvider defaultOpen={false}>
+    <SidebarProvider defaultOpen={true}>
       <DemoBadge />
       <div className="min-h-screen w-full flex bg-background">
         <PecheurSidebar />
