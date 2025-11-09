@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
 
 export type VoiceState = 'idle' | 'listening' | 'thinking' | 'speaking';
 
@@ -10,12 +11,15 @@ export const useVoiceInteraction = () => {
   const [audioChunks, setAudioChunks] = useState<Blob[]>([]);
   const [currentAudio, setCurrentAudio] = useState<HTMLAudioElement | null>(null);
   const [audioLevel, setAudioLevel] = useState<number>(0);
+  const [silenceDuration, setSilenceDuration] = useState<number>(2000);
+  const [silenceThreshold, setSilenceThreshold] = useState<number>(10);
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const animationFrameRef = useRef<number | null>(null);
   const silenceTimerRef = useRef<NodeJS.Timeout | null>(null);
   const lastSoundTimeRef = useRef<number>(Date.now());
   const { toast } = useToast();
+  const { user } = useAuth();
 
   useEffect(() => {
     return () => {
@@ -34,6 +38,35 @@ export const useVoiceInteraction = () => {
       }
     };
   }, [currentAudio]);
+
+  // Charger les préférences vocales de l'utilisateur
+  useEffect(() => {
+    const loadVoicePreferences = async () => {
+      if (!user) return;
+
+      try {
+        const { data, error } = await supabase
+          .from('user_preferences')
+          .select('voice_silence_duration, voice_silence_threshold')
+          .eq('user_id', user.id)
+          .single();
+
+        if (error && error.code !== 'PGRST116') {
+          console.error('Error loading voice preferences:', error);
+          return;
+        }
+
+        if (data) {
+          setSilenceDuration(data.voice_silence_duration || 2000);
+          setSilenceThreshold(data.voice_silence_threshold || 10);
+        }
+      } catch (error) {
+        console.error('Error loading voice preferences:', error);
+      }
+    };
+
+    loadVoicePreferences();
+  }, [user]);
 
   const getGreetingMessage = () => {
     const now = new Date();
@@ -131,10 +164,7 @@ export const useVoiceInteraction = () => {
     setAudioLevel(normalizedLevel);
 
     // Silence detection: if level is above threshold, update last sound time
-    const SILENCE_THRESHOLD = 10; // Adjust this value based on testing
-    const SILENCE_DURATION = 2000; // 2 seconds of silence
-    
-    if (normalizedLevel > SILENCE_THRESHOLD) {
+    if (normalizedLevel > silenceThreshold) {
       lastSoundTimeRef.current = Date.now();
       
       // Clear any existing silence timer
@@ -147,12 +177,12 @@ export const useVoiceInteraction = () => {
       if (!silenceTimerRef.current && voiceState === 'listening') {
         silenceTimerRef.current = setTimeout(() => {
           const timeSinceLastSound = Date.now() - lastSoundTimeRef.current;
-          if (timeSinceLastSound >= SILENCE_DURATION) {
+          if (timeSinceLastSound >= silenceDuration) {
             console.log('Silence detected, stopping recording');
             stopListening();
           }
           silenceTimerRef.current = null;
-        }, SILENCE_DURATION);
+        }, silenceDuration);
       }
     }
 

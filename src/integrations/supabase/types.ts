@@ -4265,6 +4265,8 @@ export type Database = {
           theme: string
           updated_at: string
           user_id: string
+          voice_silence_duration: number | null
+          voice_silence_threshold: number | null
         }
         Insert: {
           created_at?: string
@@ -4275,6 +4277,8 @@ export type Database = {
           theme?: string
           updated_at?: string
           user_id: string
+          voice_silence_duration?: number | null
+          voice_silence_threshold?: number | null
         }
         Update: {
           created_at?: string
@@ -4285,6 +4289,8 @@ export type Database = {
           theme?: string
           updated_at?: string
           user_id?: string
+          voice_silence_duration?: number | null
+          voice_silence_threshold?: number | null
         }
         Relationships: []
       }

@@ -9,7 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, ArrowLeft, Save, Languages, Palette, Bell } from "lucide-react";
+import { Slider } from "@/components/ui/slider";
+import { Loader2, ArrowLeft, Save, Languages, Palette, Bell, Mic } from "lucide-react";
 import { toast } from "sonner";
 
 interface UserPreferences {
@@ -17,6 +18,8 @@ interface UserPreferences {
   theme: "light" | "dark";
   email_notifications: boolean;
   push_notifications: boolean;
+  voice_silence_duration: number;
+  voice_silence_threshold: number;
 }
 
 const UserSettings = () => {
@@ -31,6 +34,8 @@ const UserSettings = () => {
     theme: theme,
     email_notifications: true,
     push_notifications: false,
+    voice_silence_duration: 2000,
+    voice_silence_threshold: 10,
   });
 
   useEffect(() => {
@@ -57,6 +62,8 @@ const UserSettings = () => {
           theme: data.theme as "light" | "dark",
           email_notifications: data.email_notifications,
           push_notifications: data.push_notifications,
+          voice_silence_duration: data.voice_silence_duration || 2000,
+          voice_silence_threshold: data.voice_silence_threshold || 10,
         };
         setPreferences(prefs);
         
@@ -84,6 +91,8 @@ const UserSettings = () => {
           theme: preferences.theme,
           email_notifications: preferences.email_notifications,
           push_notifications: preferences.push_notifications,
+          voice_silence_duration: preferences.voice_silence_duration,
+          voice_silence_threshold: preferences.voice_silence_threshold,
         }, {
           onConflict: "user_id",
         });
@@ -249,6 +258,72 @@ const UserSettings = () => {
                     setPreferences(prev => ({ ...prev, push_notifications: checked }))
                   }
                 />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Paramètres Vocaux */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <Mic className="h-5 w-5 text-primary" />
+                <CardTitle>Assistant Vocal</CardTitle>
+              </div>
+              <CardDescription>
+                Configurez les paramètres de détection vocale d'iAsted
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="voice-silence-duration">
+                      Durée de silence
+                    </Label>
+                    <span className="text-sm text-muted-foreground">
+                      {(preferences.voice_silence_duration / 1000).toFixed(1)}s
+                    </span>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Temps d'attente avant d'arrêter l'enregistrement en l'absence de parole
+                  </p>
+                  <Slider
+                    id="voice-silence-duration"
+                    min={1000}
+                    max={5000}
+                    step={500}
+                    value={[preferences.voice_silence_duration]}
+                    onValueChange={([value]) =>
+                      setPreferences(prev => ({ ...prev, voice_silence_duration: value }))
+                    }
+                    className="mt-2"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="voice-silence-threshold">
+                      Seuil de détection
+                    </Label>
+                    <span className="text-sm text-muted-foreground">
+                      {preferences.voice_silence_threshold}
+                    </span>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Sensibilité du microphone (plus bas = plus sensible au bruit ambiant)
+                  </p>
+                  <Slider
+                    id="voice-silence-threshold"
+                    min={5}
+                    max={30}
+                    step={1}
+                    value={[preferences.voice_silence_threshold]}
+                    onValueChange={([value]) =>
+                      setPreferences(prev => ({ ...prev, voice_silence_threshold: value }))
+                    }
+                    className="mt-2"
+                  />
+                </div>
               </div>
             </CardContent>
           </Card>
