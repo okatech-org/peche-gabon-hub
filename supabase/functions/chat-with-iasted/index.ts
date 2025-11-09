@@ -6,6 +6,10 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Cache configuration
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+let knowledgeBaseCache: { data: any; timestamp: number } | null = null;
+
 const SYSTEM_PROMPT = `Vous êtes l'assistant vocal officiel du Ministre de la Pêche et de l'Économie Maritime du Gabon. Vous avez accès à l'intégralité du système de gestion des pêches gabonaises et maîtrisez parfaitement tous ses modules.
 
 ## CONTEXTE DU SYSTÈME
@@ -95,10 +99,25 @@ serve(async (req) => {
       throw new Error('ELEVENLABS_API_KEY not configured');
     }
 
-    // Fetch knowledge base
-    console.log('Fetching knowledge base...');
-    const kbResponse = await fetch('https://lzqvrnuzgfuyxbpyqfxh.supabase.co/functions/v1/get-knowledge-base');
-    const knowledgeBase = await kbResponse.json();
+    // Fetch knowledge base with cache
+    let knowledgeBase;
+    const now = Date.now();
+    
+    if (knowledgeBaseCache && (now - knowledgeBaseCache.timestamp) < CACHE_TTL_MS) {
+      console.log('Using cached knowledge base');
+      knowledgeBase = knowledgeBaseCache.data;
+    } else {
+      console.log('Fetching fresh knowledge base...');
+      const kbResponse = await fetch('https://lzqvrnuzgfuyxbpyqfxh.supabase.co/functions/v1/get-knowledge-base');
+      knowledgeBase = await kbResponse.json();
+      
+      // Update cache
+      knowledgeBaseCache = {
+        data: knowledgeBase,
+        timestamp: now
+      };
+      console.log('Knowledge base cached');
+    }
 
     // Prepare messages with system prompt and knowledge base
     const enrichedMessages = [
