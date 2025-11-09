@@ -4005,6 +4005,45 @@ export type Database = {
           },
         ]
       }
+      statistiques_fiscales: {
+        Row: {
+          categorie: string
+          created_at: string | null
+          details: Json | null
+          id: string
+          montant_eur: number | null
+          montant_fcfa: number
+          nombre_contribuables: number | null
+          periode: string | null
+          type_taxe: string
+          updated_at: string | null
+        }
+        Insert: {
+          categorie: string
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          montant_eur?: number | null
+          montant_fcfa: number
+          nombre_contribuables?: number | null
+          periode?: string | null
+          type_taxe: string
+          updated_at?: string | null
+        }
+        Update: {
+          categorie?: string
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          montant_eur?: number | null
+          montant_fcfa?: number
+          nombre_contribuables?: number | null
+          periode?: string | null
+          type_taxe?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       strates: {
         Row: {
           code: string | null
