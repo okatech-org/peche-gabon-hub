@@ -75,16 +75,10 @@ const navigationSections = {
     title: "ÉCONOMIE & FINANCES",
     items: [
       { 
-        title: "Économie", 
+        title: "Économie & Finances", 
         url: "/minister-dashboard/economy", 
         icon: DollarSign,
-        description: "Exportations, valeur, prix"
-      },
-      { 
-        title: "Remontées Finances", 
-        url: "/minister-dashboard/institutional-flows", 
-        icon: Building2,
-        description: "Taxes et répartition institutionnelle"
+        description: "Taxes, exportations, répartition"
       },
     ]
   },

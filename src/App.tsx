@@ -27,7 +27,6 @@ import ArtisanalFishing from "./pages/minister/ArtisanalFishing";
 import IndustrialFishing from "./pages/minister/IndustrialFishing";
 import Surveillance from "./pages/minister/Surveillance";
 import Economy from "./pages/minister/Economy";
-import InstitutionalFlows from "./pages/minister/InstitutionalFlows";
 import Alerts from "./pages/minister/Alerts";
 import ActionsMinisterielles from "./pages/minister/ActionsMinisterielles";
 import Formations from "./pages/minister/Formations";
@@ -146,7 +145,6 @@ function App() {
               <Route path="industrial" element={<IndustrialFishing />} />
               <Route path="surveillance" element={<Surveillance />} />
               <Route path="economy" element={<Economy />} />
-              <Route path="institutional-flows" element={<InstitutionalFlows />} />
               <Route path="alerts" element={<Alerts />} />
               <Route path="remontees" element={<Remontees />} />
               <Route path="actions" element={<ActionsMinisterielles />} />
