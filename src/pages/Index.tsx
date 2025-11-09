@@ -35,7 +35,7 @@ const Index = () => {
           <div className="max-w-2xl">
             <div className="flex flex-col lg:flex-row items-center gap-3 mb-6">
               <Logo size="xl" className="drop-shadow-lg h-40 w-40 lg:h-64 lg:w-64 flex-shrink-0" />
-              <h1 className="text-5xl lg:text-7xl font-bold text-white">{t("hero.title")}</h1>
+              <h1 className="text-5xl lg:text-7xl font-bold text-white whitespace-nowrap">{t("hero.title")}</h1>
             </div>
             <p className="text-2xl lg:text-3xl mb-6 text-primary font-semibold">
               {t("hero.subtitle")}
