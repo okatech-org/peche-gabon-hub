@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Clock, DollarSign, UserPlus, Receipt, CheckCircle, AlertCircle } from "lucide-react";
+import { Clock, DollarSign, UserPlus, Receipt, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
 
@@ -14,54 +14,12 @@ interface Activity {
   amount?: number;
 }
 
-export const ActiviteRecente = () => {
-  // Données simulées - à remplacer par de vraies données
-  const activities: Activity[] = [
-    {
-      id: "1",
-      type: "paiement",
-      member: "Jean Mbongo",
-      description: "Paiement groupé de taxes",
-      timestamp: new Date(Date.now() - 1000 * 60 * 15),
-      status: "success",
-      amount: 125000,
-    },
-    {
-      id: "2",
-      type: "inscription",
-      member: "Marie Ondimba",
-      description: "Nouvelle inscription",
-      timestamp: new Date(Date.now() - 1000 * 60 * 45),
-      status: "success",
-    },
-    {
-      id: "3",
-      type: "taxe",
-      member: "Pierre Nguema",
-      description: "Déclaration de taxe",
-      timestamp: new Date(Date.now() - 1000 * 60 * 120),
-      status: "pending",
-      amount: 85000,
-    },
-    {
-      id: "4",
-      type: "validation",
-      member: "Sophie Moussavou",
-      description: "Validation de paiement",
-      timestamp: new Date(Date.now() - 1000 * 60 * 180),
-      status: "success",
-      amount: 150000,
-    },
-    {
-      id: "5",
-      type: "paiement",
-      member: "André Boussougou",
-      description: "Paiement de licence",
-      timestamp: new Date(Date.now() - 1000 * 60 * 240),
-      status: "success",
-      amount: 95000,
-    },
-  ];
+interface ActiviteRecenteProps {
+  activities: Activity[];
+  loading?: boolean;
+}
+
+export const ActiviteRecente = ({ activities, loading }: ActiviteRecenteProps) => {
 
   const getActivityIcon = (type: Activity["type"]) => {
     switch (type) {
@@ -121,48 +79,52 @@ export const ActiviteRecente = () => {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="space-y-3">
-          {activities.map((activity, index) => (
-            <div
-              key={activity.id}
-              className="flex items-start gap-3 p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors border border-border/40 animate-fade-in"
-              style={{ animationDelay: `${index * 50}ms` }}
-            >
-              {/* Icon */}
-              <div className={`p-2 rounded-lg ${getActivityColor(activity.type)} shrink-0`}>
-                {getActivityIcon(activity.type)}
-              </div>
-
-              {/* Content */}
-              <div className="flex-1 min-w-0">
-                <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <p className="font-medium text-sm">{activity.member}</p>
-                    <p className="text-xs text-muted-foreground">{activity.description}</p>
-                  </div>
-                  {getStatusBadge(activity.status)}
-                </div>
-
-                <div className="flex items-center gap-3 mt-2">
-                  <span className="text-xs text-muted-foreground flex items-center gap-1">
-                    <Clock className="h-3 w-3" />
-                    {formatDistanceToNow(activity.timestamp, { addSuffix: true, locale: fr })}
-                  </span>
-                  {activity.amount && (
-                    <span className="text-xs font-medium text-foreground">
-                      {activity.amount.toLocaleString()} FCFA
-                    </span>
-                  )}
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {activities.length === 0 && (
+        {loading ? (
+          <div className="flex items-center justify-center p-8">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          </div>
+        ) : activities.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
             <AlertCircle className="h-8 w-8 mx-auto mb-2 opacity-50" />
             <p className="text-sm">Aucune activité récente</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {activities.map((activity, index) => (
+              <div
+                key={activity.id}
+                className="flex items-start gap-3 p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors border border-border/40 animate-fade-in"
+                style={{ animationDelay: `${index * 50}ms` }}
+              >
+                {/* Icon */}
+                <div className={`p-2 rounded-lg ${getActivityColor(activity.type)} shrink-0`}>
+                  {getActivityIcon(activity.type)}
+                </div>
+
+                {/* Content */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <p className="font-medium text-sm">{activity.member}</p>
+                      <p className="text-xs text-muted-foreground">{activity.description}</p>
+                    </div>
+                    {getStatusBadge(activity.status)}
+                  </div>
+
+                  <div className="flex items-center gap-3 mt-2">
+                    <span className="text-xs text-muted-foreground flex items-center gap-1">
+                      <Clock className="h-3 w-3" />
+                      {formatDistanceToNow(activity.timestamp, { addSuffix: true, locale: fr })}
+                    </span>
+                    {activity.amount && (
+                      <span className="text-xs font-medium text-foreground">
+                        {activity.amount.toLocaleString()} FCFA
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </CardContent>

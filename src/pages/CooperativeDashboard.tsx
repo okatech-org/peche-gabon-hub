@@ -16,12 +16,15 @@ import { LanguageSelector } from "@/components/LanguageSelector";
 import { DemoBadge } from "@/components/DemoBadge";
 import { Toaster } from "@/components/ui/toaster";
 import { useState, useEffect } from "react";
+import { useCooperativeStats } from "@/hooks/useCooperativeStats";
+import { Loader2 } from "lucide-react";
 
 export default function CooperativeDashboard() {
   const [refreshKey, setRefreshKey] = useState(0);
   const [activeTab, setActiveTab] = useState("dashboard");
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [displayedTab, setDisplayedTab] = useState("dashboard");
+  const { loading, stats, recentActivities, refresh } = useCooperativeStats();
 
   useEffect(() => {
     if (activeTab !== displayedTab) {
@@ -34,12 +37,9 @@ export default function CooperativeDashboard() {
     }
   }, [activeTab, displayedTab]);
 
-  // Stats simulées - à remplacer par de vraies données
-  const stats = {
-    membresActifs: 127,
-    taxesEnCours: 34,
-    montantTotal: 45600000,
-    paiementsGroupes: 8
+  const handleRefresh = () => {
+    setRefreshKey(prev => prev + 1);
+    refresh();
   };
 
   // Contenu du dashboard
@@ -59,7 +59,7 @@ export default function CooperativeDashboard() {
             </div>
           </CardHeader>
           <CardContent className="relative space-y-2">
-            <div className="text-3xl font-bold">{stats.membresActifs}</div>
+            <div className="text-3xl font-bold">{loading ? <Loader2 className="h-8 w-8 animate-spin" /> : stats.membresActifs}</div>
             <p className="text-xs text-muted-foreground">Pêcheurs enregistrés</p>
             <Badge variant="secondary" className="bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20">
               Actif
@@ -79,7 +79,7 @@ export default function CooperativeDashboard() {
             </div>
           </CardHeader>
           <CardContent className="relative space-y-2">
-            <div className="text-3xl font-bold">{stats.taxesEnCours}</div>
+            <div className="text-3xl font-bold">{loading ? <Loader2 className="h-8 w-8 animate-spin" /> : stats.taxesEnCours}</div>
             <p className="text-xs text-muted-foreground">À traiter</p>
             <Badge variant="secondary" className="bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/20">
               En attente
@@ -99,7 +99,9 @@ export default function CooperativeDashboard() {
             </div>
           </CardHeader>
           <CardContent className="relative space-y-2">
-            <div className="text-2xl font-bold">{(stats.montantTotal / 1000000).toFixed(1)}M FCFA</div>
+            <div className="text-2xl font-bold">
+              {loading ? <Loader2 className="h-8 w-8 animate-spin" /> : `${(stats.montantTotal / 1000000).toFixed(1)}M FCFA`}
+            </div>
             <p className="text-xs text-muted-foreground">Ce mois</p>
             <Badge variant="secondary" className="bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20">
               +12%
@@ -119,7 +121,7 @@ export default function CooperativeDashboard() {
             </div>
           </CardHeader>
           <CardContent className="relative space-y-2">
-            <div className="text-3xl font-bold">{stats.paiementsGroupes}</div>
+            <div className="text-3xl font-bold">{loading ? <Loader2 className="h-8 w-8 animate-spin" /> : stats.paiementsGroupes}</div>
             <p className="text-xs text-muted-foreground">Ce mois</p>
             <Badge variant="secondary" className="bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20">
               Récents
@@ -130,7 +132,7 @@ export default function CooperativeDashboard() {
 
       {/* Activité Récente */}
       <div className="mt-6">
-        <ActiviteRecente />
+        <ActiviteRecente activities={recentActivities} loading={loading} />
       </div>
     </div>
   );
@@ -190,10 +192,11 @@ export default function CooperativeDashboard() {
                   <Button 
                     variant="outline" 
                     size="sm"
-                    onClick={() => setRefreshKey(prev => prev + 1)}
+                    onClick={handleRefresh}
+                    disabled={loading}
                     className="gap-2 hover:bg-primary/5 hover:text-primary hover:border-primary/30"
                   >
-                    <Activity className="h-4 w-4" />
+                    {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Activity className="h-4 w-4" />}
                     <span className="hidden sm:inline">Actualiser</span>
                   </Button>
                 </div>
