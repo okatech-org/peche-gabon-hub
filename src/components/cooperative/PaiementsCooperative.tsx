@@ -3,13 +3,16 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Receipt } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Loader2, Receipt, Printer } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import { ImprimerQuittanceDialog } from "./ImprimerQuittanceDialog";
 
 interface Paiement {
   id: string;
+  numero_quittance: string;
   date_paiement: string;
   montant_total: number;
   mode_paiement: string;
@@ -21,6 +24,8 @@ interface Paiement {
 export function PaiementsCooperative() {
   const [loading, setLoading] = useState(true);
   const [paiements, setPaiements] = useState<Paiement[]>([]);
+  const [selectedPaiementId, setSelectedPaiementId] = useState<string | null>(null);
+  const [showQuittance, setShowQuittance] = useState(false);
 
   useEffect(() => {
     loadPaiements();
@@ -63,6 +68,7 @@ export function PaiementsCooperative() {
   }
 
   return (
+    <>
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
@@ -78,16 +84,19 @@ export function PaiementsCooperative() {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead>N° Quittance</TableHead>
                 <TableHead>Date</TableHead>
                 <TableHead>Mode</TableHead>
                 <TableHead>Référence</TableHead>
                 <TableHead className="text-right">Montant</TableHead>
                 <TableHead>Notes</TableHead>
+                <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {paiements.map((paiement) => (
                 <TableRow key={paiement.id}>
+                  <TableCell className="font-mono font-semibold text-primary">{paiement.numero_quittance}</TableCell>
                   <TableCell>{format(new Date(paiement.date_paiement), "dd/MM/yyyy", { locale: fr })}</TableCell>
                   <TableCell>
                     <Badge variant="outline">
@@ -101,6 +110,19 @@ export function PaiementsCooperative() {
                   <TableCell className="text-sm text-muted-foreground">{paiement.reference_paiement || "-"}</TableCell>
                   <TableCell className="text-right font-semibold">{paiement.montant_total.toLocaleString()} FCFA</TableCell>
                   <TableCell className="text-sm text-muted-foreground">{paiement.notes || "-"}</TableCell>
+                  <TableCell>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        setSelectedPaiementId(paiement.id);
+                        setShowQuittance(true);
+                      }}
+                    >
+                      <Printer className="h-4 w-4 mr-2" />
+                      Imprimer
+                    </Button>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -108,5 +130,14 @@ export function PaiementsCooperative() {
         )}
       </CardContent>
     </Card>
+
+    {selectedPaiementId && (
+      <ImprimerQuittanceDialog
+        open={showQuittance}
+        onOpenChange={setShowQuittance}
+        paiementId={selectedPaiementId}
+      />
+    )}
+    </>
   );
 }

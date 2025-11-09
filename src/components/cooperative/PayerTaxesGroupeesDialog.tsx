@@ -7,7 +7,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { Loader2, Receipt } from "lucide-react";
+import { ImprimerQuittanceDialog } from "./ImprimerQuittanceDialog";
 
 interface PayerTaxesGroupeesDialogProps {
   open: boolean;
@@ -25,6 +26,8 @@ export function PayerTaxesGroupeesDialog({
   onSuccess
 }: PayerTaxesGroupeesDialogProps) {
   const [loading, setLoading] = useState(false);
+  const [paiementId, setPaiementId] = useState<string | null>(null);
+  const [showQuittance, setShowQuittance] = useState(false);
   const [formData, setFormData] = useState({
     mode_paiement: "",
     reference_paiement: "",
@@ -88,8 +91,9 @@ export function PayerTaxesGroupeesDialog({
       if (updateError) throw updateError;
 
       toast.success("Paiement groupé enregistré avec succès");
+      setPaiementId(paiementGroupe.id);
+      setShowQuittance(true);
       onSuccess();
-      onOpenChange(false);
       setFormData({ mode_paiement: "", reference_paiement: "", notes: "" });
     } catch (error) {
       console.error("Erreur:", error);
@@ -100,14 +104,15 @@ export function PayerTaxesGroupeesDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Enregistrer un Paiement Groupé</DialogTitle>
-          <DialogDescription>
-            {taxesIds.length} taxe(s) sélectionnée(s) - Total: {montantTotal.toLocaleString()} FCFA
-          </DialogDescription>
-        </DialogHeader>
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Enregistrer un Paiement Groupé</DialogTitle>
+            <DialogDescription>
+              {taxesIds.length} taxe(s) sélectionnée(s) - Total: {montantTotal.toLocaleString()} FCFA
+            </DialogDescription>
+          </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
@@ -160,5 +165,20 @@ export function PayerTaxesGroupeesDialog({
         </form>
       </DialogContent>
     </Dialog>
+
+    {paiementId && (
+      <ImprimerQuittanceDialog
+        open={showQuittance}
+        onOpenChange={(open) => {
+          setShowQuittance(open);
+          if (!open) {
+            onOpenChange(false);
+            setPaiementId(null);
+          }
+        }}
+        paiementId={paiementId}
+      />
+    )}
+    </>
   );
 }

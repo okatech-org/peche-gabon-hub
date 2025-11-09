@@ -19,9 +19,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2, Search, Plus, Edit, Trash2, Receipt, CheckCircle, XCircle, Clock, AlertTriangle, DollarSign } from "lucide-react";
+import { Loader2, Search, Plus, Edit, Trash2, Receipt, CheckCircle, XCircle, Clock, AlertTriangle, DollarSign, Printer } from "lucide-react";
 import { toast } from "sonner";
 import { AddQuittanceDialog } from "./AddQuittanceDialog";
+import { ImprimerQuittanceLicenceDialog } from "./ImprimerQuittanceLicenceDialog";
+import { GenerateQuittancesDialog } from "./GenerateQuittancesDialog";
 
 export const QuittancesManagement = () => {
   const [quittances, setQuittances] = useState<any[]>([]);
@@ -31,6 +33,8 @@ export const QuittancesManagement = () => {
   const [fenetreFilter, setFenetreFilter] = useState<boolean>(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingQuittance, setEditingQuittance] = useState<any>(null);
+  const [selectedQuittance, setSelectedQuittance] = useState<any>(null);
+  const [showPrintDialog, setShowPrintDialog] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -190,6 +194,14 @@ export const QuittancesManagement = () => {
         editingQuittance={editingQuittance}
       />
 
+      {selectedQuittance && (
+        <ImprimerQuittanceLicenceDialog
+          open={showPrintDialog}
+          onOpenChange={setShowPrintDialog}
+          quittance={selectedQuittance}
+        />
+      )}
+
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
@@ -314,6 +326,17 @@ export const QuittancesManagement = () => {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => {
+                              setSelectedQuittance(quittance);
+                              setShowPrintDialog(true);
+                            }}
+                            title="Imprimer la quittance"
+                          >
+                            <Printer className="h-4 w-4" />
+                          </Button>
                           <Button 
                             variant="ghost" 
                             size="sm"
