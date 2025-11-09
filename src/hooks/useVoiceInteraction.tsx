@@ -27,7 +27,9 @@ export const useVoiceInteraction = () => {
   const [selectedVoiceId, setSelectedVoiceId] = useState<string | null>(null);
   const [silenceDetected, setSilenceDetected] = useState<boolean>(false);
   const [silenceTimeRemaining, setSilenceTimeRemaining] = useState<number>(0);
+  const [liveTranscript, setLiveTranscript] = useState<string>('');
   const continuousModeToastShownRef = useRef<boolean>(false);
+  const recognitionRef = useRef<any>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const playbackAudioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
@@ -299,9 +301,44 @@ export const useVoiceInteraction = () => {
 
   const startListening = async () => {
     try {
+      setLiveTranscript(''); // Reset transcript
+      
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       // Keep a stable reference for stopping/cleanup
       streamRef.current = stream;
+      
+      // Start Web Speech API for live transcription
+      if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+        const SpeechRecognition = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
+        const recognition = new SpeechRecognition();
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        recognition.lang = 'fr-FR';
+        
+        recognition.onresult = (event: any) => {
+          let interim = '';
+          let final = '';
+          
+          for (let i = event.resultIndex; i < event.results.length; i++) {
+            const transcript = event.results[i][0].transcript;
+            if (event.results[i].isFinal) {
+              final += transcript + ' ';
+            } else {
+              interim += transcript;
+            }
+          }
+          
+          setLiveTranscript(final + interim);
+        };
+        
+        recognition.onerror = (event: any) => {
+          console.warn('Speech recognition error:', event.error);
+        };
+        
+        recognition.start();
+        recognitionRef.current = recognition;
+        console.log('🎤 Speech recognition started');
+      }
       
       // Set up audio analysis
       const audioContext = new AudioContext();
@@ -393,6 +430,17 @@ export const useVoiceInteraction = () => {
   };
 
   const stopListening = () => {
+    // Stop speech recognition
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.stop();
+        recognitionRef.current = null;
+        console.log('🛑 Speech recognition stopped');
+      } catch (e) {
+        console.warn('⚠️ Error stopping speech recognition:', e);
+      }
+    }
+    
     const mr = mediaRecorderRef.current || mediaRecorder;
     const state = mr?.state;
     console.log('🛑 Stopping listening... State:', state);
@@ -760,6 +808,14 @@ export const useVoiceInteraction = () => {
   }, [currentAudio, mediaRecorder, startListening]);
 
   const cancelInteraction = () => {
+    // Stop speech recognition
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.stop();
+        recognitionRef.current = null;
+      } catch {}
+    }
+    
     if (currentAudio) {
       currentAudio.pause();
       currentAudio.src = '';
@@ -768,6 +824,7 @@ export const useVoiceInteraction = () => {
     if (mr && mr.state === 'recording') {
       try { mr.stop(); } catch {}
     }
+    setLiveTranscript('');
     setVoiceState('idle');
     unifiedToast.info("Interaction annulée", "La conversation a été interrompue");
   };
@@ -792,5 +849,6 @@ export const useVoiceInteraction = () => {
     silenceDetected,
     silenceTimeRemaining,
     silenceDuration,
+    liveTranscript,
   };
 };

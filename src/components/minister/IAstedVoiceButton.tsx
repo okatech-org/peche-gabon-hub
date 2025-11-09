@@ -26,6 +26,7 @@ export const IAstedVoiceButton = ({ className = '', size = 'md' }: IAstedVoiceBu
     silenceDetected,
     silenceTimeRemaining,
     silenceDuration,
+    liveTranscript,
   } = useVoiceInteraction();
   const lastClickTime = useRef<number>(0);
   const clickTimeout = useRef<NodeJS.Timeout | null>(null);
@@ -110,6 +111,7 @@ export const IAstedVoiceButton = ({ className = '', size = 'md' }: IAstedVoiceBu
         silenceDuration={silenceDuration}
         onSendNow={stopListening}
         onCancel={cancelInteraction}
+        liveTranscript={liveTranscript}
       />
       
       {/* Contrôles vocaux */}

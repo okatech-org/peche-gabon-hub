@@ -9,6 +9,7 @@ interface IAstedListeningOverlayProps {
   silenceDuration: number;
   onSendNow?: () => void;
   onCancel?: () => void;
+  liveTranscript?: string;
 }
 
 export const IAstedListeningOverlay = ({ 
@@ -19,6 +20,7 @@ export const IAstedListeningOverlay = ({
   silenceDuration,
   onSendNow,
   onCancel,
+  liveTranscript = '',
 }: IAstedListeningOverlayProps) => {
   const [pulseScale, setPulseScale] = useState(1);
 
@@ -86,15 +88,25 @@ export const IAstedListeningOverlay = ({
         </div>
 
         {/* Message */}
-        <div className="text-center animate-in slide-in-from-bottom duration-700">
+        <div className="text-center animate-in slide-in-from-bottom duration-700 max-w-2xl">
           <h2 className="text-4xl font-bold text-foreground mb-2 tracking-tight">
             {silenceDetected ? "Détection de silence..." : "Je vous écoute Excellence"}
           </h2>
-          <p className="text-muted-foreground text-lg">
+          <p className="text-muted-foreground text-lg mb-4">
             {silenceDetected 
               ? `Envoi dans ${(silenceTimeRemaining / 1000).toFixed(1)}s` 
               : "Parlez maintenant..."}
           </p>
+          
+          {/* Transcription en temps réel */}
+          {liveTranscript && (
+            <div className="mt-4 p-4 bg-background/50 backdrop-blur-sm rounded-lg border border-primary/20 animate-in fade-in duration-300">
+              <p className="text-sm text-muted-foreground mb-1">Transcription en direct:</p>
+              <p className="text-base text-foreground font-medium">
+                {liveTranscript}
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Indicateur de silence avec compte à rebours */}
@@ -121,20 +133,34 @@ export const IAstedListeningOverlay = ({
           </div>
         )}
 
-        {/* Indicateur d'activité */}
+        {/* VU-mètre amélioré */}
         <div className="flex flex-col items-center gap-6 animate-in slide-in-from-bottom duration-1000">
-          <div className="flex gap-2">
-            {[...Array(5)].map((_, i) => (
-              <div
-                key={i}
-                className="w-2 h-8 bg-primary/60 rounded-full animate-pulse"
-                style={{
-                  animationDelay: `${i * 0.1}s`,
-                  height: `${20 + (audioLevel / 100) * 20}px`,
-                  transition: 'height 0.1s ease-out'
-                }}
-              />
-            ))}
+          <div className="flex items-end gap-1.5 h-24">
+            {[...Array(20)].map((_, i) => {
+              // Créer un effet de distribution pour simuler un VU-mètre réaliste
+              const barHeight = Math.max(
+                8,
+                (audioLevel / 100) * 80 * (0.5 + Math.random() * 0.5)
+              );
+              const delay = i * 0.05;
+              
+              return (
+                <div
+                  key={i}
+                  className="w-1.5 rounded-full transition-all duration-100 ease-out"
+                  style={{
+                    height: `${barHeight}px`,
+                    backgroundColor: audioLevel > 70 
+                      ? 'hsl(var(--destructive))' 
+                      : audioLevel > 40 
+                      ? 'hsl(var(--warning))' 
+                      : 'hsl(var(--primary))',
+                    opacity: audioLevel > 5 ? 0.9 : 0.3,
+                    animationDelay: `${delay}s`,
+                  }}
+                />
+              );
+            })}
           </div>
 
           {/* Actions */}
