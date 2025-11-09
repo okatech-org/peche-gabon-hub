@@ -21,20 +21,20 @@ export const DatabaseManager = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold text-slate-100">Gestion Base de Données</h2>
           <p className="text-slate-400 text-sm mt-1">Monitoring et administration PostgreSQL</p>
         </div>
-        <Button variant="outline" size="sm" className="gap-2">
+        <Button variant="outline" size="sm" className="gap-2 border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-slate-100">
           <RefreshCw className="h-4 w-4" />
           Actualiser
         </Button>
       </div>
 
       {/* Connexions Stats */}
-      <div className="grid gap-6 md:grid-cols-4">
-        <Card className="bg-slate-800/50 border-slate-700">
+      <div className="grid gap-4 md:grid-cols-4">
+        <Card className="bg-slate-800/30 border-slate-700 backdrop-blur-sm hover:bg-slate-800/50 transition-colors">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-slate-200">Connexions Actives</CardTitle>
             <Zap className="h-4 w-4 text-green-400" />

@@ -89,17 +89,17 @@ export const LogsViewer = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold text-slate-100">Logs Système</h2>
           <p className="text-slate-400 text-sm mt-1">Consultation des logs en temps réel</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" className="gap-2">
+          <Button variant="outline" size="sm" className="gap-2 border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-slate-100">
             <Download className="h-4 w-4" />
             Exporter
           </Button>
-          <Button onClick={handleRefresh} variant="outline" size="sm" className="gap-2">
+          <Button onClick={handleRefresh} variant="outline" size="sm" className="gap-2 border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-slate-100">
             <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
             Actualiser
           </Button>
@@ -117,16 +117,16 @@ export const LogsViewer = () => {
             className="pl-10 bg-slate-800/50 border-slate-700 text-slate-200"
           />
         </div>
-        <Button variant="outline" size="icon">
+        <Button variant="outline" size="icon" className="border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-slate-100">
           <Filter className="h-4 w-4" />
         </Button>
       </div>
 
       {/* Logs Tabs */}
-      <Card className="bg-slate-800/50 border-slate-700">
+      <Card className="bg-slate-800/30 border-slate-700 backdrop-blur-sm">
         <CardContent className="pt-6">
           <Tabs defaultValue="console">
-            <TabsList className="bg-slate-900/50">
+            <TabsList className="bg-slate-900/50 border border-slate-700">
               <TabsTrigger value="console" className="gap-2">
                 <Terminal className="h-4 w-4" />
                 Console

@@ -193,10 +193,10 @@ export const DeveloppementPanel = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in">
       <div>
-        <h2 className="text-3xl font-bold tracking-tight">Développement</h2>
-        <p className="text-muted-foreground">
+        <h2 className="text-2xl font-bold text-slate-100">Développement</h2>
+        <p className="text-slate-400 text-sm mt-1">
           Base de connaissance et cahier des charges des métiers de la pêche
         </p>
       </div>
@@ -204,54 +204,54 @@ export const DeveloppementPanel = () => {
       {/* Statistiques générales */}
       {stats && (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
-          <Card>
+          <Card className="bg-slate-800/30 border-slate-700 backdrop-blur-sm hover:bg-slate-800/50 transition-colors">
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
+              <CardTitle className="text-sm font-medium text-slate-400">
                 Total Remontées
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">{stats.total}</div>
+              <div className="text-3xl font-bold text-slate-100">{stats.total}</div>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="bg-slate-800/30 border-slate-700 backdrop-blur-sm hover:bg-slate-800/50 transition-colors">
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
+              <CardTitle className="text-sm font-medium text-slate-400">
                 Nouveaux
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-blue-500">{stats.byStatus.nouveau}</div>
+              <div className="text-3xl font-bold text-blue-400">{stats.byStatus.nouveau}</div>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="bg-slate-800/30 border-slate-700 backdrop-blur-sm hover:bg-slate-800/50 transition-colors">
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
+              <CardTitle className="text-sm font-medium text-slate-400">
                 En cours
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-yellow-500">{stats.byStatus.en_cours}</div>
+              <div className="text-3xl font-bold text-yellow-400">{stats.byStatus.en_cours}</div>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="bg-slate-800/30 border-slate-700 backdrop-blur-sm hover:bg-slate-800/50 transition-colors">
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
+              <CardTitle className="text-sm font-medium text-slate-400">
                 Traités
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-green-500">{stats.byStatus.traite}</div>
+              <div className="text-3xl font-bold text-green-400">{stats.byStatus.traite}</div>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="bg-slate-800/30 border-slate-700 backdrop-blur-sm hover:bg-slate-800/50 transition-colors">
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
+              <CardTitle className="text-sm font-medium text-slate-400">
                 Archivés
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-gray-500">{stats.byStatus.archive}</div>
+              <div className="text-3xl font-bold text-slate-500">{stats.byStatus.archive}</div>
             </CardContent>
           </Card>
         </div>
@@ -259,10 +259,10 @@ export const DeveloppementPanel = () => {
 
       <div className="flex gap-4">
         <Select value={selectedRole} onValueChange={setSelectedRole}>
-          <SelectTrigger className="w-[250px]">
+          <SelectTrigger className="w-[250px] bg-slate-800/30 border-slate-700 text-slate-200">
             <SelectValue placeholder="Filtrer par rôle" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="bg-slate-900 border-slate-700">
             <SelectItem value="all">Tous les rôles</SelectItem>
             <SelectItem value="ministre">Ministère de la Mer</SelectItem>
             <SelectItem value="direction_centrale">Direction Centrale</SelectItem>
@@ -289,10 +289,10 @@ export const DeveloppementPanel = () => {
         </Select>
 
         <Select value={selectedType} onValueChange={setSelectedType}>
-          <SelectTrigger className="w-[250px]">
+          <SelectTrigger className="w-[250px] bg-slate-800/30 border-slate-700 text-slate-200">
             <SelectValue placeholder="Filtrer par type" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="bg-slate-900 border-slate-700">
             <SelectItem value="all">Tous les types</SelectItem>
             <SelectItem value="role">Rôle</SelectItem>
             <SelectItem value="mission">Mission</SelectItem>
@@ -303,7 +303,7 @@ export const DeveloppementPanel = () => {
       </div>
 
       <Tabs defaultValue="statistiques" className="space-y-4">
-        <TabsList>
+        <TabsList className="bg-slate-800/50 border border-slate-700">
           <TabsTrigger value="statistiques" className="gap-2">
             <BarChart3 className="h-4 w-4" />
             Statistiques
@@ -328,11 +328,11 @@ export const DeveloppementPanel = () => {
         
         <TabsContent value="statistiques">
           {stats && (
-            <div className="grid gap-6 md:grid-cols-2">
-              <Card>
+            <div className="grid gap-4 md:grid-cols-2">
+              <Card className="bg-slate-800/30 border-slate-700 backdrop-blur-sm">
                 <CardHeader>
-                  <CardTitle>Distribution par Type</CardTitle>
-                  <CardDescription>
+                  <CardTitle className="text-slate-200">Distribution par Type</CardTitle>
+                  <CardDescription className="text-slate-400">
                     Répartition des remontées selon leur type
                   </CardDescription>
                 </CardHeader>
@@ -361,26 +361,33 @@ export const DeveloppementPanel = () => {
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="bg-slate-800/30 border-slate-700 backdrop-blur-sm">
                 <CardHeader>
-                  <CardTitle>Distribution par Rôle</CardTitle>
-                  <CardDescription>
+                  <CardTitle className="text-slate-200">Distribution par Rôle</CardTitle>
+                  <CardDescription className="text-slate-400">
                     Nombre de remontées par rôle démonstration
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <ResponsiveContainer width="100%" height={300}>
                     <BarChart data={stats.byRole}>
-                      <CartesianGrid strokeDasharray="3 3" />
+                      <CartesianGrid strokeDasharray="3 3" stroke="#475569" />
                       <XAxis 
                         dataKey="name" 
                         angle={-45}
                         textAnchor="end"
                         height={100}
                         fontSize={12}
+                        stroke="#94a3b8"
                       />
-                      <YAxis />
-                      <Tooltip />
+                      <YAxis stroke="#94a3b8" />
+                      <Tooltip 
+                        contentStyle={{ 
+                          backgroundColor: '#1e293b', 
+                          border: '1px solid #475569',
+                          borderRadius: '6px'
+                        }}
+                      />
                       <Bar dataKey="value" fill="#8884d8">
                         {stats.byRole.map((entry, index) => (
                           <Cell key={`cell-${index}`} fill={entry.fill} />
@@ -391,10 +398,10 @@ export const DeveloppementPanel = () => {
                 </CardContent>
               </Card>
 
-              <Card className="md:col-span-2">
+              <Card className="md:col-span-2 bg-slate-800/30 border-slate-700 backdrop-blur-sm">
                 <CardHeader>
-                  <CardTitle>Répartition par Statut</CardTitle>
-                  <CardDescription>
+                  <CardTitle className="text-slate-200">Répartition par Statut</CardTitle>
+                  <CardDescription className="text-slate-400">
                     État d'avancement des remontées d'information
                   </CardDescription>
                 </CardHeader>
@@ -408,10 +415,16 @@ export const DeveloppementPanel = () => {
                         { name: "Archivé", value: stats.byStatus.archive, fill: "#6b7280" },
                       ]}
                     >
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="name" />
-                      <YAxis />
-                      <Tooltip />
+                      <CartesianGrid strokeDasharray="3 3" stroke="#475569" />
+                      <XAxis dataKey="name" stroke="#94a3b8" />
+                      <YAxis stroke="#94a3b8" />
+                      <Tooltip 
+                        contentStyle={{ 
+                          backgroundColor: '#1e293b', 
+                          border: '1px solid #475569',
+                          borderRadius: '6px'
+                        }}
+                      />
                       <Bar dataKey="value">
                         {[
                           { fill: "#3b82f6" },
@@ -435,16 +448,16 @@ export const DeveloppementPanel = () => {
             <ScrollArea className="h-[600px] pr-4">
               <div className="space-y-4">
                 {groupByStatus(status).map((feedback) => (
-                  <Card key={feedback.id}>
+                  <Card key={feedback.id} className="bg-slate-800/30 border-slate-700 backdrop-blur-sm hover:bg-slate-800/50 transition-colors">
                     <CardHeader>
                       <div className="flex items-start justify-between">
                         <div className="space-y-1">
-                          <CardTitle className="text-lg">{feedback.titre}</CardTitle>
-                          <CardDescription>
-                            <Badge variant="outline" className="mr-2">
-                              {feedback.role_demo}
+                          <CardTitle className="text-lg text-slate-100">{feedback.titre}</CardTitle>
+                          <CardDescription className="text-slate-400">
+                            <Badge variant="outline" className="mr-2 border-slate-600 text-slate-300">
+                              {roleLabels[feedback.role_demo] || feedback.role_demo}
                             </Badge>
-                            <Badge variant="secondary">
+                            <Badge variant="secondary" className="bg-slate-700 text-slate-200">
                               {typeLabels[feedback.type_feedback as keyof typeof typeLabels]}
                             </Badge>
                           </CardDescription>
@@ -458,10 +471,10 @@ export const DeveloppementPanel = () => {
                             })
                           }
                         >
-                          <SelectTrigger className="w-[140px]">
+                          <SelectTrigger className="w-[140px] bg-slate-800/50 border-slate-700 text-slate-200">
                             <SelectValue />
                           </SelectTrigger>
-                          <SelectContent>
+                          <SelectContent className="bg-slate-900 border-slate-700">
                             <SelectItem value="nouveau">Nouveau</SelectItem>
                             <SelectItem value="en_cours">En cours</SelectItem>
                             <SelectItem value="traite">Traité</SelectItem>
@@ -471,10 +484,10 @@ export const DeveloppementPanel = () => {
                       </div>
                     </CardHeader>
                     <CardContent>
-                      <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                      <p className="text-sm text-slate-300 whitespace-pre-wrap">
                         {feedback.description}
                       </p>
-                      <p className="text-xs text-muted-foreground mt-4">
+                      <p className="text-xs text-slate-500 mt-4">
                         {new Date(feedback.created_at).toLocaleDateString("fr-FR", {
                           year: "numeric",
                           month: "long",
@@ -487,8 +500,8 @@ export const DeveloppementPanel = () => {
                   </Card>
                 ))}
                 {groupByStatus(status).length === 0 && (
-                  <Card>
-                    <CardContent className="py-8 text-center text-muted-foreground">
+                  <Card className="bg-slate-800/30 border-slate-700 backdrop-blur-sm">
+                    <CardContent className="py-8 text-center text-slate-400">
                       Aucune remontée dans cette catégorie
                     </CardContent>
                   </Card>
