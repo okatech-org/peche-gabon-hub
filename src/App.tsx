@@ -19,6 +19,7 @@ import InspecteurOverview from "./pages/inspecteur/InspecteurOverview";
 import Inspections from "./pages/inspecteur/Inspections";
 import Carte from "./pages/inspecteur/Carte";
 import Licences from "./pages/inspecteur/Licences";
+import Infractions from "./pages/inspecteur/Infractions";
 import DonneesPubliques from "./pages/DonneesPubliques";
 import Actualites from "./pages/Actualites";
 import Sensibilisation from "./pages/Sensibilisation";
@@ -247,6 +248,7 @@ function App() {
               <Route path="inspections" element={<Inspections />} />
               <Route path="carte" element={<Carte />} />
               <Route path="licences" element={<Licences />} />
+              <Route path="infractions" element={<Infractions />} />
             </Route>
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
