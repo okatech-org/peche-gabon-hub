@@ -135,7 +135,7 @@ export function RemonteesInstitutionnellesDashboard() {
   const [tendancesInstitutions, setTendancesInstitutions] = useState<TendanceInstitution[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
-  const [totalRemontees, setTotalRemontees] = useState(0);
+  const [totalRedistribue, setTotalRedistribue] = useState(0);
   const [exporting, setExporting] = useState(false);
   const [yearsRange, setYearsRange] = useState<number[]>([]);
   const [previsionsRemontees, setPrevisionsRemontees] = useState<PrevisionsRemontees | null>(null);
@@ -292,7 +292,7 @@ export function RemonteesInstitutionnellesDashboard() {
       });
 
       setStats(Array.from(statsMap.values()));
-      setTotalRemontees(total);
+      setTotalRedistribue(total);
 
       // Calculer l'évolution mensuelle
       const evolutionMap = new Map<number, number>();
@@ -526,7 +526,7 @@ export function RemonteesInstitutionnellesDashboard() {
       yPosition += 8;
 
       pdf.setFontSize(10);
-      pdf.text(`Total des remontées: ${totalRemontees.toLocaleString()} FCFA`, 20, yPosition);
+      pdf.text(`Total redistribué: ${totalRedistribue.toLocaleString()} FCFA`, 20, yPosition);
       yPosition += 6;
       pdf.text(`Nombre d'institutions: ${stats.length}`, 20, yPosition);
       yPosition += 6;
@@ -618,10 +618,10 @@ export function RemonteesInstitutionnellesDashboard() {
             <div>
               <CardTitle className="flex items-center gap-2">
                 <Building2 className="h-6 w-6" />
-                Remontées Institutionnelles
+                Redistribution depuis le Trésor Public
               </CardTitle>
               <CardDescription>
-                Suivi de la répartition des taxes collectées aux institutions
+                Distribution des recettes du Trésor Public aux institutions selon la répartition établie
               </CardDescription>
             </div>
             <div className="flex items-center gap-4">
@@ -657,11 +657,11 @@ export function RemonteesInstitutionnellesDashboard() {
       <div className="grid gap-4 md:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Remontées</CardTitle>
+            <CardTitle className="text-sm font-medium">Total Redistribué</CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totalRemontees.toLocaleString()} FCFA</div>
+            <div className="text-2xl font-bold">{totalRedistribue.toLocaleString()} FCFA</div>
             <p className="text-xs text-muted-foreground">Année {selectedYear}</p>
           </CardContent>
         </Card>
@@ -687,8 +687,8 @@ export function RemonteesInstitutionnellesDashboard() {
               {stats.reduce((sum, s) => sum + s.montant_paye, 0).toLocaleString()} FCFA
             </div>
             <p className="text-xs text-muted-foreground">
-              {totalRemontees > 0
-                ? ((stats.reduce((sum, s) => sum + s.montant_paye, 0) / totalRemontees) * 100).toFixed(1)
+              {totalRedistribue > 0
+                ? ((stats.reduce((sum, s) => sum + s.montant_paye, 0) / totalRedistribue) * 100).toFixed(1)
                 : 0}
               % du total
             </p>

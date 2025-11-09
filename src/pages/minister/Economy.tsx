@@ -10,14 +10,14 @@ export default function Economy() {
       <div>
         <h2 className="text-2xl font-bold">Économie & Finances de la Pêche</h2>
         <p className="text-sm text-muted-foreground">
-          Vue complète des statistiques économiques, fiscales et répartition institutionnelle
+          Vue complète des recettes du Trésor Public, redistribution institutionnelle et statistiques économiques
         </p>
       </div>
       
       <Tabs defaultValue="fiscal" className="w-full">
         <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="fiscal">Taxes Collectées</TabsTrigger>
-          <TabsTrigger value="institutional">Répartition Institutionnelle</TabsTrigger>
+          <TabsTrigger value="fiscal">Recettes Trésor Public</TabsTrigger>
+          <TabsTrigger value="institutional">Redistribution Institutionnelle</TabsTrigger>
           <TabsTrigger value="data">Données Détaillées</TabsTrigger>
           <TabsTrigger value="economy">Économie & Exportations</TabsTrigger>
         </TabsList>
