@@ -125,6 +125,9 @@ export default function Carte() {
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
   const [showHeatmap, setShowHeatmap] = useState(false);
   const [heatmapFilter, setHeatmapFilter] = useState<string>("tous");
+  const [retryCount, setRetryCount] = useState(0);
+  const [isRetrying, setIsRetrying] = useState(false);
+  const maxRetries = 3;
 
   // Token Mapbox via hook sécurisé
   const { token: mapboxToken, isLoading: tokenLoading, error: tokenError } = useMapboxToken();
@@ -136,6 +139,48 @@ export default function Carte() {
       setIsLoading(false);
     }
   }, [tokenError]);
+
+  // Fonction de retry avec backoff exponentiel
+  const retryMapLoad = () => {
+    if (retryCount >= maxRetries) {
+      setErrorMsg("Impossible de charger la carte après plusieurs tentatives.");
+      setIsLoading(false);
+      setIsRetrying(false);
+      return;
+    }
+
+    setIsRetrying(true);
+    setErrorMsg(null);
+    const delay = Math.min(1000 * Math.pow(2, retryCount), 8000); // Max 8s
+    
+    logger.info(`⏳ Nouvelle tentative (${retryCount + 1}/${maxRetries}) dans ${delay}ms...`);
+    toast.info(`Nouvelle tentative ${retryCount + 1}/${maxRetries}...`);
+
+    setTimeout(() => {
+      setRetryCount(prev => prev + 1);
+      setIsRetrying(false);
+      // Force map reload
+      if (map.current) {
+        map.current.remove();
+        map.current = null;
+      }
+      setIsMapReady(false);
+      setIsLoading(true);
+    }, delay);
+  };
+
+  // Fonction de rechargement manuel
+  const handleManualReload = () => {
+    setRetryCount(0);
+    setErrorMsg(null);
+    setIsLoading(true);
+    setIsRetrying(false);
+    if (map.current) {
+      map.current.remove();
+      map.current = null;
+    }
+    setIsMapReady(false);
+  };
 
   // Initialiser la carte une seule fois
   useEffect(() => {
@@ -171,7 +216,8 @@ export default function Carte() {
           const message: string = typeof err === 'string' ? err : err?.message || '';
           const status = err?.status || err?.response?.status;
           const tokenError = /access token|unauthorized|forbidden|invalid token/i.test(message) || [401,403].includes(status);
-          const styleError = /style|failed to load style|not found/i.test(message);
+          const styleError = /style|failed to load style|not found|tiles/i.test(message);
+          const isMapLoaded = map.current && map.current.loaded();
 
           if (tokenError) {
             logger.error("❌ Erreur Mapbox (token):", e);
@@ -181,9 +227,15 @@ export default function Carte() {
             return;
           }
 
-          if (styleError && !(map.current && map.current.loaded())) {
-            logger.error("❌ Erreur de style Mapbox avant chargement:", e);
-            setErrorMsg("Erreur lors du chargement du style de la carte. Réessayez.");
+          if (styleError && !isMapLoaded && retryCount < maxRetries && !isRetrying) {
+            logger.warn("⚠️ Erreur de style/tiles, tentative de retry...", e);
+            retryMapLoad();
+            return;
+          }
+
+          if (styleError && !isMapLoaded) {
+            logger.error("❌ Erreur de style Mapbox:", e);
+            setErrorMsg("Erreur lors du chargement du style de la carte.");
             setIsLoading(false);
             return;
           }
@@ -684,15 +736,16 @@ export default function Carte() {
               <div className="flex flex-col sm:flex-row gap-2 justify-center">
                 <Button 
                   variant="default" 
-                  onClick={() => { 
-                    setIsLoading(true); 
-                    setErrorMsg(null);
-                    // Forcer un rechargement complet de la page
-                    window.location.reload();
-                  }}
+                  onClick={handleManualReload}
+                  disabled={isRetrying}
                 >
-                  Réessayer
+                  {isRetrying ? "Rechargement..." : "Recharger la carte"}
                 </Button>
+                {retryCount > 0 && retryCount < maxRetries && (
+                  <Badge variant="outline">
+                    Tentative {retryCount}/{maxRetries}
+                  </Badge>
+                )}
               </div>
             </div>
           </div>
