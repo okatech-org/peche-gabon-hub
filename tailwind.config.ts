@@ -60,6 +60,41 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        pink: {
+          400: "hsl(330, 81%, 70%)",
+          500: "hsl(330, 81%, 60%)",
+        },
+        purple: {
+          400: "hsl(280, 70%, 70%)",
+          500: "hsl(280, 70%, 60%)",
+        },
+        cyan: {
+          400: "hsl(190, 81%, 67%)",
+          500: "hsl(190, 81%, 57%)",
+        },
+        blue: {
+          400: "hsl(213, 94%, 68%)",
+          500: "hsl(213, 94%, 58%)",
+        },
+        green: {
+          400: "hsl(142, 71%, 65%)",
+          500: "hsl(142, 71%, 45%)",
+        },
+        emerald: {
+          500: "hsl(160, 84%, 39%)",
+        },
+        orange: {
+          400: "hsl(27, 96%, 61%)",
+          500: "hsl(27, 96%, 51%)",
+        },
+        red: {
+          400: "hsl(0, 84%, 60%)",
+          500: "hsl(0, 84%, 50%)",
+        },
+        yellow: {
+          400: "hsl(45, 93%, 58%)",
+          500: "hsl(45, 93%, 47%)",
+        },
       },
       backgroundImage: {
         'gradient-ocean': 'var(--gradient-ocean)',

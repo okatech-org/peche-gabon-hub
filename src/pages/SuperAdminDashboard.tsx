@@ -20,35 +20,46 @@ const SuperAdminDashboard = () => {
 
   return (
     <SidebarProvider defaultOpen={true}>
-      <div className="min-h-screen flex w-full bg-gradient-to-br from-slate-950 via-slate-900 to-zinc-950">
+      <div className="min-h-screen flex w-full bg-[#121212]">
         <SuperAdminSidebar />
         
         <div className="flex-1 flex flex-col">
           {/* Header */}
-          <header className="sticky top-0 z-10 border-b border-slate-800/50 bg-slate-950/80 backdrop-blur-xl shadow-2xl">
+          <header className="sticky top-0 z-10 border-b border-border/50 bg-background/95 backdrop-blur-xl">
             <div className="flex h-16 items-center gap-4 px-6">
-              <SidebarTrigger className="text-slate-400 hover:text-slate-100 hover:bg-slate-900/50 rounded-md p-2 transition-colors">
+              <SidebarTrigger className="text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-lg p-2 transition-colors">
                 <Menu className="h-5 w-5" />
               </SidebarTrigger>
               
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700/50 shadow-lg">
-                  <Server className="h-5 w-5 text-slate-300" />
+                <div className="p-2 rounded-xl bg-gradient-to-br from-primary/20 to-accent/20 border border-primary/20">
+                  <Server className="h-5 w-5 text-primary" />
                 </div>
                 <div>
-                  <h1 className="text-lg font-bold text-slate-100 tracking-tight">Super Admin</h1>
-                  <p className="text-xs text-slate-500">Gestion Technique Complète</p>
+                  <h1 className="text-lg font-bold text-foreground">Super Admin</h1>
+                  <p className="text-xs text-muted-foreground">Gestion Technique Complète</p>
                 </div>
               </div>
 
-              <div className="ml-auto flex items-center gap-4">
-                <div className="hidden md:flex items-center gap-2">
-                  <span className="text-sm text-slate-400">{user?.email}</span>
+              {/* Search Bar */}
+              <div className="hidden md:flex flex-1 max-w-md mx-8">
+                <div className="relative w-full">
+                  <input
+                    type="text"
+                    placeholder="Type to Search"
+                    className="w-full h-10 pl-4 pr-4 rounded-lg bg-muted/50 border border-border/50 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+                  />
+                </div>
+              </div>
+
+              <div className="ml-auto flex items-center gap-3">
+                <div className="hidden lg:flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground">{user?.email}</span>
                   {roles.map((role) => (
                     <Badge 
                       key={role} 
                       variant="outline" 
-                      className="border-slate-700 text-slate-300 bg-slate-900/50 text-xs"
+                      className="border-primary/30 text-primary bg-primary/10 text-xs"
                     >
                       {role}
                     </Badge>
@@ -58,15 +69,15 @@ const SuperAdminDashboard = () => {
                   variant="outline" 
                   size="sm" 
                   onClick={() => navigate("/dashboard")}
-                  className="hidden sm:flex border-slate-700 text-slate-300 hover:bg-slate-900 hover:text-slate-100 hover:border-slate-600 transition-all"
+                  className="hidden sm:flex border-border/50 hover:bg-muted hover:border-primary/30 transition-all"
                 >
-                  Retour Dashboard
+                  Retour
                 </Button>
                 <Button 
                   variant="ghost" 
                   size="sm" 
                   onClick={signOut}
-                  className="text-slate-400 hover:text-slate-100 hover:bg-slate-900/50"
+                  className="text-muted-foreground hover:text-foreground hover:bg-muted/50"
                 >
                   <LogOut className="h-4 w-4" />
                 </Button>
@@ -75,7 +86,7 @@ const SuperAdminDashboard = () => {
           </header>
 
           {/* Main Content */}
-          <main className="flex-1 overflow-auto p-4 md:p-6">
+          <main className="flex-1 overflow-auto p-6 md:p-8">
             <Routes>
               <Route path="/" element={<Navigate to="/superadmin-dashboard/monitoring" replace />} />
               <Route path="/monitoring" element={<SystemMonitoring />} />

@@ -53,24 +53,24 @@ export function SuperAdminSidebar() {
   const isCollapsed = state === "collapsed";
 
   return (
-    <Sidebar collapsible="icon" className="border-r border-slate-800/50 bg-slate-950">
-      <SidebarContent className="bg-slate-950">
+    <Sidebar collapsible="icon" className="border-r border-sidebar-border bg-sidebar">
+      <SidebarContent className="bg-sidebar py-4">
         {menuItems.map((section) => (
-          <SidebarGroup key={section.group} className="py-3">
+          <SidebarGroup key={section.group} className="py-2">
             {!isCollapsed && (
-              <SidebarGroupLabel className="text-slate-500 text-[10px] uppercase tracking-widest font-semibold px-3 mb-2">
+              <SidebarGroupLabel className="text-muted-foreground text-[10px] uppercase tracking-wider font-medium px-4 mb-2">
                 {section.group}
               </SidebarGroupLabel>
             )}
             <SidebarGroupContent>
-              <SidebarMenu className="space-y-1">
+              <SidebarMenu className="space-y-1 px-2">
                 {section.items.map((item) => (
                   <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton asChild className="px-3">
+                    <SidebarMenuButton asChild>
                       <NavLink
                         to={item.url}
-                        className="flex items-center gap-3 rounded-md px-3 py-2.5 text-slate-400 hover:bg-slate-900/50 hover:text-slate-100 transition-all duration-200 group"
-                        activeClassName="bg-gradient-to-r from-slate-900 to-slate-800/50 text-slate-50 font-medium shadow-sm border-l-2 border-slate-400"
+                        className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-muted-foreground hover:bg-sidebar-accent hover:text-foreground transition-all duration-200 group"
+                        activeClassName="bg-primary/10 text-primary font-medium border border-primary/20"
                       >
                         <item.icon className="h-4 w-4 flex-shrink-0 group-hover:scale-110 transition-transform" />
                         {!isCollapsed && <span className="text-sm">{item.title}</span>}

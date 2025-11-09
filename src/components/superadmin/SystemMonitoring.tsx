@@ -65,15 +65,15 @@ export const SystemMonitoring = () => {
     <div className="space-y-6 animate-fade-in">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-slate-100">Monitoring Système</h2>
-          <p className="text-slate-400 text-sm mt-1">Vue d'ensemble des ressources et performances</p>
+          <h2 className="text-3xl font-bold text-foreground">Welcome To The Dashboard</h2>
+          <p className="text-muted-foreground text-sm mt-1">Vue d'ensemble des ressources et performances en temps réel</p>
         </div>
         <Button 
           onClick={fetchSystemStats} 
           disabled={isRefreshing}
           variant="outline"
           size="sm"
-          className="gap-2 border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-slate-100"
+          className="gap-2 hover:scale-105 transition-transform"
         >
           <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
           Actualiser
@@ -81,109 +81,130 @@ export const SystemMonitoring = () => {
       </div>
 
       {/* Ressources Système */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="bg-slate-800/30 border-slate-700 backdrop-blur-sm hover:bg-slate-800/50 transition-colors">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-slate-200">CPU</CardTitle>
-            <Cpu className="h-4 w-4 text-blue-400" />
+      <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-4">
+        <Card className="relative overflow-hidden border-border/50 bg-gradient-to-br from-pink-500/10 via-card to-purple-500/10 backdrop-blur-sm hover:shadow-elevated transition-all duration-300">
+          <div className="absolute top-4 right-4 p-2.5 rounded-full bg-background/80 backdrop-blur-sm">
+            <Cpu className="h-5 w-5 text-pink-400" />
+          </div>
+          <CardHeader className="pb-2">
+            <CardDescription className="text-muted-foreground text-xs">Utilisation CPU</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-slate-100">{stats.cpu.toFixed(1)}%</div>
-            <Progress value={stats.cpu} className="mt-2 h-2" />
+            <div className="text-3xl font-bold text-foreground mb-3">{stats.cpu.toFixed(1)}%</div>
+            <Progress value={stats.cpu} className="h-1.5" />
             <Badge 
-              variant={getStatusColor(stats.cpu, 'cpu')} 
-              className="mt-2 text-xs"
+              className={`mt-3 text-xs font-medium ${
+                stats.cpu > 80 ? "bg-red-500/20 text-red-400 border-red-500/30" : 
+                stats.cpu > 60 ? "bg-yellow-500/20 text-yellow-400 border-yellow-500/30" : 
+                "bg-green-500/20 text-green-400 border-green-500/30"
+              }`}
             >
               {stats.cpu > 80 ? "Élevé" : stats.cpu > 60 ? "Modéré" : "Normal"}
             </Badge>
           </CardContent>
         </Card>
 
-        <Card className="bg-slate-800/30 border-slate-700 backdrop-blur-sm hover:bg-slate-800/50 transition-colors">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-slate-200">Mémoire</CardTitle>
-            <Activity className="h-4 w-4 text-green-400" />
+        <Card className="relative overflow-hidden border-border/50 bg-gradient-to-br from-cyan-500/10 via-card to-blue-500/10 backdrop-blur-sm hover:shadow-elevated transition-all duration-300">
+          <div className="absolute top-4 right-4 p-2.5 rounded-full bg-background/80 backdrop-blur-sm">
+            <Activity className="h-5 w-5 text-cyan-400" />
+          </div>
+          <CardHeader className="pb-2">
+            <CardDescription className="text-muted-foreground text-xs">Mémoire RAM</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-slate-100">{stats.memory.toFixed(1)}%</div>
-            <Progress value={stats.memory} className="mt-2 h-2" />
+            <div className="text-3xl font-bold text-foreground mb-3">{stats.memory.toFixed(1)}%</div>
+            <Progress value={stats.memory} className="h-1.5" />
             <Badge 
-              variant={getStatusColor(stats.memory, 'memory')} 
-              className="mt-2 text-xs"
+              className={`mt-3 text-xs font-medium ${
+                stats.memory > 85 ? "bg-red-500/20 text-red-400 border-red-500/30" : 
+                stats.memory > 70 ? "bg-yellow-500/20 text-yellow-400 border-yellow-500/30" : 
+                "bg-green-500/20 text-green-400 border-green-500/30"
+              }`}
             >
               {stats.memory > 85 ? "Élevé" : stats.memory > 70 ? "Modéré" : "Normal"}
             </Badge>
           </CardContent>
         </Card>
 
-        <Card className="bg-slate-800/30 border-slate-700 backdrop-blur-sm hover:bg-slate-800/50 transition-colors">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-slate-200">Disque</CardTitle>
-            <HardDrive className="h-4 w-4 text-purple-400" />
+        <Card className="relative overflow-hidden border-border/50 bg-gradient-to-br from-orange-500/10 via-card to-red-500/10 backdrop-blur-sm hover:shadow-elevated transition-all duration-300">
+          <div className="absolute top-4 right-4 p-2.5 rounded-full bg-background/80 backdrop-blur-sm">
+            <HardDrive className="h-5 w-5 text-orange-400" />
+          </div>
+          <CardHeader className="pb-2">
+            <CardDescription className="text-muted-foreground text-xs">Espace Disque</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-slate-100">{stats.disk.toFixed(1)}%</div>
-            <Progress value={stats.disk} className="mt-2 h-2" />
+            <div className="text-3xl font-bold text-foreground mb-3">{stats.disk.toFixed(1)}%</div>
+            <Progress value={stats.disk} className="h-1.5" />
             <Badge 
-              variant={getStatusColor(stats.disk, 'disk')} 
-              className="mt-2 text-xs"
+              className={`mt-3 text-xs font-medium ${
+                stats.disk > 85 ? "bg-red-500/20 text-red-400 border-red-500/30" : 
+                stats.disk > 70 ? "bg-yellow-500/20 text-yellow-400 border-yellow-500/30" : 
+                "bg-green-500/20 text-green-400 border-green-500/30"
+              }`}
             >
               {stats.disk > 85 ? "Élevé" : stats.disk > 70 ? "Modéré" : "Normal"}
             </Badge>
           </CardContent>
         </Card>
 
-        <Card className="bg-slate-800/30 border-slate-700 backdrop-blur-sm hover:bg-slate-800/50 transition-colors">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-slate-200">Uptime</CardTitle>
-            <Clock className="h-4 w-4 text-amber-400" />
+        <Card className="relative overflow-hidden border-border/50 bg-gradient-to-br from-green-500/10 via-card to-emerald-500/10 backdrop-blur-sm hover:shadow-elevated transition-all duration-300">
+          <div className="absolute top-4 right-4 p-2.5 rounded-full bg-background/80 backdrop-blur-sm">
+            <Clock className="h-5 w-5 text-green-400" />
+          </div>
+          <CardHeader className="pb-2">
+            <CardDescription className="text-muted-foreground text-xs">System Uptime</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-slate-100">{stats.uptime}</div>
-            <p className="text-xs text-slate-400 mt-2">Système stable</p>
-            <Badge variant="secondary" className="mt-2 text-xs">Actif</Badge>
+            <div className="text-3xl font-bold text-foreground mb-3">{stats.uptime}</div>
+            <p className="text-xs text-muted-foreground mb-2">Système stable et opérationnel</p>
+            <Badge className="text-xs font-medium bg-green-500/20 text-green-400 border-green-500/30">
+              Actif
+            </Badge>
           </CardContent>
         </Card>
       </div>
 
       {/* Métriques Application */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card className="bg-slate-800/30 border-slate-700 backdrop-blur-sm hover:bg-slate-800/50 transition-colors">
+      <div className="grid gap-5 md:grid-cols-3">
+        <Card className="border-border/50 bg-gradient-to-br from-primary/5 via-card to-accent/5 backdrop-blur-sm hover:shadow-elevated transition-all duration-300">
           <CardHeader>
-            <CardTitle className="text-slate-200">Requêtes</CardTitle>
-            <CardDescription className="text-slate-400">Dernières 24h</CardDescription>
+            <CardTitle className="text-foreground text-lg">Requêtes Totales</CardTitle>
+            <CardDescription className="text-muted-foreground">Dernières 24 heures</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-slate-100">{stats.requests.toLocaleString()}</div>
-            <p className="text-xs text-slate-400 mt-2">
-              ~{Math.floor(stats.requests / 24)} req/heure
+            <div className="text-4xl font-bold text-foreground mb-2">{stats.requests.toLocaleString()}</div>
+            <p className="text-sm text-muted-foreground">
+              ~{Math.floor(stats.requests / 24)} requêtes/heure
             </p>
           </CardContent>
         </Card>
 
-        <Card className="bg-slate-800/30 border-slate-700 backdrop-blur-sm hover:bg-slate-800/50 transition-colors">
+        <Card className="border-border/50 bg-gradient-to-br from-red-500/5 via-card to-orange-500/5 backdrop-blur-sm hover:shadow-elevated transition-all duration-300">
           <CardHeader>
-            <CardTitle className="text-slate-200">Erreurs</CardTitle>
-            <CardDescription className="text-slate-400">Taux d'erreur</CardDescription>
+            <CardTitle className="text-foreground text-lg">Erreurs Détectées</CardTitle>
+            <CardDescription className="text-muted-foreground">Taux d'erreur système</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-slate-100">{stats.errors}</div>
-            <p className="text-xs text-slate-400 mt-2">
-              {((stats.errors / stats.requests) * 100).toFixed(2)}% du total
+            <div className="text-4xl font-bold text-foreground mb-2">{stats.errors}</div>
+            <p className="text-sm text-muted-foreground">
+              {((stats.errors / stats.requests) * 100).toFixed(3)}% du total
             </p>
           </CardContent>
         </Card>
 
-        <Card className="bg-slate-800/30 border-slate-700 backdrop-blur-sm hover:bg-slate-800/50 transition-colors">
+        <Card className="border-border/50 bg-gradient-to-br from-blue-500/5 via-card to-cyan-500/5 backdrop-blur-sm hover:shadow-elevated transition-all duration-300">
           <CardHeader>
-            <CardTitle className="text-slate-200">Latence Moyenne</CardTitle>
-            <CardDescription className="text-slate-400">Temps de réponse</CardDescription>
+            <CardTitle className="text-foreground text-lg">Latence Moyenne</CardTitle>
+            <CardDescription className="text-muted-foreground">Temps de réponse</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-slate-100">{stats.latency}ms</div>
+            <div className="text-4xl font-bold text-foreground mb-2">{stats.latency}ms</div>
             <Badge 
-              variant={stats.latency > 200 ? "destructive" : "secondary"} 
-              className="mt-2 text-xs"
+              className={`text-xs font-medium ${
+                stats.latency > 200 ? "bg-red-500/20 text-red-400 border-red-500/30" : 
+                "bg-green-500/20 text-green-400 border-green-500/30"
+              }`}
             >
               {stats.latency > 200 ? "Lent" : "Rapide"}
             </Badge>
