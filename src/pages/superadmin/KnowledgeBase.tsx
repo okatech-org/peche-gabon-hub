@@ -5,9 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
-import { Search, BookOpen, Calendar, TrendingUp, Tag, FileText } from "lucide-react";
+import { Search, BookOpen, Calendar, TrendingUp, Tag, FileText, Eye, ExternalLink, MessageSquare } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 
@@ -24,6 +26,15 @@ interface KnowledgeEntry {
   created_at: string;
 }
 
+interface ConversationSource {
+  id: string;
+  titre: string;
+  created_at: string;
+  updated_at: string;
+  user_id: string;
+  tags: string[];
+}
+
 export default function KnowledgeBase() {
   const [entries, setEntries] = useState<KnowledgeEntry[]>([]);
   const [filteredEntries, setFilteredEntries] = useState<KnowledgeEntry[]>([]);
@@ -33,7 +44,11 @@ export default function KnowledgeBase() {
   const [isLoading, setIsLoading] = useState(true);
   const [allThemes, setAllThemes] = useState<string[]>([]);
   const [allKeywords, setAllKeywords] = useState<string[]>([]);
+  const [selectedEntry, setSelectedEntry] = useState<KnowledgeEntry | null>(null);
+  const [conversationSources, setConversationSources] = useState<ConversationSource[]>([]);
+  const [loadingConversations, setLoadingConversations] = useState(false);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   useEffect(() => {
     loadKnowledgeBase();
@@ -139,6 +154,39 @@ export default function KnowledgeBase() {
     if (score >= 0.6) return "text-blue-600";
     if (score >= 0.4) return "text-yellow-600";
     return "text-gray-600";
+  };
+
+  const openEntryDetails = async (entry: KnowledgeEntry) => {
+    setSelectedEntry(entry);
+    setLoadingConversations(true);
+    
+    try {
+      const { data, error } = await supabase
+        .from('conversations_iasted')
+        .select('*')
+        .in('id', entry.conversations_sources)
+        .order('updated_at', { ascending: false });
+
+      if (error) throw error;
+
+      if (data) {
+        setConversationSources(data);
+      }
+    } catch (error) {
+      console.error('Error loading conversations:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de charger les conversations sources.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoadingConversations(false);
+    }
+  };
+
+  const openConversation = (conversationId: string) => {
+    // Navigate to iAsted page with conversation ID
+    navigate('/minister-dashboard/iasted', { state: { conversationId } });
   };
 
   if (isLoading) {
@@ -284,12 +332,22 @@ export default function KnowledgeBase() {
                             </span>
                           </div>
                         </div>
-                        <Badge
-                          variant="outline"
-                          className={getRelevanceColor(entry.score_pertinence)}
-                        >
-                          Score: {(entry.score_pertinence * 100).toFixed(0)}%
-                        </Badge>
+                        <div className="flex items-center gap-2">
+                          <Badge
+                            variant="outline"
+                            className={getRelevanceColor(entry.score_pertinence)}
+                          >
+                            Score: {(entry.score_pertinence * 100).toFixed(0)}%
+                          </Badge>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => openEntryDetails(entry)}
+                          >
+                            <Eye className="h-4 w-4 mr-2" />
+                            Détails
+                          </Button>
+                        </div>
                       </div>
 
                       {/* Content */}
@@ -348,6 +406,149 @@ export default function KnowledgeBase() {
           </ScrollArea>
         </div>
       </div>
+
+      {/* Entry Details Modal */}
+      <Dialog open={selectedEntry !== null} onOpenChange={(open) => !open && setSelectedEntry(null)}>
+        <DialogContent className="max-w-4xl max-h-[80vh]">
+          <DialogHeader>
+            <DialogTitle className="text-2xl">{selectedEntry?.titre}</DialogTitle>
+            <DialogDescription>
+              Détails complets de l'entrée de base de connaissance
+            </DialogDescription>
+          </DialogHeader>
+
+          {selectedEntry && (
+            <ScrollArea className="max-h-[60vh] pr-4">
+              <div className="space-y-6">
+                {/* Metadata */}
+                <div className="grid grid-cols-2 gap-4 p-4 bg-muted/50 rounded-lg">
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground">Créée le</label>
+                    <p className="text-sm font-medium">
+                      {format(new Date(selectedEntry.created_at), 'dd MMMM yyyy à HH:mm', { locale: fr })}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground">Dernière mise à jour</label>
+                    <p className="text-sm font-medium">
+                      {format(new Date(selectedEntry.derniere_mise_a_jour), 'dd MMMM yyyy à HH:mm', { locale: fr })}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground">Nombre de références</label>
+                    <p className="text-sm font-medium">{selectedEntry.nb_references}</p>
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground">Score de pertinence</label>
+                    <p className="text-sm font-medium">
+                      <Badge variant="outline" className={getRelevanceColor(selectedEntry.score_pertinence)}>
+                        {(selectedEntry.score_pertinence * 100).toFixed(0)}%
+                      </Badge>
+                    </p>
+                  </div>
+                </div>
+
+                {/* Content */}
+                <div>
+                  <label className="text-sm font-semibold mb-2 block">Contenu synthétisé</label>
+                  <div className="prose prose-sm max-w-none p-4 bg-muted/30 rounded-lg">
+                    <p className="whitespace-pre-wrap text-muted-foreground">
+                      {selectedEntry.contenu_synthetise}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Themes */}
+                {selectedEntry.themes && selectedEntry.themes.length > 0 && (
+                  <div>
+                    <label className="text-sm font-semibold mb-2 block">Thèmes</label>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedEntry.themes.map((theme) => (
+                        <Badge key={theme} variant="secondary">
+                          {theme}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Keywords */}
+                {selectedEntry.mots_cles && selectedEntry.mots_cles.length > 0 && (
+                  <div>
+                    <label className="text-sm font-semibold mb-2 block">Mots-clés</label>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedEntry.mots_cles.map((keyword) => (
+                        <Badge key={keyword} variant="outline">
+                          {keyword}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <Separator />
+
+                {/* Conversation Sources */}
+                <div>
+                  <label className="text-sm font-semibold mb-3 block flex items-center gap-2">
+                    <MessageSquare className="h-4 w-4" />
+                    Conversations sources ({selectedEntry.conversations_sources.length})
+                  </label>
+
+                  {loadingConversations ? (
+                    <div className="flex items-center justify-center py-8">
+                      <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+                    </div>
+                  ) : conversationSources.length === 0 ? (
+                    <p className="text-sm text-muted-foreground text-center py-4">
+                      Aucune conversation source disponible
+                    </p>
+                  ) : (
+                    <div className="space-y-2">
+                      {conversationSources.map((conversation) => (
+                        <Card
+                          key={conversation.id}
+                          className="p-4 hover:bg-muted/50 transition-colors cursor-pointer"
+                          onClick={() => openConversation(conversation.id)}
+                        >
+                          <div className="flex items-start justify-between gap-4">
+                            <div className="flex-1 space-y-2">
+                              <div className="flex items-center gap-2">
+                                <MessageSquare className="h-4 w-4 text-primary flex-shrink-0" />
+                                <h4 className="font-medium text-sm">{conversation.titre}</h4>
+                              </div>
+                              <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                                <span>
+                                  Créée: {format(new Date(conversation.created_at), 'dd MMM yyyy', { locale: fr })}
+                                </span>
+                                <span>
+                                  Modifiée: {format(new Date(conversation.updated_at), 'dd MMM yyyy', { locale: fr })}
+                                </span>
+                              </div>
+                              {conversation.tags && conversation.tags.length > 0 && (
+                                <div className="flex flex-wrap gap-1">
+                                  {conversation.tags.map((tag) => (
+                                    <Badge key={tag} variant="outline" className="text-xs">
+                                      {tag}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                            <Button variant="ghost" size="sm">
+                              <ExternalLink className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </ScrollArea>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

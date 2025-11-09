@@ -24,7 +24,11 @@ interface Conversation {
   updated_at: string;
 }
 
-export const IAstedChat = () => {
+interface IAstedChatProps {
+  conversationIdToLoad?: string | null;
+}
+
+export const IAstedChat = ({ conversationIdToLoad }: IAstedChatProps) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -55,6 +59,13 @@ export const IAstedChat = () => {
   useEffect(() => {
     loadConversations();
   }, []);
+
+  useEffect(() => {
+    // Load conversation if ID is provided
+    if (conversationIdToLoad) {
+      loadConversation(conversationIdToLoad);
+    }
+  }, [conversationIdToLoad]);
 
   // Cleanup audio preview URL on unmount or when audioPreview changes
   useEffect(() => {

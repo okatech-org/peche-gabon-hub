@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import { IAstedChat } from "@/components/minister/IAstedChat";
 import { ConversationHistory } from "@/components/minister/ConversationHistory";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -6,6 +7,16 @@ import { MessageSquare, History } from "lucide-react";
 
 export default function IAsted() {
   const [activeTab, setActiveTab] = useState("chat");
+  const location = useLocation();
+  const [conversationIdToLoad, setConversationIdToLoad] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Check if we received a conversation ID from navigation state
+    if (location.state?.conversationId) {
+      setConversationIdToLoad(location.state.conversationId);
+      setActiveTab("chat");
+    }
+  }, [location.state]);
 
   return (
     <div className="space-y-6">
@@ -28,7 +39,7 @@ export default function IAsted() {
           </TabsTrigger>
         </TabsList>
         <TabsContent value="chat" className="mt-6">
-          <IAstedChat />
+          <IAstedChat conversationIdToLoad={conversationIdToLoad} />
         </TabsContent>
         <TabsContent value="history" className="mt-6">
           <ConversationHistory />
