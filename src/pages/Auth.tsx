@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Waves, Fish, ArrowLeft, AlertCircle, Loader2 } from "lucide-react";
+import { Waves, Fish, ArrowLeft, AlertCircle, Loader2, Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -369,6 +369,21 @@ const Auth = () => {
                 </form>
               </TabsContent>
             </Tabs>
+
+            {/* Demo Button */}
+            <div className="mt-6 pt-6 border-t border-border">
+              <p className="text-sm text-center text-muted-foreground mb-3">
+                Vous souhaitez découvrir la plateforme ?
+              </p>
+              <Button 
+                variant="outline" 
+                className="w-full" 
+                onClick={() => navigate("/demo")}
+              >
+                <Users className="mr-2 h-4 w-4" />
+                Comptes Démo
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </div>
