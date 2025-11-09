@@ -4,14 +4,23 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
-import { Mic, Send, Volume2, VolumeX, Bot, User } from "lucide-react";
+import { Mic, Send, Volume2, VolumeX, Bot, User, History, Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { AudioWaveform } from "./AudioWaveform";
+import { IAstedHistory } from "./IAstedHistory";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 interface Message {
   role: 'user' | 'assistant';
   content: string;
   audioUrl?: string;
+}
+
+interface Conversation {
+  id: string;
+  titre: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export const IAstedChat = () => {
@@ -25,6 +34,8 @@ export const IAstedChat = () => {
   const [audioChunks, setAudioChunks] = useState<Blob[]>([]);
   const [audioStream, setAudioStream] = useState<MediaStream | null>(null);
   const [conversationId, setConversationId] = useState<string | null>(null);
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [showHistory, setShowHistory] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
@@ -32,69 +43,136 @@ export const IAstedChat = () => {
     scrollRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Créer ou charger une conversation
   useEffect(() => {
-    const initializeConversation = async () => {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
-
-        // Créer une nouvelle conversation
-        const { data, error } = await supabase
-          .from('conversations_iasted')
-          .insert({
-            user_id: user.id,
-            titre: 'Nouvelle conversation'
-          })
-          .select()
-          .single();
-
-        if (error) throw error;
-        setConversationId(data.id);
-      } catch (error) {
-        console.error('Error initializing conversation:', error);
-      }
-    };
-
-    initializeConversation();
+    loadConversations();
   }, []);
 
-  const saveMessage = async (message: Message) => {
-    if (!conversationId) return;
+  const loadConversations = async () => {
+    const { data, error } = await supabase
+      .from('conversations_iasted')
+      .select('*')
+      .order('updated_at', { ascending: false })
+      .limit(20);
 
-    try {
-      await supabase
-        .from('messages_iasted')
-        .insert({
-          conversation_id: conversationId,
-          role: message.role,
-          content: message.content,
-          audio_url: message.audioUrl
-        });
+    if (!error && data) {
+      setConversations(data);
+    }
+  };
 
-      // Mettre à jour le titre de la conversation si c'est le premier message
-      if (messages.length === 0 && message.role === 'user') {
-        const titre = message.content.substring(0, 50) + (message.content.length > 50 ? '...' : '');
-        await supabase
-          .from('conversations_iasted')
-          .update({ titre })
-          .eq('id', conversationId);
-      }
-    } catch (error) {
+  const createNewConversation = async (firstMessage: string) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return null;
+
+    // Générer un titre basé sur le premier message (max 50 caractères)
+    const titre = firstMessage.length > 50 
+      ? firstMessage.substring(0, 47) + '...' 
+      : firstMessage;
+
+    const { data, error } = await supabase
+      .from('conversations_iasted')
+      .insert({
+        user_id: user.id,
+        titre
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error creating conversation:', error);
+      return null;
+    }
+
+    await loadConversations();
+    return data.id;
+  };
+
+  const saveMessage = async (conversationId: string, role: 'user' | 'assistant', content: string, audioUrl?: string) => {
+    const { error } = await supabase
+      .from('messages_iasted')
+      .insert({
+        conversation_id: conversationId,
+        role,
+        content,
+        audio_url: audioUrl
+      });
+
+    if (error) {
       console.error('Error saving message:', error);
     }
   };
+
+  const loadConversation = async (conversationId: string) => {
+    const { data, error } = await supabase
+      .from('messages_iasted')
+      .select('*')
+      .eq('conversation_id', conversationId)
+      .order('created_at', { ascending: true });
+
+    if (!error && data) {
+      const loadedMessages = data.map(msg => ({
+        role: msg.role as 'user' | 'assistant',
+        content: msg.content,
+        audioUrl: msg.audio_url
+      }));
+      setMessages(loadedMessages);
+      setConversationId(conversationId);
+      setShowHistory(false);
+    }
+  };
+
+  const deleteConversation = async (conversationIdToDelete: string) => {
+    const { error } = await supabase
+      .from('conversations_iasted')
+      .delete()
+      .eq('id', conversationIdToDelete);
+
+    if (!error) {
+      await loadConversations();
+      if (conversationId === conversationIdToDelete) {
+        setMessages([]);
+        setConversationId(null);
+      }
+      toast({
+        title: "Conversation supprimée",
+        description: "La conversation a été supprimée avec succès."
+      });
+    }
+  };
+
+  const startNewConversation = () => {
+    setMessages([]);
+    setConversationId(null);
+    setShowHistory(false);
+  };
+
+  // Supprimer l'ancien useEffect d'initialisation de conversation
+  // useEffect(() => {
+  //   initializeConversation();
+  // }, []);
 
   const handleSendMessage = async () => {
     if (!input.trim() || isLoading) return;
 
     const userMessage: Message = { role: 'user', content: input };
     setMessages(prev => [...prev, userMessage]);
-    await saveMessage(userMessage);
     setInput("");
     setIsLoading(true);
 
     try {
+      // Créer une nouvelle conversation si nécessaire
+      let currentConvId = conversationId;
+      if (!currentConvId) {
+        currentConvId = await createNewConversation(input);
+        if (currentConvId) {
+          setConversationId(currentConvId);
+        }
+      }
+
+      // Sauvegarder le message utilisateur
+      if (currentConvId) {
+        await saveMessage(currentConvId, 'user', input);
+      }
+
       const { data, error } = await supabase.functions.invoke('chat-with-iasted', {
         body: { 
           messages: [...messages, userMessage].map(m => ({ role: m.role, content: m.content })),
@@ -111,7 +189,11 @@ export const IAstedChat = () => {
           audioUrl: data.audioContent ? `data:audio/mp3;base64,${data.audioContent}` : undefined
         };
         setMessages(prev => [...prev, assistantMessage]);
-        await saveMessage(assistantMessage);
+
+        // Sauvegarder le message assistant
+        if (currentConvId) {
+          await saveMessage(currentConvId, 'assistant', data.message, assistantMessage.audioUrl);
+        }
 
         // Auto-play audio
         if (assistantMessage.audioUrl) {
@@ -270,15 +352,41 @@ export const IAstedChat = () => {
   return (
     <Card className="flex flex-col h-[700px]">
       <div className="p-4 border-b bg-gradient-to-r from-primary/10 to-primary/5">
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-primary/20 rounded-full">
-            <Bot className="h-6 w-6 text-primary" />
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-primary/20 rounded-full">
+              <Bot className="h-6 w-6 text-primary" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-lg">iAsted</h3>
+              <p className="text-sm text-muted-foreground">
+                Assistant Vocal Ministériel Intelligent
+              </p>
+            </div>
           </div>
-          <div>
-            <h3 className="font-semibold text-lg">iAsted</h3>
-            <p className="text-sm text-muted-foreground">
-              Assistant Vocal Ministériel Intelligent
-            </p>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={startNewConversation}
+              title="Nouvelle conversation"
+            >
+              <Plus className="h-4 w-4" />
+            </Button>
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="outline" size="icon" title="Historique">
+                  <History className="h-4 w-4" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="left" className="w-[400px] p-0">
+                <IAstedHistory
+                  onSelectConversation={loadConversation}
+                  onDeleteConversation={deleteConversation}
+                  onNewConversation={startNewConversation}
+                />
+              </SheetContent>
+            </Sheet>
           </div>
         </div>
       </div>
