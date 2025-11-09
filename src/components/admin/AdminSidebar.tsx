@@ -31,6 +31,7 @@ import {
   Target,
   DollarSign,
   BarChart3,
+  Code,
 } from "lucide-react";
 
 const menuItems = [
@@ -100,6 +101,7 @@ const menuItems = [
   {
     group: "Système",
     items: [
+      { title: "Développement", url: "/admin/developpement", icon: Code },
       { title: "Paramètres", url: "/admin/settings", icon: Settings },
     ],
   },

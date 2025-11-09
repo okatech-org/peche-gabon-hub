@@ -912,6 +912,42 @@ export type Database = {
           },
         ]
       }
+      demo_feedbacks: {
+        Row: {
+          created_at: string | null
+          description: string
+          id: string
+          role_demo: string
+          statut: string | null
+          titre: string
+          type_feedback: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description: string
+          id?: string
+          role_demo: string
+          statut?: string | null
+          titre: string
+          type_feedback: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string
+          id?: string
+          role_demo?: string
+          statut?: string | null
+          titre?: string
+          type_feedback?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       documents_ministeriels: {
         Row: {
           contenu_genere: string
