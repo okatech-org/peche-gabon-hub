@@ -36,3 +36,6 @@ verify_jwt = true
 [functions.synthesize-conversation-to-knowledge]
 verify_jwt = true
 
+[functions.generate-greeting-audio]
+verify_jwt = true
+

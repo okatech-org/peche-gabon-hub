@@ -120,15 +120,15 @@ export const useVoiceInteraction = () => {
       
       setVoiceState('speaking');
       
-      // Generate audio for greeting
-      const { data: greetingData, error: greetingError } = await supabase.functions.invoke('chat-with-iasted', {
-        body: { 
-          messages: [{ role: 'user', content: greetingMessage }],
-          generateAudio: true 
-        }
+      console.log('Playing greeting:', greetingMessage);
+      
+      // Generate audio for greeting (simple TTS without AI conversation)
+      const { data: greetingData, error: greetingError } = await supabase.functions.invoke('generate-greeting-audio', {
+        body: { text: greetingMessage }
       });
 
       if (greetingError || !greetingData.audioContent) {
+        console.error('Failed to generate greeting audio:', greetingError);
         throw new Error('Failed to generate greeting audio');
       }
 
@@ -145,6 +145,7 @@ export const useVoiceInteraction = () => {
         const audio = new Audio(audioUrl);
         audio.onended = () => {
           URL.revokeObjectURL(audioUrl);
+          console.log('Greeting finished, ready to listen');
           resolve();
         };
         audio.onerror = () => {
@@ -159,6 +160,7 @@ export const useVoiceInteraction = () => {
       setCurrentAudio(null);
     } catch (error) {
       console.error('Error playing greeting:', error);
+      // Continue to listening even if greeting fails
     }
   };
 
