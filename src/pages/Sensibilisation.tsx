@@ -2,21 +2,29 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Heart, Fish, Waves, AlertTriangle, BookOpen, Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useLanguage } from "@/hooks/useLanguage";
+import { LanguageSelector } from "@/components/LanguageSelector";
 
 const Sensibilisation = () => {
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Language Selector - Fixed position */}
+      <div className="fixed top-4 right-4 z-50">
+        <LanguageSelector />
+      </div>
+      
       {/* Header */}
       <header className="bg-card border-b sticky top-0 z-10 backdrop-blur-sm bg-card/95">
         <div className="container mx-auto max-w-6xl px-4 py-4">
           <div className="flex items-center justify-between">
             <Button variant="ghost" onClick={() => navigate("/")}>
               <ArrowLeft className="mr-2 h-4 w-4" />
-              Retour
+              {t("common.back")}
             </Button>
-            <h1 className="text-2xl font-bold">Sensibilisation</h1>
+            <h1 className="text-2xl font-bold">{t("nav.awareness")}</h1>
             <div className="w-24" />
           </div>
         </div>
@@ -288,7 +296,7 @@ const Sensibilisation = () => {
       {/* Footer */}
       <footer className="bg-card border-t py-8 px-4">
         <div className="container mx-auto max-w-6xl text-center text-muted-foreground">
-          <p>© 2025 PÊCHE GABON - Ministère de la Pêche et de l'Aquaculture</p>
+          <p>{t("footer.copyright")}</p>
         </div>
       </footer>
     </div>

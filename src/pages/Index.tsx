@@ -1,6 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { Fish, Waves, Shield, BarChart3, Users, ArrowRight, FileText, TrendingUp, Newspaper, Heart } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useLanguage } from "@/hooks/useLanguage";
+import { LanguageSelector } from "@/components/LanguageSelector";
 import heroImage from "@/assets/hero-fisherman.jpg";
 import artisanalImage from "@/assets/artisanal-fishing.jpg";
 import industrialImage from "@/assets/industrial-fishing.jpg";
@@ -10,9 +12,14 @@ import investorsImage from "@/assets/investors.jpg";
 
 const Index = () => {
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   return (
     <div className="min-h-screen">
+      {/* Language Selector - Fixed position */}
+      <div className="fixed top-4 right-4 z-50">
+        <LanguageSelector />
+      </div>
       {/* Hero Section */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0">
@@ -27,15 +34,13 @@ const Index = () => {
           <div className="max-w-2xl">
             <div className="flex items-center gap-3 mb-6">
               <Fish className="h-16 w-16 text-primary" />
-              <h1 className="text-5xl lg:text-7xl font-bold text-white">PÊCHE GABON</h1>
+              <h1 className="text-5xl lg:text-7xl font-bold text-white">{t("hero.title")}</h1>
             </div>
             <p className="text-2xl lg:text-3xl mb-6 text-primary font-semibold">
-              Excellence en Gestion Halieutique
+              {t("hero.subtitle")}
             </p>
             <p className="text-lg mb-8 text-white/90">
-              Une plateforme digitale de pointe pour une gestion durable et transparente des ressources 
-              halieutiques gabonaises. Nous offrons aux investisseurs un écosystème moderne, 
-              réglementé et propice à la croissance.
+              {t("hero.description")}
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
               <Button
@@ -44,7 +49,7 @@ const Index = () => {
                 className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-glow button-hover-lift button-glow"
               >
                 <TrendingUp className="mr-2 h-5 w-5" />
-                Données & Investissements
+                {t("hero.dataInvestment")}
               </Button>
               <Button
                 size="lg"
@@ -52,7 +57,7 @@ const Index = () => {
                 onClick={() => navigate("/auth")}
                 className="border-primary text-white bg-background/20 backdrop-blur-sm hover:bg-primary/20 button-hover-lift"
               >
-                Espace Professionnel
+                {t("nav.professionalSpace")}
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
             </div>
@@ -66,19 +71,19 @@ const Index = () => {
           <div className="flex flex-wrap justify-center gap-4">
             <Button variant="ghost" className="button-hover-lift" onClick={() => navigate("/donnees-publiques")}>
               <TrendingUp className="mr-2 h-4 w-4" />
-              Données Publiques
+              {t("nav.publicData")}
             </Button>
             <Button variant="ghost" className="button-hover-lift" onClick={() => navigate("/actualites")}>
               <Newspaper className="mr-2 h-4 w-4" />
-              Actualités
+              {t("nav.news")}
             </Button>
             <Button variant="ghost" className="button-hover-lift" onClick={() => navigate("/sensibilisation")}>
               <Heart className="mr-2 h-4 w-4" />
-              Sensibilisation
+              {t("nav.awareness")}
             </Button>
             <Button variant="ghost" className="button-hover-lift" onClick={() => navigate("/registre-documents")}>
               <FileText className="mr-2 h-4 w-4" />
-              Registre Public
+              {t("nav.registry")}
             </Button>
           </div>
         </div>
@@ -277,7 +282,7 @@ const Index = () => {
       {/* Footer */}
       <footer className="bg-card border-t py-8 px-4">
         <div className="container mx-auto max-w-6xl text-center text-muted-foreground">
-          <p>© 2025 PÊCHE GABON - Ministère de la Pêche et de l'Aquaculture</p>
+          <p>{t("footer.copyright")}</p>
         </div>
       </footer>
     </div>

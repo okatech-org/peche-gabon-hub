@@ -3,24 +3,32 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { ArrowLeft, Download, TrendingUp, Fish, DollarSign, Ship, Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useCSVData } from "@/hooks/useCSVData";
+import { useLanguage } from "@/hooks/useLanguage";
+import { LanguageSelector } from "@/components/LanguageSelector";
 
 const DonneesPubliques = () => {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const { data: indicateurs } = useCSVData("/data/analytics/indicateurs_cles.csv");
 
   const stats = indicateurs?.[0] || {};
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Language Selector - Fixed position */}
+      <div className="fixed top-4 right-4 z-50">
+        <LanguageSelector />
+      </div>
+      
       {/* Header */}
       <header className="bg-card border-b sticky top-0 z-10 backdrop-blur-sm bg-card/95">
         <div className="container mx-auto max-w-6xl px-4 py-4">
           <div className="flex items-center justify-between">
             <Button variant="ghost" onClick={() => navigate("/")}>
               <ArrowLeft className="mr-2 h-4 w-4" />
-              Retour
+              {t("common.back")}
             </Button>
-            <h1 className="text-2xl font-bold">Données Publiques</h1>
+            <h1 className="text-2xl font-bold">{t("nav.publicData")}</h1>
             <div className="w-24" />
           </div>
         </div>
@@ -228,8 +236,8 @@ const DonneesPubliques = () => {
       {/* Footer */}
       <footer className="bg-card border-t py-8 px-4">
         <div className="container mx-auto max-w-6xl text-center text-muted-foreground">
-          <p>© 2025 PÊCHE GABON - Ministère de la Pêche et de l'Aquaculture</p>
-          <p className="text-sm mt-2">Données mises à jour quotidiennement</p>
+          <p>{t("footer.copyright")}</p>
+          <p className="text-sm mt-2">{t("footer.dataUpdated")}</p>
         </div>
       </footer>
     </div>

@@ -12,6 +12,8 @@ import { fr } from "date-fns/locale";
 import { toast } from "sonner";
 import { NotificationSubscriptionDialog } from "@/components/notifications/NotificationSubscriptionDialog";
 import { NotificationHistoryPanel } from "@/components/notifications/NotificationHistoryPanel";
+import { useLanguage } from "@/hooks/useLanguage";
+import { LanguageSelector } from "@/components/LanguageSelector";
 
 const TYPE_DOCUMENTS = [
   { value: "arrete", label: "Arrêté ministériel" },
@@ -136,6 +138,10 @@ ${doc.destinataires && doc.destinataires.length > 0 ? `\nDestinataires:\n${doc.d
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-secondary/10">
+      {/* Language Selector - Fixed position */}
+      <div className="fixed top-4 right-4 z-50">
+        <LanguageSelector />
+      </div>
       <div className="container mx-auto px-4 py-8">
         {/* Bouton retour et abonnement */}
         <div className="mb-6 flex items-center justify-between gap-4">
