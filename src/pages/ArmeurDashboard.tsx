@@ -1,8 +1,9 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Ship, Activity, BarChart3 } from "lucide-react";
+import { Ship, Activity, BarChart3, Receipt } from "lucide-react";
 import { FlotteArmeur } from "@/components/armeur/FlotteArmeur";
 import { MareesArmeur } from "@/components/armeur/MareesArmeur";
 import { StatistiquesArmeur } from "@/components/armeur/StatistiquesArmeur";
+import { TaxesArmeur } from "@/components/armeur/TaxesArmeur";
 
 export default function ArmeurDashboard() {
   return (
@@ -15,7 +16,7 @@ export default function ArmeurDashboard() {
       </div>
 
       <Tabs defaultValue="flotte" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="flotte" className="flex items-center gap-2">
             <Ship className="h-4 w-4" />
             Ma Flotte
@@ -23,6 +24,10 @@ export default function ArmeurDashboard() {
           <TabsTrigger value="marees" className="flex items-center gap-2">
             <Activity className="h-4 w-4" />
             Marées
+          </TabsTrigger>
+          <TabsTrigger value="taxes" className="flex items-center gap-2">
+            <Receipt className="h-4 w-4" />
+            Taxes & Impôts
           </TabsTrigger>
           <TabsTrigger value="stats" className="flex items-center gap-2">
             <BarChart3 className="h-4 w-4" />
@@ -36,6 +41,10 @@ export default function ArmeurDashboard() {
 
         <TabsContent value="marees" className="space-y-6 mt-6">
           <MareesArmeur />
+        </TabsContent>
+
+        <TabsContent value="taxes" className="space-y-6 mt-6">
+          <TaxesArmeur />
         </TabsContent>
 
         <TabsContent value="stats" className="space-y-6 mt-6">

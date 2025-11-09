@@ -3661,6 +3661,89 @@ export type Database = {
           },
         ]
       }
+      taxes_captures: {
+        Row: {
+          bareme_id: string | null
+          capture_pa_id: string | null
+          created_at: string | null
+          date_paiement: string | null
+          espece_id: string | null
+          id: string
+          maree_industrielle_id: string | null
+          montant_taxe: number
+          montant_unitaire: number | null
+          notes: string | null
+          poids_taxable_kg: number
+          quittance_numero: string | null
+          statut_paiement: string | null
+          taux_applique: number | null
+          type_taxe: string
+        }
+        Insert: {
+          bareme_id?: string | null
+          capture_pa_id?: string | null
+          created_at?: string | null
+          date_paiement?: string | null
+          espece_id?: string | null
+          id?: string
+          maree_industrielle_id?: string | null
+          montant_taxe: number
+          montant_unitaire?: number | null
+          notes?: string | null
+          poids_taxable_kg: number
+          quittance_numero?: string | null
+          statut_paiement?: string | null
+          taux_applique?: number | null
+          type_taxe?: string
+        }
+        Update: {
+          bareme_id?: string | null
+          capture_pa_id?: string | null
+          created_at?: string | null
+          date_paiement?: string | null
+          espece_id?: string | null
+          id?: string
+          maree_industrielle_id?: string | null
+          montant_taxe?: number
+          montant_unitaire?: number | null
+          notes?: string | null
+          poids_taxable_kg?: number
+          quittance_numero?: string | null
+          statut_paiement?: string | null
+          taux_applique?: number | null
+          type_taxe?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "taxes_captures_bareme_id_fkey"
+            columns: ["bareme_id"]
+            isOneToOne: false
+            referencedRelation: "bareme_taxes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "taxes_captures_capture_pa_id_fkey"
+            columns: ["capture_pa_id"]
+            isOneToOne: false
+            referencedRelation: "captures_pa"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "taxes_captures_espece_id_fkey"
+            columns: ["espece_id"]
+            isOneToOne: false
+            referencedRelation: "especes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "taxes_captures_maree_industrielle_id_fkey"
+            columns: ["maree_industrielle_id"]
+            isOneToOne: false
+            referencedRelation: "marees_industrielles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       taxes_industrielles: {
         Row: {
           annee: number
@@ -4049,7 +4132,17 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      taxes_dues_summary: {
+        Row: {
+          date_plus_ancienne: string | null
+          date_plus_recente: string | null
+          montant_total: number | null
+          nombre_taxes: number | null
+          statut_paiement: string | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       assign_demo_role: {
