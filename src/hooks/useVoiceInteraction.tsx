@@ -237,40 +237,38 @@ export const useVoiceInteraction = () => {
   const analyzeAudioLevel = () => {
     if (!analyserRef.current || voiceState !== 'listening') return;
 
-    const dataArray = new Uint8Array(analyserRef.current.frequencyBinCount);
-    analyserRef.current.getByteFrequencyData(dataArray);
+    // Use time-domain data for more reliable VAD
+    const timeDomain = new Uint8Array(analyserRef.current.fftSize);
+    analyserRef.current.getByteTimeDomainData(timeDomain);
 
-    // Calculate average level
-    const average = dataArray.reduce((a, b) => a + b) / dataArray.length;
-    const normalizedLevel = Math.min(100, (average / 255) * 100);
-    
+    // Compute RMS amplitude (0..1)
+    let sumSquares = 0;
+    for (let i = 0; i < timeDomain.length; i++) {
+      const centered = (timeDomain[i] - 128) / 128; // -1..1
+      sumSquares += centered * centered;
+    }
+    const rms = Math.sqrt(sumSquares / timeDomain.length);
+    const level = Math.min(1, rms * 2); // simple scaling
+    const normalizedLevel = Math.round(level * 100);
+
     setAudioLevel(normalizedLevel);
 
-    // Silence detection: if level is above threshold, update last sound time
     if (normalizedLevel > silenceThreshold) {
+      // Voice activity
       lastSoundTimeRef.current = Date.now();
       setSilenceDetected(false);
       setSilenceTimeRemaining(0);
-      
-      // Clear any existing silence timer and countdown
-      if (silenceTimerRef.current) {
-        clearTimeout(silenceTimerRef.current);
-        silenceTimerRef.current = null;
-      }
       if (silenceCountdownIntervalRef.current) {
         clearInterval(silenceCountdownIntervalRef.current);
         silenceCountdownIntervalRef.current = null;
       }
     } else {
-      // Check if enough time has passed since last sound
       const timeSinceLastSound = Date.now() - lastSoundTimeRef.current;
-      
-      // Start silence detection visual feedback after 300ms of silence
+
+      // Show visual feedback after 300ms of silence
       if (timeSinceLastSound >= 300 && !silenceDetected) {
         setSilenceDetected(true);
         setSilenceTimeRemaining(silenceDuration);
-        
-        // Start countdown display
         if (!silenceCountdownIntervalRef.current) {
           silenceCountdownIntervalRef.current = setInterval(() => {
             const remaining = silenceDuration - (Date.now() - lastSoundTimeRef.current);
@@ -280,10 +278,9 @@ export const useVoiceInteraction = () => {
           }, 50);
         }
       }
-      
-      // If we've been silent long enough, stop listening
+
       if (timeSinceLastSound >= silenceDuration) {
-        console.log('Silence detected, stopping recording');
+        console.log('Silence detected, stopping recording (rms-based)');
         if (silenceCountdownIntervalRef.current) {
           clearInterval(silenceCountdownIntervalRef.current);
           silenceCountdownIntervalRef.current = null;
@@ -554,40 +551,64 @@ export const useVoiceInteraction = () => {
       // Ensure audio context is ready before playing
       await ensureAudioContextResumed();
 
-      // Convert base64 to audio blob
+      // Decode base64 to ArrayBuffer
       const binaryString = atob(base64Audio);
       const bytes = new Uint8Array(binaryString.length);
       for (let i = 0; i < binaryString.length; i++) {
         bytes[i] = binaryString.charCodeAt(i);
       }
+      const arrayBuffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
+
+      if (playbackAudioContextRef.current) {
+        const ctx = playbackAudioContextRef.current;
+
+        try {
+          const audioBuffer = await ctx.decodeAudioData(arrayBuffer.slice(0));
+          await new Promise<void>((resolve) => {
+            const source = ctx.createBufferSource();
+            source.buffer = audioBuffer;
+            source.connect(ctx.destination);
+            source.onended = () => resolve();
+            source.start(0);
+          });
+          setVoiceState('idle');
+          
+          // Mode continu: relancer l'écoute
+          if (continuousMode && !continuousModePaused) {
+            console.log('Mode continu activé, redémarrage de l\'écoute (WebAudio)...');
+            setTimeout(() => startListening(), 300);
+          }
+          return;
+        } catch (decodeErr) {
+          console.warn('decodeAudioData failed, falling back to HTMLAudio', decodeErr);
+        }
+      }
+
+      // Fallback to HTMLAudioElement
       const audioBlob = new Blob([bytes], { type: 'audio/mpeg' });
       const audioUrl = URL.createObjectURL(audioBlob);
-
-      // Play audio
       const audio = new Audio(audioUrl);
-      audio.onended = () => {
-        URL.revokeObjectURL(audioUrl);
-        setVoiceState('idle');
-        setCurrentAudio(null);
-        
-        // Si le mode continu est activé ET non en pause, redémarrer l'écoute automatiquement
-        if (continuousMode && !continuousModePaused) {
-          console.log('Mode continu activé, redémarrage de l\'écoute...');
-          setTimeout(() => {
-            startListening();
-          }, 500); // Petit délai avant de recommencer l'écoute
-        }
-      };
 
-      audio.onerror = () => {
-        console.error('Error playing audio');
-        URL.revokeObjectURL(audioUrl);
-        setVoiceState('idle');
-        setCurrentAudio(null);
-      };
+      await new Promise<void>((resolve, reject) => {
+        audio.onended = () => {
+          URL.revokeObjectURL(audioUrl);
+          resolve();
+        };
+        audio.onerror = () => {
+          URL.revokeObjectURL(audioUrl);
+          reject(new Error('Error playing audio'));
+        };
+        setCurrentAudio(audio);
+        audio.play().catch(reject);
+      });
 
-      setCurrentAudio(audio);
-      await audio.play();
+      setCurrentAudio(null);
+      setVoiceState('idle');
+
+      if (continuousMode && !continuousModePaused) {
+        console.log('Mode continu activé, redémarrage de l\'écoute (fallback)...');
+        setTimeout(() => startListening(), 300);
+      }
 
     } catch (error) {
       console.error('Error playing audio:', error);
@@ -606,7 +627,10 @@ export const useVoiceInteraction = () => {
         );
         continuousModeToastShownRef.current = true;
       }
-      
+
+      // Débloquer l'audio (navigateurs mobiles/desktop)
+      await ensureAudioContextResumed();
+
       // Jouer la salutation puis démarrer l'écoute
       await playGreeting();
       startListening();
