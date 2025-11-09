@@ -19,7 +19,7 @@ import {
   Bot
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import {
   Sidebar,
@@ -142,6 +142,12 @@ export function MinisterSidebar() {
   const { state } = useSidebar();
   const location = useLocation();
   const { user, signOut } = useAuth();
+  const navigate = useNavigate();
+  
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/auth');
+  };
   const currentPath = location.pathname;
   const collapsed = state === "collapsed";
   
@@ -368,7 +374,7 @@ export function MinisterSidebar() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={signOut}
+              onClick={handleSignOut}
               className="w-full justify-start gap-2 h-8 text-xs hover:bg-sidebar-accent hover:text-destructive transition-all"
             >
               <LogOut className="h-3.5 w-3.5" />
@@ -385,7 +391,7 @@ export function MinisterSidebar() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={signOut}
+              onClick={handleSignOut}
               className="p-1.5 hover:bg-sidebar-accent hover:text-destructive transition-all"
               title="Déconnexion"
             >
