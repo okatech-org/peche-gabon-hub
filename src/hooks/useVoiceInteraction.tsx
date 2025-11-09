@@ -122,7 +122,7 @@ export const useVoiceInteraction = () => {
       // Generate audio for greeting
       const { data: greetingData, error: greetingError } = await supabase.functions.invoke('chat-with-iasted', {
         body: { 
-          message: greetingMessage,
+          messages: [{ role: 'user', content: greetingMessage }],
           generateAudio: true 
         }
       });
@@ -308,7 +308,7 @@ export const useVoiceInteraction = () => {
         // Get AI response
         const { data: chatData, error: chatError } = await supabase.functions.invoke('chat-with-iasted', {
           body: { 
-            message: transcriptionData.text,
+            messages: [{ role: 'user', content: transcriptionData.text }],
             generateAudio: true 
           }
         });
