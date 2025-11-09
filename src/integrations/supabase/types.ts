@@ -4445,6 +4445,45 @@ export type Database = {
         }
         Relationships: []
       }
+      voice_presets: {
+        Row: {
+          created_at: string
+          id: string
+          is_default: boolean | null
+          name: string
+          updated_at: string
+          user_id: string
+          voice_continuous_mode: boolean
+          voice_id: string
+          voice_silence_duration: number
+          voice_silence_threshold: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_default?: boolean | null
+          name: string
+          updated_at?: string
+          user_id: string
+          voice_continuous_mode?: boolean
+          voice_id: string
+          voice_silence_duration?: number
+          voice_silence_threshold?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_default?: boolean | null
+          name?: string
+          updated_at?: string
+          user_id?: string
+          voice_continuous_mode?: boolean
+          voice_id?: string
+          voice_silence_duration?: number
+          voice_silence_threshold?: number
+        }
+        Relationships: []
+      }
       workflow_commentaires: {
         Row: {
           auteur_institution: string
