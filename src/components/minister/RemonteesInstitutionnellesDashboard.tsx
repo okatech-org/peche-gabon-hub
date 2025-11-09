@@ -106,6 +106,24 @@ interface PrevisionsResult {
   analyse: string;
 }
 
+interface PrevisionTypeTaxe {
+  previsions_mensuelles: PrevisionMensuelle[];
+  total_annuel: number;
+  croissance: number;
+}
+
+interface PrevisionsParType {
+  previsions_par_type: {
+    captures: PrevisionTypeTaxe;
+    licences: PrevisionTypeTaxe;
+    exportations: PrevisionTypeTaxe;
+    autres: PrevisionTypeTaxe;
+  };
+  total_global: number;
+  analyse_globale: string;
+  recommandations: string[];
+}
+
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
 const MOIS_NOMS = ["Jan", "Fév", "Mar", "Avr", "Mai", "Jun", "Jul", "Aoû", "Sep", "Oct", "Nov", "Déc"];
 
@@ -125,6 +143,8 @@ export function RemonteesInstitutionnellesDashboard() {
   const [recettesTresor, setRecettesTresor] = useState<RecetteTresorAnnuelle[]>([]);
   const [previsionsTresor, setPrevisionsTresor] = useState<PrevisionsResult | null>(null);
   const [loadingPrevisionsTresor, setLoadingPrevisionsTresor] = useState(false);
+  const [previsionsParType, setPrevisionsParType] = useState<PrevisionsParType | null>(null);
+  const [loadingPrevisionsParType, setLoadingPrevisionsParType] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -158,6 +178,59 @@ export function RemonteesInstitutionnellesDashboard() {
       toast.error("Erreur lors de la génération des prévisions");
     } finally {
       setLoadingPrevisionsTresor(false);
+    }
+  };
+
+  const genererPrevisionsParType = async () => {
+    setLoadingPrevisionsParType(true);
+    try {
+      // Simuler des données historiques par type de taxe
+      // En production, ces données viendraient de la base de données
+      const currentYear = new Date().getFullYear();
+      const donneesHistoriques = {
+        captures: [
+          { annee: currentYear - 2, montant: 15000000 },
+          { annee: currentYear - 1, montant: 17500000 },
+          { annee: currentYear, montant: 19200000 }
+        ],
+        licences: [
+          { annee: currentYear - 2, montant: 3500000 },
+          { annee: currentYear - 1, montant: 4200000 },
+          { annee: currentYear, montant: 4800000 }
+        ],
+        exportations: [
+          { annee: currentYear - 2, montant: 8000000 },
+          { annee: currentYear - 1, montant: 9500000 },
+          { annee: currentYear, montant: 10500000 }
+        ],
+        autres: [
+          { annee: currentYear - 2, montant: 2000000 },
+          { annee: currentYear - 1, montant: 2400000 },
+          { annee: currentYear, montant: 2745000 }
+        ]
+      };
+
+      const { data, error } = await supabase.functions.invoke('prevoir-recettes-par-type', {
+        body: { donneesHistoriques }
+      });
+
+      if (error) {
+        if (error.message?.includes("429")) {
+          toast.error("Limite de requêtes atteinte, veuillez réessayer plus tard");
+        } else if (error.message?.includes("402")) {
+          toast.error("Crédits insuffisants, veuillez recharger votre compte");
+        } else {
+          toast.error("Erreur lors de la génération des prévisions");
+        }
+        throw error;
+      }
+
+      setPrevisionsParType(data);
+      toast.success("Prévisions par type générées avec succès");
+    } catch (error) {
+      console.error("Erreur lors de la génération des prévisions par type:", error);
+    } finally {
+      setLoadingPrevisionsParType(false);
     }
   };
 
@@ -640,7 +713,7 @@ export function RemonteesInstitutionnellesDashboard() {
       <Card>
         <CardContent className="pt-6">
           <Tabs defaultValue="repartition" className="w-full">
-            <TabsList className="grid w-full grid-cols-8">
+            <TabsList className="grid w-full grid-cols-9">
               <TabsTrigger value="repartition">
                 <PieChart className="h-4 w-4 mr-2" />
                 Répartition
@@ -656,6 +729,10 @@ export function RemonteesInstitutionnellesDashboard() {
               <TabsTrigger value="previsions-tresor">
                 <Sparkles className="h-4 w-4 mr-2" />
                 Prévisions IA
+              </TabsTrigger>
+              <TabsTrigger value="previsions-type">
+                <BarChart3 className="h-4 w-4 mr-2" />
+                Par Type
               </TabsTrigger>
               <TabsTrigger value="comparaison">
                 <Calendar className="h-4 w-4 mr-2" />
@@ -1129,6 +1206,305 @@ export function RemonteesInstitutionnellesDashboard() {
                       variant="outline"
                       onClick={genererPrevisionsTresor} 
                       disabled={loadingPrevisionsTresor}
+                    >
+                      <Sparkles className="h-4 w-4 mr-2" />
+                      Régénérer les Prévisions
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </TabsContent>
+
+            <TabsContent value="previsions-type" className="space-y-6">
+              {!previsionsParType ? (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <BarChart3 className="h-5 w-5" />
+                      Prévisions IA par Type de Taxe
+                    </CardTitle>
+                    <CardDescription>
+                      Analyse granulaire des différentes sources de revenus
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-center py-12">
+                      <BarChart3 className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                      <p className="text-muted-foreground mb-4">
+                        Générez des prévisions détaillées pour chaque type de taxe
+                      </p>
+                      <Button 
+                        onClick={genererPrevisionsParType} 
+                        disabled={loadingPrevisionsParType}
+                      >
+                        {loadingPrevisionsParType ? (
+                          <>
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            Génération en cours...
+                          </>
+                        ) : (
+                          <>
+                            <Sparkles className="h-4 w-4 mr-2" />
+                            Générer les Prévisions par Type
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="space-y-6">
+                  {/* Vue d'ensemble */}
+                  <div className="grid gap-4 md:grid-cols-4">
+                    <Card>
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm font-medium text-muted-foreground">
+                          Total Global Prévu
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-2xl font-bold">
+                          {previsionsParType.total_global.toLocaleString('fr-FR')} FCFA
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    <Card>
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm font-medium text-muted-foreground">
+                          Captures
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-2xl font-bold text-blue-600">
+                          {previsionsParType.previsions_par_type.captures.total_annuel.toLocaleString('fr-FR')}
+                        </div>
+                        <p className="text-xs text-green-600 mt-1">
+                          +{previsionsParType.previsions_par_type.captures.croissance.toFixed(1)}%
+                        </p>
+                      </CardContent>
+                    </Card>
+
+                    <Card>
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm font-medium text-muted-foreground">
+                          Licences
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-2xl font-bold text-purple-600">
+                          {previsionsParType.previsions_par_type.licences.total_annuel.toLocaleString('fr-FR')}
+                        </div>
+                        <p className="text-xs text-green-600 mt-1">
+                          +{previsionsParType.previsions_par_type.licences.croissance.toFixed(1)}%
+                        </p>
+                      </CardContent>
+                    </Card>
+
+                    <Card>
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm font-medium text-muted-foreground">
+                          Exportations
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-2xl font-bold text-orange-600">
+                          {previsionsParType.previsions_par_type.exportations.total_annuel.toLocaleString('fr-FR')}
+                        </div>
+                        <p className="text-xs text-green-600 mt-1">
+                          +{previsionsParType.previsions_par_type.exportations.croissance.toFixed(1)}%
+                        </p>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  {/* Graphique comparatif par type */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Répartition des Prévisions par Type</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <ResponsiveContainer width="100%" height={300}>
+                        <RechartsPieChart>
+                          <Pie
+                            data={[
+                              { 
+                                name: 'Captures', 
+                                value: previsionsParType.previsions_par_type.captures.total_annuel,
+                                fill: '#3b82f6'
+                              },
+                              { 
+                                name: 'Licences', 
+                                value: previsionsParType.previsions_par_type.licences.total_annuel,
+                                fill: '#a855f7'
+                              },
+                              { 
+                                name: 'Exportations', 
+                                value: previsionsParType.previsions_par_type.exportations.total_annuel,
+                                fill: '#f97316'
+                              },
+                              { 
+                                name: 'Autres', 
+                                value: previsionsParType.previsions_par_type.autres.total_annuel,
+                                fill: '#22c55e'
+                              }
+                            ]}
+                            cx="50%"
+                            cy="50%"
+                            labelLine={false}
+                            label={({ name, value }) => `${name}: ${(value / 1000000).toFixed(1)}M`}
+                            outerRadius={100}
+                            dataKey="value"
+                          >
+                          </Pie>
+                          <Tooltip formatter={(value: number) => `${value.toLocaleString('fr-FR')} FCFA`} />
+                          <Legend />
+                        </RechartsPieChart>
+                      </ResponsiveContainer>
+                    </CardContent>
+                  </Card>
+
+                  {/* Graphiques mensuels par type */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Évolution Mensuelle par Type de Taxe</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <ResponsiveContainer width="100%" height={400}>
+                        <LineChart>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis 
+                            dataKey="mois" 
+                            type="category" 
+                            allowDuplicatedCategory={false}
+                          />
+                          <YAxis />
+                          <Tooltip formatter={(value: number) => `${value.toLocaleString('fr-FR')} FCFA`} />
+                          <Legend />
+                          <Line 
+                            data={previsionsParType.previsions_par_type.captures.previsions_mensuelles}
+                            type="monotone" 
+                            dataKey="montant_prevu" 
+                            stroke="#3b82f6"
+                            strokeWidth={2}
+                            name="Captures"
+                          />
+                          <Line 
+                            data={previsionsParType.previsions_par_type.licences.previsions_mensuelles}
+                            type="monotone" 
+                            dataKey="montant_prevu" 
+                            stroke="#a855f7"
+                            strokeWidth={2}
+                            name="Licences"
+                          />
+                          <Line 
+                            data={previsionsParType.previsions_par_type.exportations.previsions_mensuelles}
+                            type="monotone" 
+                            dataKey="montant_prevu" 
+                            stroke="#f97316"
+                            strokeWidth={2}
+                            name="Exportations"
+                          />
+                          <Line 
+                            data={previsionsParType.previsions_par_type.autres.previsions_mensuelles}
+                            type="monotone" 
+                            dataKey="montant_prevu" 
+                            stroke="#22c55e"
+                            strokeWidth={2}
+                            name="Autres"
+                          />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </CardContent>
+                  </Card>
+
+                  {/* Analyse et recommandations */}
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Analyse Globale</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-muted-foreground">{previsionsParType.analyse_globale}</p>
+                      </CardContent>
+                    </Card>
+
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Recommandations</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <ul className="space-y-2">
+                          {previsionsParType.recommandations.map((rec, idx) => (
+                            <li key={idx} className="flex items-start gap-2">
+                              <span className="text-primary mt-1">•</span>
+                              <span className="text-sm text-muted-foreground">{rec}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  {/* Tableau détaillé */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Détail des Prévisions par Type</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <Tabs defaultValue="captures" className="w-full">
+                        <TabsList className="grid w-full grid-cols-4">
+                          <TabsTrigger value="captures">Captures</TabsTrigger>
+                          <TabsTrigger value="licences">Licences</TabsTrigger>
+                          <TabsTrigger value="exportations">Exportations</TabsTrigger>
+                          <TabsTrigger value="autres">Autres</TabsTrigger>
+                        </TabsList>
+
+                        {(['captures', 'licences', 'exportations', 'autres'] as const).map((type) => (
+                          <TabsContent key={type} value={type}>
+                            <Table>
+                              <TableHeader>
+                                <TableRow>
+                                  <TableHead>Mois</TableHead>
+                                  <TableHead className="text-right">Minimum</TableHead>
+                                  <TableHead className="text-right">Prévu</TableHead>
+                                  <TableHead className="text-right">Maximum</TableHead>
+                                  <TableHead className="text-right">Confiance</TableHead>
+                                </TableRow>
+                              </TableHeader>
+                              <TableBody>
+                                {previsionsParType.previsions_par_type[type].previsions_mensuelles.map((prev) => (
+                                  <TableRow key={prev.mois}>
+                                    <TableCell className="font-medium capitalize">{prev.mois}</TableCell>
+                                    <TableCell className="text-right text-muted-foreground">
+                                      {prev.montant_min.toLocaleString('fr-FR')} FCFA
+                                    </TableCell>
+                                    <TableCell className="text-right font-bold">
+                                      {prev.montant_prevu.toLocaleString('fr-FR')} FCFA
+                                    </TableCell>
+                                    <TableCell className="text-right text-muted-foreground">
+                                      {prev.montant_max.toLocaleString('fr-FR')} FCFA
+                                    </TableCell>
+                                    <TableCell className="text-right">
+                                      <Badge variant={prev.confiance >= 80 ? "default" : prev.confiance >= 60 ? "secondary" : "outline"}>
+                                        {prev.confiance}%
+                                      </Badge>
+                                    </TableCell>
+                                  </TableRow>
+                                ))}
+                              </TableBody>
+                            </Table>
+                          </TabsContent>
+                        ))}
+                      </Tabs>
+                    </CardContent>
+                  </Card>
+
+                  <div className="flex justify-center">
+                    <Button 
+                      variant="outline"
+                      onClick={genererPrevisionsParType} 
+                      disabled={loadingPrevisionsParType}
                     >
                       <Sparkles className="h-4 w-4 mr-2" />
                       Régénérer les Prévisions
