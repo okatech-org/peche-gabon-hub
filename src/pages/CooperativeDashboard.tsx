@@ -14,11 +14,24 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { DemoBadge } from "@/components/DemoBadge";
 import { Toaster } from "@/components/ui/toaster";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function CooperativeDashboard() {
   const [refreshKey, setRefreshKey] = useState(0);
   const [activeTab, setActiveTab] = useState("dashboard");
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [displayedTab, setDisplayedTab] = useState("dashboard");
+
+  useEffect(() => {
+    if (activeTab !== displayedTab) {
+      setIsTransitioning(true);
+      const timer = setTimeout(() => {
+        setDisplayedTab(activeTab);
+        setIsTransitioning(false);
+      }, 150);
+      return () => clearTimeout(timer);
+    }
+  }, [activeTab, displayedTab]);
 
   // Stats simulées - à remplacer par de vraies données
   const stats = {
@@ -143,27 +156,29 @@ export default function CooperativeDashboard() {
               <div className="space-y-8">
                 {/* Hero Header */}
                 <div className="flex items-center justify-between">
-                  <div>
+                  <div className={`transition-all duration-300 ${
+                    isTransitioning ? "opacity-50" : "opacity-100"
+                  }`}>
                     <div className="flex items-center gap-3 mb-2">
                       <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-foreground via-foreground to-foreground/70 bg-clip-text">
-                        {activeTab === "dashboard" && "Gestion de Coopérative"}
-                        {activeTab === "taxes" && "Taxes des Membres"}
-                        {activeTab === "paiements" && "Paiements Groupés"}
-                        {activeTab === "notifications" && "Notifications"}
-                        {activeTab === "membres" && "Gestion des Membres"}
-                        {activeTab === "stats" && "Statistiques"}
+                        {displayedTab === "dashboard" && "Gestion de Coopérative"}
+                        {displayedTab === "taxes" && "Taxes des Membres"}
+                        {displayedTab === "paiements" && "Paiements Groupés"}
+                        {displayedTab === "notifications" && "Notifications"}
+                        {displayedTab === "membres" && "Gestion des Membres"}
+                        {displayedTab === "stats" && "Statistiques"}
                       </h1>
                       <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
                         Coopérative
                       </Badge>
                     </div>
                     <p className="text-muted-foreground text-sm md:text-base">
-                      {activeTab === "dashboard" && "Vue d'ensemble de votre coopérative"}
-                      {activeTab === "taxes" && "Gérez les taxes des membres de votre coopérative"}
-                      {activeTab === "paiements" && "Effectuez des paiements groupés pour vos membres"}
-                      {activeTab === "notifications" && "Historique des notifications envoyées"}
-                      {activeTab === "membres" && "Gérez les membres de votre coopérative"}
-                      {activeTab === "stats" && "Visualisez les statistiques de votre coopérative"}
+                      {displayedTab === "dashboard" && "Vue d'ensemble de votre coopérative"}
+                      {displayedTab === "taxes" && "Gérez les taxes des membres de votre coopérative"}
+                      {displayedTab === "paiements" && "Effectuez des paiements groupés pour vos membres"}
+                      {displayedTab === "notifications" && "Historique des notifications envoyées"}
+                      {displayedTab === "membres" && "Gérez les membres de votre coopérative"}
+                      {displayedTab === "stats" && "Visualisez les statistiques de votre coopérative"}
                     </p>
                   </div>
                   <Button 
@@ -178,13 +193,19 @@ export default function CooperativeDashboard() {
                 </div>
 
                 {/* Tab Content */}
-                <div className="animate-fade-in">
-                  {activeTab === "dashboard" && renderDashboard()}
-                  {activeTab === "taxes" && <TaxesCooperative key={`taxes-${refreshKey}`} />}
-                  {activeTab === "paiements" && <PaiementsCooperative key={`paiements-${refreshKey}`} />}
-                  {activeTab === "notifications" && <NotificationsHistorique key={`notifications-${refreshKey}`} />}
-                  {activeTab === "membres" && <MembresCooperative key={`membres-${refreshKey}`} />}
-                  {activeTab === "stats" && <StatistiquesCooperative key={`stats-${refreshKey}`} />}
+                <div 
+                  className={`transition-all duration-300 ${
+                    isTransitioning 
+                      ? "opacity-0 translate-x-4" 
+                      : "opacity-100 translate-x-0"
+                  }`}
+                >
+                  {displayedTab === "dashboard" && renderDashboard()}
+                  {displayedTab === "taxes" && <TaxesCooperative key={`taxes-${refreshKey}`} />}
+                  {displayedTab === "paiements" && <PaiementsCooperative key={`paiements-${refreshKey}`} />}
+                  {displayedTab === "notifications" && <NotificationsHistorique key={`notifications-${refreshKey}`} />}
+                  {displayedTab === "membres" && <MembresCooperative key={`membres-${refreshKey}`} />}
+                  {displayedTab === "stats" && <StatistiquesCooperative key={`stats-${refreshKey}`} />}
                 </div>
               </div>
             </div>
