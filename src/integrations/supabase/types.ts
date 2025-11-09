@@ -2135,6 +2135,54 @@ export type Database = {
         }
         Relationships: []
       }
+      notifications_paiements: {
+        Row: {
+          created_at: string | null
+          date_echeance: string
+          destinataire_email: string | null
+          destinataire_nom: string
+          destinataire_telephone: string | null
+          id: string
+          jours_restants: number
+          message_erreur: string | null
+          montant: number
+          statut: string
+          type_notification: string
+          type_taxe: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          date_echeance: string
+          destinataire_email?: string | null
+          destinataire_nom: string
+          destinataire_telephone?: string | null
+          id?: string
+          jours_restants: number
+          message_erreur?: string | null
+          montant: number
+          statut?: string
+          type_notification: string
+          type_taxe: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          date_echeance?: string
+          destinataire_email?: string | null
+          destinataire_nom?: string
+          destinataire_telephone?: string | null
+          id?: string
+          jours_restants?: number
+          message_erreur?: string | null
+          montant?: number
+          statut?: string
+          type_notification?: string
+          type_taxe?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       objectifs_peche: {
         Row: {
           annee: number
@@ -4300,6 +4348,19 @@ export type Database = {
         Returns: boolean
       }
       generer_numero_quittance: { Args: { p_annee?: number }; Returns: string }
+      get_upcoming_payment_deadlines: {
+        Args: never
+        Returns: {
+          date_echeance: string
+          jours_restants: number
+          montant: number
+          type_taxe: string
+          user_email: string
+          user_id: string
+          user_name: string
+          user_phone: string
+        }[]
+      }
       get_user_roles: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"][]

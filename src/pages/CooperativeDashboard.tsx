@@ -1,9 +1,10 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Users, Receipt, DollarSign, BarChart3 } from "lucide-react";
+import { Users, Receipt, DollarSign, BarChart3, Bell } from "lucide-react";
 import { MembresCooperative } from "@/components/cooperative/MembresCooperative";
 import { TaxesCooperative } from "@/components/cooperative/TaxesCooperative";
 import { PaiementsCooperative } from "@/components/cooperative/PaiementsCooperative";
 import { StatistiquesCooperative } from "@/components/cooperative/StatistiquesCooperative";
+import { NotificationsHistorique } from "@/components/cooperative/NotificationsHistorique";
 
 export default function CooperativeDashboard() {
   return (
@@ -16,7 +17,7 @@ export default function CooperativeDashboard() {
       </div>
 
       <Tabs defaultValue="taxes" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="taxes" className="flex items-center gap-2">
             <Receipt className="h-4 w-4" />
             Taxes des Membres
@@ -24,6 +25,10 @@ export default function CooperativeDashboard() {
           <TabsTrigger value="paiements" className="flex items-center gap-2">
             <DollarSign className="h-4 w-4" />
             Paiements Groupés
+          </TabsTrigger>
+          <TabsTrigger value="notifications" className="flex items-center gap-2">
+            <Bell className="h-4 w-4" />
+            Notifications
           </TabsTrigger>
           <TabsTrigger value="membres" className="flex items-center gap-2">
             <Users className="h-4 w-4" />
@@ -41,6 +46,10 @@ export default function CooperativeDashboard() {
 
         <TabsContent value="paiements" className="space-y-6 mt-6">
           <PaiementsCooperative />
+        </TabsContent>
+
+        <TabsContent value="notifications" className="space-y-6 mt-6">
+          <NotificationsHistorique />
         </TabsContent>
 
         <TabsContent value="membres" className="space-y-6 mt-6">
