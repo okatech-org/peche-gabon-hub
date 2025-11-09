@@ -924,7 +924,7 @@ const Demo = () => {
               Analyse et Administration
             </h3>
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {['analyste', 'admin'].map(roleId => {
+              {['analyste', 'admin', 'super_admin'].map(roleId => {
                 const account = demoAccounts.find(a => a.role === roleId);
                 if (!account) return null;
                 const IconComponent = account.icon;
