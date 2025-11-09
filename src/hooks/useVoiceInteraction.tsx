@@ -1,0 +1,196 @@
+import { useState, useRef, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+
+export type VoiceState = 'idle' | 'listening' | 'thinking' | 'speaking';
+
+export const useVoiceInteraction = () => {
+  const [voiceState, setVoiceState] = useState<VoiceState>('idle');
+  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
+  const [audioChunks, setAudioChunks] = useState<Blob[]>([]);
+  const [currentAudio, setCurrentAudio] = useState<HTMLAudioElement | null>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    return () => {
+      if (currentAudio) {
+        currentAudio.pause();
+        currentAudio.src = '';
+      }
+      if (audioContextRef.current) {
+        audioContextRef.current.close();
+      }
+    };
+  }, [currentAudio]);
+
+  const startListening = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream);
+      const chunks: Blob[] = [];
+
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) {
+          chunks.push(e.data);
+        }
+      };
+
+      recorder.onstop = async () => {
+        const audioBlob = new Blob(chunks, { type: 'audio/webm' });
+        await processAudio(audioBlob);
+        stream.getTracks().forEach(track => track.stop());
+      };
+
+      recorder.start();
+      setMediaRecorder(recorder);
+      setAudioChunks(chunks);
+      setVoiceState('listening');
+
+      // Auto stop after 10 seconds
+      setTimeout(() => {
+        if (recorder.state === 'recording') {
+          stopListening();
+        }
+      }, 10000);
+
+    } catch (error) {
+      console.error('Error accessing microphone:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible d'accéder au microphone.",
+        variant: "destructive"
+      });
+      setVoiceState('idle');
+    }
+  };
+
+  const stopListening = () => {
+    if (mediaRecorder && mediaRecorder.state === 'recording') {
+      mediaRecorder.stop();
+      setVoiceState('thinking');
+    }
+  };
+
+  const processAudio = async (audioBlob: Blob) => {
+    try {
+      // Convert to base64
+      const reader = new FileReader();
+      reader.readAsDataURL(audioBlob);
+      
+      reader.onloadend = async () => {
+        const base64Audio = reader.result as string;
+        const base64Data = base64Audio.split(',')[1];
+
+        // Transcribe audio
+        const { data: transcriptionData, error: transcriptionError } = await supabase.functions.invoke('transcribe-audio', {
+          body: { audio: base64Data }
+        });
+
+        if (transcriptionError || !transcriptionData.text) {
+          throw new Error('Transcription failed');
+        }
+
+        console.log('Transcription:', transcriptionData.text);
+
+        // Maintain thinking state for 3 seconds
+        await new Promise(resolve => setTimeout(resolve, 3000));
+
+        // Get AI response
+        const { data: chatData, error: chatError } = await supabase.functions.invoke('chat-with-iasted', {
+          body: { 
+            message: transcriptionData.text,
+            generateAudio: true 
+          }
+        });
+
+        if (chatError || !chatData.message) {
+          throw new Error('Chat failed');
+        }
+
+        console.log('AI Response:', chatData.message);
+
+        // Play audio response if available
+        if (chatData.audioContent) {
+          await playAudioResponse(chatData.audioContent);
+        } else {
+          setVoiceState('idle');
+        }
+      };
+
+      reader.onerror = () => {
+        console.error('Error reading audio file');
+        setVoiceState('idle');
+      };
+
+    } catch (error) {
+      console.error('Error processing audio:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de traiter l'audio.",
+        variant: "destructive"
+      });
+      setVoiceState('idle');
+    }
+  };
+
+  const playAudioResponse = async (base64Audio: string) => {
+    try {
+      setVoiceState('speaking');
+
+      // Convert base64 to audio blob
+      const binaryString = atob(base64Audio);
+      const bytes = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+      const audioBlob = new Blob([bytes], { type: 'audio/mpeg' });
+      const audioUrl = URL.createObjectURL(audioBlob);
+
+      // Play audio
+      const audio = new Audio(audioUrl);
+      audio.onended = () => {
+        URL.revokeObjectURL(audioUrl);
+        setVoiceState('idle');
+        setCurrentAudio(null);
+      };
+
+      audio.onerror = () => {
+        console.error('Error playing audio');
+        URL.revokeObjectURL(audioUrl);
+        setVoiceState('idle');
+        setCurrentAudio(null);
+      };
+
+      setCurrentAudio(audio);
+      await audio.play();
+
+    } catch (error) {
+      console.error('Error playing audio:', error);
+      setVoiceState('idle');
+    }
+  };
+
+  const handleInteraction = () => {
+    if (voiceState === 'idle') {
+      startListening();
+    } else if (voiceState === 'listening') {
+      stopListening();
+    } else if (voiceState === 'speaking') {
+      // Stop current audio and reset
+      if (currentAudio) {
+        currentAudio.pause();
+        currentAudio.src = '';
+      }
+      setVoiceState('idle');
+    }
+  };
+
+  return {
+    voiceState,
+    handleInteraction,
+    isListening: voiceState === 'listening',
+    isThinking: voiceState === 'thinking',
+    isSpeaking: voiceState === 'speaking',
+  };
+};
