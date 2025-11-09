@@ -1835,6 +1835,45 @@ export type Database = {
           },
         ]
       }
+      knowledge_base_entries: {
+        Row: {
+          contenu_synthetise: string
+          conversations_sources: string[] | null
+          created_at: string | null
+          derniere_mise_a_jour: string | null
+          id: string
+          mots_cles: string[] | null
+          nb_references: number | null
+          score_pertinence: number | null
+          themes: string[] | null
+          titre: string
+        }
+        Insert: {
+          contenu_synthetise: string
+          conversations_sources?: string[] | null
+          created_at?: string | null
+          derniere_mise_a_jour?: string | null
+          id?: string
+          mots_cles?: string[] | null
+          nb_references?: number | null
+          score_pertinence?: number | null
+          themes?: string[] | null
+          titre: string
+        }
+        Update: {
+          contenu_synthetise?: string
+          conversations_sources?: string[] | null
+          created_at?: string | null
+          derniere_mise_a_jour?: string | null
+          id?: string
+          mots_cles?: string[] | null
+          nb_references?: number | null
+          score_pertinence?: number | null
+          themes?: string[] | null
+          titre?: string
+        }
+        Relationships: []
+      }
       licences: {
         Row: {
           annee: number
