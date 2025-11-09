@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
+import { toast as unifiedToast } from '@/lib/toast';
 
 export type VoiceState = 'idle' | 'listening' | 'thinking' | 'speaking';
 
@@ -14,6 +15,7 @@ export const useVoiceInteraction = () => {
   const [silenceDuration, setSilenceDuration] = useState<number>(2000);
   const [silenceThreshold, setSilenceThreshold] = useState<number>(10);
   const [continuousMode, setContinuousMode] = useState<boolean>(false);
+  const continuousModeToastShownRef = useRef<boolean>(false);
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const animationFrameRef = useRef<number | null>(null);
@@ -60,7 +62,13 @@ export const useVoiceInteraction = () => {
         if (data) {
           setSilenceDuration(data.voice_silence_duration || 2000);
           setSilenceThreshold(data.voice_silence_threshold || 10);
-          setContinuousMode(data.voice_continuous_mode || false);
+          const newContinuousMode = data.voice_continuous_mode || false;
+          setContinuousMode(newContinuousMode);
+          
+          // Réinitialiser le flag du toast si le mode continu change
+          if (!newContinuousMode) {
+            continuousModeToastShownRef.current = false;
+          }
         }
       } catch (error) {
         console.error('Error loading voice preferences:', error);
@@ -382,6 +390,16 @@ export const useVoiceInteraction = () => {
 
   const handleInteraction = async () => {
     if (voiceState === 'idle') {
+      // Afficher le toast la première fois que le mode continu est utilisé
+      if (continuousMode && !continuousModeToastShownRef.current) {
+        unifiedToast.info(
+          "Mode conversation continue activé",
+          "iAsted écoutera automatiquement après chaque réponse",
+          4000
+        );
+        continuousModeToastShownRef.current = true;
+      }
+      
       // Play greeting first, then start listening
       await playGreeting();
       startListening();
