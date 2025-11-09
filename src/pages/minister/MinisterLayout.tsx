@@ -10,6 +10,7 @@ import { LogOut } from "lucide-react";
 import { Toaster } from "@/components/ui/toaster";
 import { useAuth } from "@/hooks/useAuth";
 import { IAstedFloatingButton } from "@/components/minister/IAstedFloatingButton";
+import { DemoBadge } from "@/components/DemoBadge";
 
 // Breadcrumb mapping pour navigation intuitive
 const breadcrumbMap: Record<string, { label: string; icon?: any }[]> = {
@@ -43,6 +44,7 @@ export default function MinisterLayout() {
 
   return (
     <SidebarProvider defaultOpen={true}>
+      <DemoBadge />
       <div className="min-h-screen w-full flex bg-background">
         <MinisterSidebar />
         

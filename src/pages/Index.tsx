@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useLanguage } from "@/hooks/useLanguage";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { Logo } from "@/components/Logo";
+import { DemoBadge } from "@/components/DemoBadge";
 import heroImage from "@/assets/hero-fisherman.jpg";
 import artisanalImage from "@/assets/artisanal-fishing.jpg";
 import industrialImage from "@/assets/industrial-fishing.jpg";
@@ -17,6 +18,7 @@ const Index = () => {
 
   return (
     <div className="min-h-screen">
+      <DemoBadge />
       {/* Language Selector - Fixed position */}
       <div className="fixed top-4 right-4 z-50">
         <LanguageSelector />

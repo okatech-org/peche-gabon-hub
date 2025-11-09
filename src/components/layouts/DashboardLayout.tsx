@@ -7,6 +7,7 @@ import { DashboardHeader } from "./DashboardHeader";
 import { DashboardSidebar } from "./DashboardSidebar";
 import { getUserPrimaryRole } from "@/lib/roleConfig";
 import { Loader2 } from "lucide-react";
+import { DemoBadge } from "@/components/DemoBadge";
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -46,6 +47,7 @@ export const DashboardLayout = ({ children, showSidebar = true }: DashboardLayou
 
   return (
     <SidebarProvider>
+      <DemoBadge />
       <div className="min-h-screen flex w-full">
         {showSidebar && <DashboardSidebar roleConfig={roleConfig} />}
         
