@@ -21,3 +21,6 @@ verify_jwt = true
 [functions.generate-audio-summary]
 verify_jwt = true
 
+[functions.get-knowledge-base]
+verify_jwt = false
+
