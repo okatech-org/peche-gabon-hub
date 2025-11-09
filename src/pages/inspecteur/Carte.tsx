@@ -4,8 +4,6 @@ import "mapbox-gl/dist/mapbox-gl.css";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import surveillanceImg from "@/assets/surveillance.jpg";
 import {
   Select,
@@ -120,33 +118,17 @@ export default function Carte() {
   const [isLoading, setIsLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [showFallbackImage, setShowFallbackImage] = useState(false);
-  const [showConfigForm, setShowConfigForm] = useState(false);
-  const [customToken, setCustomToken] = useState("");
-  const [tokenInput, setTokenInput] = useState("");
   const [initNonce, setInitNonce] = useState(0);
   const [inspections, setInspections] = useState<Inspection[]>(mockInspections);
   const [filterType, setFilterType] = useState<string>("tous");
   const [filterStatut, setFilterStatut] = useState<string>("tous");
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
 
-  // Token Mapbox - utiliser le custom token ou celui par défaut
+  // Token Mapbox depuis les variables d'environnement (configuré dans les secrets du projet)
   const mapboxToken = useMemo(
-    () => customToken || import.meta.env.VITE_MAPBOX_TOKEN || "pk.eyJ1IjoibG92YWJsZS1kZXYiLCJhIjoiY2x4anExeWN6MDdmYzJrcXptbXN4dDZ0ZSJ9.5K6P4BTFQS2bJTjG8KWz0g",
-    [customToken]
+    () => import.meta.env.VITE_MAPBOX_TOKEN || "pk.eyJ1IjoibG92YWJsZS1kZXYiLCJhIjoiY2x4anExeWN6MDdmYzJrcXptbXN4dDZ0ZSJ9.5K6P4BTFQS2bJTjG8KWz0g",
+    []
   );
-
-  const handleTokenSubmit = () => {
-    if (tokenInput.trim()) {
-      setCustomToken(tokenInput.trim());
-      setShowConfigForm(false);
-      setErrorMsg(null);
-      setIsLoading(true);
-      setInitNonce((n) => n + 1);
-      toast.success("Token configuré - Chargement de la carte...");
-    } else {
-      toast.error("Veuillez entrer un token valide");
-    }
-  };
 
   // Initialiser la carte (une fois + lors d'un retry)
   useEffect(() => {
@@ -425,55 +407,34 @@ export default function Carte() {
 
         {errorMsg && (
           <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4">
-            <div className="max-w-md w-full text-center space-y-3">
-              <p className="text-sm text-destructive mb-4">{errorMsg}</p>
-              
-              {showConfigForm ? (
-                <Card className="p-4 space-y-4 text-left">
-                  <div className="space-y-2">
-                    <Label htmlFor="mapbox-token">Clé API Mapbox</Label>
-                    <Input
-                      id="mapbox-token"
-                      type="text"
-                      placeholder="pk.eyJ1..."
-                      value={tokenInput}
-                      onChange={(e) => setTokenInput(e.target.value)}
-                      className="font-mono text-xs"
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      Obtenez votre token gratuit sur{" "}
-                      <a
-                        href="https://account.mapbox.com/access-tokens/"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-primary underline"
-                      >
-                        mapbox.com
-                      </a>
-                    </p>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button variant="outline" onClick={() => setShowConfigForm(false)} className="flex-1">
-                      Annuler
-                    </Button>
-                    <Button onClick={handleTokenSubmit} className="flex-1">
-                      Configurer
-                    </Button>
-                  </div>
-                </Card>
-              ) : (
-                <div className="flex flex-col sm:flex-row gap-2 justify-center">
-                  <Button variant="default" onClick={() => { setIsLoading(true); setErrorMsg(null); setInitNonce((n) => n + 1); }}>
-                    Réessayer
-                  </Button>
-                  <Button variant="outline" onClick={() => setShowConfigForm(true)}>
-                    Configurer la clé API
-                  </Button>
-                  <Button variant="outline" onClick={() => { setErrorMsg(null); setShowFallbackImage(true); }}>
-                    Vue alternative
-                  </Button>
-                </div>
-              )}
+            <div className="max-w-md w-full text-center space-y-4">
+              <div className="space-y-2">
+                <p className="text-sm text-destructive font-medium">{errorMsg}</p>
+                <p className="text-xs text-muted-foreground">
+                  Vérifiez que la clé API Mapbox est correctement configurée dans les secrets du projet.
+                </p>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-2 justify-center">
+                <Button 
+                  variant="default" 
+                  onClick={() => { 
+                    setIsLoading(true); 
+                    setErrorMsg(null); 
+                    setInitNonce((n) => n + 1); 
+                  }}
+                >
+                  Réessayer
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => { 
+                    setErrorMsg(null); 
+                    setShowFallbackImage(true); 
+                  }}
+                >
+                  Vue alternative
+                </Button>
+              </div>
             </div>
           </div>
         )}
