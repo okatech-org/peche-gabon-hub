@@ -33,6 +33,8 @@ export const IAstedChat = () => {
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
   const [audioChunks, setAudioChunks] = useState<Blob[]>([]);
   const [audioStream, setAudioStream] = useState<MediaStream | null>(null);
+  const [recordingStartTime, setRecordingStartTime] = useState<number | null>(null);
+  const [recordingDuration, setRecordingDuration] = useState(0);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [showHistory, setShowHistory] = useState(false);
@@ -300,6 +302,13 @@ export const IAstedChat = () => {
       });
       
       setAudioStream(stream);
+      const startTime = Date.now();
+      setRecordingStartTime(startTime);
+      
+      // Update recording duration every 100ms
+      const durationInterval = setInterval(() => {
+        setRecordingDuration((Date.now() - startTime) / 1000);
+      }, 100);
       
       const recorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
       const chunks: Blob[] = [];
@@ -311,16 +320,40 @@ export const IAstedChat = () => {
       };
 
       recorder.onstop = async () => {
+        clearInterval(durationInterval);
+        const duration = (Date.now() - startTime) / 1000;
+        
+        // Validate minimum duration (0.5 seconds)
+        if (duration < 0.5) {
+          toast({
+            title: "Enregistrement trop court",
+            description: "Veuillez enregistrer au moins 0.5 seconde d'audio.",
+            variant: "destructive"
+          });
+          stream.getTracks().forEach(track => track.stop());
+          setAudioStream(null);
+          setRecordingStartTime(null);
+          setRecordingDuration(0);
+          return;
+        }
+        
         const audioBlob = new Blob(chunks, { type: 'audio/webm' });
         await transcribeAudio(audioBlob);
         stream.getTracks().forEach(track => track.stop());
         setAudioStream(null);
+        setRecordingStartTime(null);
+        setRecordingDuration(0);
       };
 
       recorder.start();
       setMediaRecorder(recorder);
       setAudioChunks(chunks);
       setIsRecording(true);
+      
+      toast({
+        title: "Enregistrement démarré",
+        description: "Parlez maintenant... (min 0.5s)",
+      });
     } catch (error) {
       console.error('Error starting recording:', error);
       toast({
@@ -333,6 +366,28 @@ export const IAstedChat = () => {
 
   const stopRecording = () => {
     if (mediaRecorder && isRecording) {
+      const duration = recordingStartTime ? (Date.now() - recordingStartTime) / 1000 : 0;
+      
+      if (duration < 0.5) {
+        toast({
+          title: "Enregistrement trop court",
+          description: `Durée: ${duration.toFixed(1)}s. Minimum requis: 0.5s`,
+          variant: "destructive"
+        });
+        
+        // Cancel the recording
+        mediaRecorder.stop();
+        setIsRecording(false);
+        setMediaRecorder(null);
+        if (audioStream) {
+          audioStream.getTracks().forEach(track => track.stop());
+          setAudioStream(null);
+        }
+        setRecordingStartTime(null);
+        setRecordingDuration(0);
+        return;
+      }
+      
       mediaRecorder.stop();
       setIsRecording(false);
       setMediaRecorder(null);
@@ -537,15 +592,22 @@ export const IAstedChat = () => {
             >
               <Send className="h-4 w-4" />
             </Button>
-            <Button
-              variant={isRecording ? "destructive" : "outline"}
-              size="icon"
-              disabled={isLoading}
-              onClick={handleMicClick}
-              title={isRecording ? "Arrêter l'enregistrement" : "Enregistrer un message vocal"}
-            >
-              <Mic className={`h-4 w-4 ${isRecording ? 'animate-pulse' : ''}`} />
-            </Button>
+            <div className="relative">
+              <Button
+                variant={isRecording ? "destructive" : "outline"}
+                size="icon"
+                disabled={isLoading}
+                onClick={handleMicClick}
+                title={isRecording ? "Arrêter l'enregistrement" : "Enregistrer un message vocal"}
+              >
+                <Mic className={`h-4 w-4 ${isRecording ? 'animate-pulse' : ''}`} />
+              </Button>
+              {isRecording && (
+                <span className="absolute -top-8 left-1/2 -translate-x-1/2 text-xs font-mono text-red-500 whitespace-nowrap bg-background px-2 py-1 rounded border border-red-200">
+                  {recordingDuration.toFixed(1)}s
+                </span>
+              )}
+            </div>
           </div>
         </div>
 
