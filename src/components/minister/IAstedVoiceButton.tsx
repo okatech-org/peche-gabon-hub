@@ -1,5 +1,6 @@
 import { useRef, useEffect } from 'react';
 import { IAstedButton } from './IAstedButton';
+import { IAstedListeningOverlay } from './IAstedListeningOverlay';
 import { useVoiceInteraction } from '@/hooks/useVoiceInteraction';
 
 interface IAstedVoiceButtonProps {
@@ -47,19 +48,27 @@ export const IAstedVoiceButton = ({ className = '', size = 'md' }: IAstedVoiceBu
   };
 
   return (
-    <IAstedButton
-      onClick={handleDoubleClick}
-      className={className}
-      size={size}
-      voiceListening={isListening}
-      voiceSpeaking={isSpeaking}
-      voiceProcessing={isThinking}
-      isInterfaceOpen={false}
-      audioLevel={audioLevel}
-      continuousMode={continuousMode}
-      continuousModePaused={continuousModePaused}
-      onToggleContinuousPause={toggleContinuousPause}
-    />
+    <>
+      <IAstedButton
+        onClick={handleDoubleClick}
+        className={className}
+        size={size}
+        voiceListening={isListening}
+        voiceSpeaking={isSpeaking}
+        voiceProcessing={isThinking}
+        isInterfaceOpen={false}
+        audioLevel={audioLevel}
+        continuousMode={continuousMode}
+        continuousModePaused={continuousModePaused}
+        onToggleContinuousPause={toggleContinuousPause}
+      />
+      
+      {/* Overlay d'écoute */}
+      <IAstedListeningOverlay 
+        audioLevel={audioLevel}
+        isVisible={isListening}
+      />
+    </>
   );
 };
 
