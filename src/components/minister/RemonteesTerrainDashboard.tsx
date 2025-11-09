@@ -29,6 +29,7 @@ import { RemonteeTypeCards } from "./RemonteeTypeCards";
 import { RemonteeTypeDetailDialog } from "./RemonteeTypeDetailDialog";
 import { RemonteesSyntheseGlobale } from "./RemonteesSyntheseGlobale";
 import { RemonteesMap } from "./RemonteesMap";
+import { RemonteeCardEnriched } from "./RemonteeCardEnriched";
 
 interface RemonteeStats {
   total: number;
@@ -153,18 +154,6 @@ export function RemonteesTerrainDashboard() {
     return matchesType && matchesStatut && matchesSearch;
   });
 
-  const getStatutColor = (statut: string) => {
-    switch (statut) {
-      case "nouveau": return "bg-blue-500";
-      case "en_analyse": return "bg-yellow-500";
-      case "en_traitement": return "bg-orange-500";
-      case "resolu": return "bg-green-500";
-      case "rejete": return "bg-red-500";
-      case "archive": return "bg-gray-500";
-      default: return "bg-gray-500";
-    }
-  };
-
   const getPrioriteColor = (priorite: string) => {
     switch (priorite) {
       case "critique": return "destructive";
@@ -211,15 +200,28 @@ export function RemonteesTerrainDashboard() {
 
   return (
     <div className="space-y-6">
-      {/* En-tête avec action */}
-      <div className="flex justify-between items-center">
+      {/* En-tête moderne */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold">Remontées Terrain</h2>
-          <p className="text-sm text-muted-foreground">
+          <h2 className="text-3xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
+            Remontées Terrain
+          </h2>
+          <p className="text-sm text-muted-foreground mt-1">
             Gestion des réclamations, suggestions et informations du terrain
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex items-center gap-2">
+          {selectedIds.length > 0 && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setSelectedIds([])}
+              className="gap-1.5"
+            >
+              <XCircle className="h-4 w-4" />
+              Désélectionner tout
+            </Button>
+          )}
           <GenerateSyntheseDialog 
             remonteeIds={selectedIds.length > 0 ? selectedIds : remontees.map(r => r.id)} 
             onSuccess={() => setSelectedIds([])} 
@@ -238,97 +240,116 @@ export function RemonteesTerrainDashboard() {
         }}
       />
 
-      {/* Statistiques globales */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-        <Card>
-          <CardContent className="p-6">
+      {/* Statistiques globales modernes */}
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3 md:gap-4">
+        <Card className="relative overflow-hidden border-border/40 bg-gradient-to-br from-card to-card/95">
+          <div className="absolute top-0 right-0 w-24 h-24 bg-primary/5 rounded-full blur-2xl -mr-12 -mt-12" />
+          <CardContent className="p-4 md:p-6 relative">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Total</p>
-                <p className="text-2xl font-bold">{stats.total}</p>
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Total</p>
+                <p className="text-2xl md:text-3xl font-bold mt-1">{stats.total}</p>
               </div>
-              <FileText className="h-8 w-8 text-primary" />
+              <div className="p-2.5 rounded-lg bg-primary/10">
+                <FileText className="h-5 w-5 md:h-6 md:w-6 text-primary" />
+              </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardContent className="p-6">
+        <Card className="relative overflow-hidden border-border/40 bg-gradient-to-br from-card to-card/95">
+          <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/5 rounded-full blur-2xl -mr-12 -mt-12" />
+          <CardContent className="p-4 md:p-6 relative">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Nouveau</p>
-                <p className="text-2xl font-bold">{stats.nouveau}</p>
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Nouveau</p>
+                <p className="text-2xl md:text-3xl font-bold mt-1">{stats.nouveau}</p>
               </div>
-              <Clock className="h-8 w-8 text-blue-500" />
+              <div className="p-2.5 rounded-lg bg-blue-500/10">
+                <Clock className="h-5 w-5 md:h-6 md:w-6 text-blue-500" />
+              </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardContent className="p-6">
+        <Card className="relative overflow-hidden border-border/40 bg-gradient-to-br from-card to-card/95">
+          <div className="absolute top-0 right-0 w-24 h-24 bg-yellow-500/5 rounded-full blur-2xl -mr-12 -mt-12" />
+          <CardContent className="p-4 md:p-6 relative">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">En analyse</p>
-                <p className="text-2xl font-bold">{stats.en_analyse}</p>
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Analyse</p>
+                <p className="text-2xl md:text-3xl font-bold mt-1">{stats.en_analyse}</p>
               </div>
-              <TrendingUp className="h-8 w-8 text-yellow-500" />
+              <div className="p-2.5 rounded-lg bg-yellow-500/10">
+                <TrendingUp className="h-5 w-5 md:h-6 md:w-6 text-yellow-500" />
+              </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardContent className="p-6">
+        <Card className="relative overflow-hidden border-border/40 bg-gradient-to-br from-card to-card/95">
+          <div className="absolute top-0 right-0 w-24 h-24 bg-orange-500/5 rounded-full blur-2xl -mr-12 -mt-12" />
+          <CardContent className="p-4 md:p-6 relative">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">En traitement</p>
-                <p className="text-2xl font-bold">{stats.en_traitement}</p>
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Traitement</p>
+                <p className="text-2xl md:text-3xl font-bold mt-1">{stats.en_traitement}</p>
               </div>
-              <AlertTriangle className="h-8 w-8 text-orange-500" />
+              <div className="p-2.5 rounded-lg bg-orange-500/10">
+                <AlertTriangle className="h-5 w-5 md:h-6 md:w-6 text-orange-500" />
+              </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardContent className="p-6">
+        <Card className="relative overflow-hidden border-border/40 bg-gradient-to-br from-card to-card/95">
+          <div className="absolute top-0 right-0 w-24 h-24 bg-green-500/5 rounded-full blur-2xl -mr-12 -mt-12" />
+          <CardContent className="p-4 md:p-6 relative">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Résolu</p>
-                <p className="text-2xl font-bold">{stats.resolu}</p>
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Résolu</p>
+                <p className="text-2xl md:text-3xl font-bold mt-1">{stats.resolu}</p>
               </div>
-              <CheckCircle className="h-8 w-8 text-green-500" />
+              <div className="p-2.5 rounded-lg bg-green-500/10">
+                <CheckCircle className="h-5 w-5 md:h-6 md:w-6 text-green-500" />
+              </div>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Cartes de types de remontées */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
+      {/* Cartes de types de remontées avec design moderne */}
+      <div className="space-y-4">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-primary" />
-            <h3 className="text-lg font-semibold">Types de remontées</h3>
+            <div className="p-2 rounded-lg bg-primary/10">
+              <Sparkles className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold">Types de remontées</h3>
+              <p className="text-xs text-muted-foreground">
+                Cliquez pour filtrer ou survolez pour voir les détails
+              </p>
+            </div>
           </div>
           <div className="flex items-center gap-2">
-            <p className="text-sm text-muted-foreground">
-              Cliquez sur une carte pour filtrer ou survolez pour voir les détails
-            </p>
-            <div className="flex items-center gap-1 bg-muted rounded-lg p-1">
+            <div className="flex items-center gap-1 bg-muted/50 rounded-lg p-1 border border-border/40">
               <Button
                 variant={viewMode === "list" ? "secondary" : "ghost"}
                 size="sm"
                 onClick={() => setViewMode("list")}
-                className="h-8"
+                className="h-7 text-xs"
               >
-                <List className="h-4 w-4 mr-1" />
+                <List className="h-3.5 w-3.5 mr-1" />
                 Liste
               </Button>
               <Button
                 variant={viewMode === "map" ? "secondary" : "ghost"}
                 size="sm"
                 onClick={() => setViewMode("map")}
-                className="h-8"
+                className="h-7 text-xs"
               >
-                <Map className="h-4 w-4 mr-1" />
+                <Map className="h-3.5 w-3.5 mr-1" />
                 Carte
               </Button>
             </div>
@@ -351,112 +372,83 @@ export function RemonteesTerrainDashboard() {
         />
       ) : (
         <>
-          {/* Filtres additionnels */}
-          <Card>
-            <CardContent className="p-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Input
-                    placeholder="Rechercher par titre, description, référence..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Select value={filterStatut} onValueChange={setFilterStatut}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Statut" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="tous">Tous les statuts</SelectItem>
-                      <SelectItem value="nouveau">Nouveau</SelectItem>
-                      <SelectItem value="en_analyse">En analyse</SelectItem>
-                      <SelectItem value="en_traitement">En traitement</SelectItem>
-                      <SelectItem value="resolu">Résolu</SelectItem>
-                      <SelectItem value="rejete">Rejeté</SelectItem>
-                      <SelectItem value="archive">Archivé</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Liste des remontées */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Liste des Remontées ({filteredRemontees.length})</CardTitle>
-            </CardHeader>
-            <CardContent>
-          <div className="space-y-3">
-            {filteredRemontees.map((remontee) => (
-              <Card key={remontee.id} className="hover:shadow-md transition-shadow">
-                <CardContent className="p-4">
-                  <div className="flex items-start gap-3">
-                    <Checkbox
-                      checked={selectedIds.includes(remontee.id)}
-                      onCheckedChange={(checked) => {
-                        if (checked) {
-                          setSelectedIds([...selectedIds, remontee.id]);
-                        } else {
-                          setSelectedIds(selectedIds.filter(id => id !== remontee.id));
-                        }
-                      }}
-                      className="mt-1"
-                    />
-                    <div className="flex items-start justify-between flex-1">
-                    <div className="flex-1 space-y-2">
-                      <div className="flex items-center gap-2">
-                        <Badge variant="outline">{remontee.numero_reference}</Badge>
-                        <Badge variant={getPrioriteColor(remontee.niveau_priorite)}>
-                          {remontee.niveau_priorite}
-                        </Badge>
-                        <Badge variant="outline">{getTypeLabel(remontee.type_remontee)}</Badge>
-                        {remontee.sentiment && (
-                          <span className="text-lg">{getSentimentIcon(remontee.sentiment)}</span>
-                        )}
-                      </div>
-                      
-                      <h4 className="font-semibold">{remontee.titre}</h4>
-                      <p className="text-sm text-muted-foreground line-clamp-2">
-                        {remontee.description}
-                      </p>
-                      
-                      <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                        {remontee.source && <span>Source: {remontee.source}</span>}
-                        {remontee.localisation && <span>📍 {remontee.localisation}</span>}
-                        {remontee.categorie && <span>🏷️ {remontee.categorie}</span>}
-                        <span>{new Date(remontee.created_at).toLocaleDateString()}</span>
-                      </div>
-                    </div>
-                    
-                    <div className="flex flex-col items-end gap-2">
-                      <div className={`px-3 py-1 rounded-full text-xs text-white ${getStatutColor(remontee.statut)}`}>
-                        {remontee.statut}
-                      </div>
-                      <Button 
-                        size="sm" 
-                        variant="outline"
-                        onClick={() => setSelectedRemontee(remontee)}
-                      >
-                        <Eye className="h-4 w-4 mr-1" />
-                        Détails
-                      </Button>
-                    </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-            
-            {filteredRemontees.length === 0 && (
-              <p className="text-center text-muted-foreground py-8">
-                Aucune remontée ne correspond aux critères de recherche
-              </p>
-            )}
+      {/* Filtres additionnels avec design moderne */}
+      <Card className="border-border/40 bg-gradient-to-br from-card to-card/95">
+        <CardContent className="p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <Filter className="h-4 w-4 text-primary" />
+            <h3 className="text-sm font-semibold">Filtres</h3>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <Input
+              placeholder="🔍 Rechercher par titre, description, référence..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="bg-background/50"
+            />
+            <Select value={filterStatut} onValueChange={setFilterStatut}>
+              <SelectTrigger className="bg-background/50">
+                <SelectValue placeholder="Statut" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="tous">Tous les statuts</SelectItem>
+                <SelectItem value="nouveau">Nouveau</SelectItem>
+                <SelectItem value="en_analyse">En analyse</SelectItem>
+                <SelectItem value="en_traitement">En traitement</SelectItem>
+                <SelectItem value="resolu">Résolu</SelectItem>
+                <SelectItem value="rejete">Rejeté</SelectItem>
+                <SelectItem value="archive">Archivé</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </CardContent>
       </Card>
+
+          {/* Liste des remontées enrichies */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold">
+                Remontées ({filteredRemontees.length})
+              </h3>
+              {selectedIds.length > 0 && (
+                <Badge variant="secondary" className="bg-primary/10 text-primary">
+                  {selectedIds.length} sélectionnée{selectedIds.length > 1 ? 's' : ''}
+                </Badge>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              {filteredRemontees.map((remontee) => (
+                <RemonteeCardEnriched
+                  key={remontee.id}
+                  remontee={remontee}
+                  onViewDetails={() => setSelectedRemontee(remontee)}
+                  selected={selectedIds.includes(remontee.id)}
+                  onSelect={(checked) => {
+                    if (checked) {
+                      setSelectedIds([...selectedIds, remontee.id]);
+                    } else {
+                      setSelectedIds(selectedIds.filter(id => id !== remontee.id));
+                    }
+                  }}
+                />
+              ))}
+            </div>
+            
+            {filteredRemontees.length === 0 && (
+              <Card className="border-dashed">
+                <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+                  <FileText className="h-12 w-12 text-muted-foreground/50 mb-3" />
+                  <p className="text-muted-foreground font-medium">
+                    Aucune remontée ne correspond aux critères de recherche
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Essayez de modifier vos filtres
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+          </div>
         </>
       )}
 
