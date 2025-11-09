@@ -2,6 +2,7 @@ import { ReactNode } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import { SidebarProvider } from "@/components/ui/sidebar";
+import { Toaster } from "@/components/ui/toaster";
 import { DashboardHeader } from "./DashboardHeader";
 import { DashboardSidebar } from "./DashboardSidebar";
 import { getUserPrimaryRole } from "@/lib/roleConfig";
@@ -68,6 +69,7 @@ export const DashboardLayout = ({ children, showSidebar = true }: DashboardLayou
           </footer>
         </div>
       </div>
+      <Toaster />
     </SidebarProvider>
   );
 };

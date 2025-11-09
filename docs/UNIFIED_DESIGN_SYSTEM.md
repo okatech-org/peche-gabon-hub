@@ -145,17 +145,15 @@ export default function MonDashboard() {
 ### ✅ Migrés
 - [x] ArmeurDashboard.tsx
 - [x] CooperativeDashboard.tsx
-
-### 🔄 À Migrer
-- [ ] Dashboard.tsx (Pêcheur)
-- [ ] DGPADashboard.tsx
-- [ ] ANPADashboard.tsx
-- [ ] AGASADashboard.tsx
-- [ ] DGMMDashboard.tsx
-- [ ] OPRAGDashboard.tsx
-- [ ] ANPNDashboard.tsx
-- [ ] DGDDIDashboard.tsx (à créer)
-- [ ] COREPDashboard.tsx (à créer)
+- [x] Dashboard.tsx (Pêcheur)
+- [x] DGPADashboard.tsx
+- [x] ANPADashboard.tsx
+- [x] AGASADashboard.tsx
+- [x] DGMMDashboard.tsx
+- [x] OPRAGDashboard.tsx
+- [x] ANPNDashboard.tsx
+- [x] DGDDIDashboard.tsx
+- [x] COREPDashboard.tsx
 
 ### 🚫 Exceptions
 - MinisterLayout - A déjà son propre layout sophistiqué
