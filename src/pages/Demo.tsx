@@ -9,7 +9,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { 
   Crown, Anchor, Shield, Award, Ship, FlaskConical, Trees, TrendingUp, 
-  Fish, Users, Eye, Settings, Loader2, ArrowLeft
+  Fish, Users, Eye, Settings, Loader2, ArrowLeft, Building2, Clipboard, 
+  BarChart3, Package, Globe, Handshake
 } from "lucide-react";
 import { DemoFeedbackDialog } from "@/components/demo/DemoFeedbackDialog";
 
@@ -35,6 +36,40 @@ const Demo = () => {
       color: "from-purple-500 to-indigo-600",
       category: "Gouvernance",
       active: true
+    },
+    {
+      role: "direction_centrale",
+      name: "Direction Centrale",
+      description: "Coordination nationale des politiques de pêche - Pilotage stratégique et opérationnel",
+      detailedDescription: "Assure la coordination nationale des politiques de pêche et d'aquaculture. Pilote la mise en œuvre des orientations ministérielles, supervise les directions provinciales, et coordonne l'action des différentes agences techniques. Produit les synthèses nationales et rapports sectoriels.",
+      missions: [
+        "Coordination nationale des politiques de pêche",
+        "Supervision des directions provinciales",
+        "Pilotage des programmes sectoriels",
+        "Production des synthèses et rapports nationaux"
+      ],
+      email: "centrale@demo.ga",
+      icon: Building2,
+      color: "from-violet-500 to-purple-500",
+      category: "Gouvernance",
+      active: false
+    },
+    {
+      role: "direction_provinciale",
+      name: "Direction Provinciale",
+      description: "Supervision provinciale - Mise en œuvre locale des politiques de pêche",
+      detailedDescription: "Représente l'autorité de pêche au niveau provincial. Met en œuvre les politiques nationales adaptées au contexte local, supervise les agents de terrain, coordonne avec les collectivités locales, et remonte les informations vers la direction centrale.",
+      missions: [
+        "Mise en œuvre provinciale des politiques de pêche",
+        "Supervision des agents de terrain",
+        "Coordination avec les collectivités locales",
+        "Remontées d'information vers le niveau national"
+      ],
+      email: "province@demo.ga",
+      icon: Building2,
+      color: "from-indigo-500 to-blue-500",
+      category: "Gouvernance",
+      active: false
     },
     {
       role: "dgpa",
@@ -156,6 +191,40 @@ const Demo = () => {
       active: false
     },
     {
+      role: "dgddi",
+      name: "DGDDI - Douanes",
+      description: "Direction Générale des Douanes - Contrôle des flux import/export de produits halieutiques",
+      detailedDescription: "Contrôle les importations et exportations de produits de la pêche. Vérifie la conformité documentaire, applique les droits de douane, lutte contre la contrebande, et collecte les statistiques sur le commerce international des produits halieutiques.",
+      missions: [
+        "Contrôle des importations et exportations",
+        "Application des droits de douane",
+        "Lutte contre la contrebande de produits halieutiques",
+        "Collecte des statistiques du commerce international"
+      ],
+      email: "dgddi@demo.ga",
+      icon: Package,
+      color: "from-orange-500 to-red-500",
+      category: "Contrôle",
+      active: false
+    },
+    {
+      role: "partenaire_international",
+      name: "Partenaire International",
+      description: "Coopération internationale - APD UE-Gabon, WCS, Global Fishing Watch",
+      detailedDescription: "Représente les partenaires internationaux soutenant le développement du secteur halieutique gabonais. Apporte une aide technique et financière, partage les bonnes pratiques internationales, et facilite les transferts de technologie et de connaissances.",
+      missions: [
+        "Aide au développement et coopération technique",
+        "Financement de projets sectoriels",
+        "Partage des bonnes pratiques internationales",
+        "Transfert de technologie et renforcement des capacités"
+      ],
+      email: "partenaire@demo.ga",
+      icon: Handshake,
+      color: "from-blue-400 to-purple-400",
+      category: "Coopération",
+      active: false
+    },
+    {
       role: "pecheur",
       name: "Pêcheur Artisanal",
       description: "Acteur de terrain - Déclaration des captures, remontées quotidiennes et paiement des taxes",
@@ -207,6 +276,23 @@ const Demo = () => {
       active: true
     },
     {
+      role: "agent_collecte",
+      name: "Agent de Collecte",
+      description: "Personnel terrain - Saisie des données de débarquement et validation terrain",
+      detailedDescription: "Agent de terrain chargé de la collecte des données de pêche dans les sites de débarquement. Enregistre les captures, vérifie les déclarations des pêcheurs, valide les données terrain, et assure la remontée des informations vers le système central.",
+      missions: [
+        "Collecte des données de débarquement",
+        "Validation des déclarations de captures",
+        "Saisie et transmission des données terrain",
+        "Assistance aux pêcheurs dans leurs déclarations"
+      ],
+      email: "agent@demo.ga",
+      icon: Clipboard,
+      color: "from-green-500 to-emerald-500",
+      category: "Personnel terrain",
+      active: false
+    },
+    {
       role: "inspecteur",
       name: "Inspecteur",
       description: "Surveillance terrain - Contrôles, inspections et remontées d'infractions",
@@ -222,6 +308,40 @@ const Demo = () => {
       color: "from-red-500 to-rose-600",
       category: "Contrôle",
       active: true
+    },
+    {
+      role: "observateur_pi",
+      name: "Observateur Pêche Industrielle",
+      description: "Observateur embarqué - Surveillance des captures et pratiques en mer",
+      detailedDescription: "Observateur scientifique embarqué sur les navires de pêche industrielle. Tient le journal de bord détaillé, enregistre les captures par espèce, documente les rejets et prises accessoires, et vérifie le respect des règlementations en vigueur.",
+      missions: [
+        "Tenue du journal de marée détaillé",
+        "Enregistrement des captures et rejets",
+        "Documentation des prises accessoires",
+        "Vérification du respect des règlementations"
+      ],
+      email: "observateur@demo.ga",
+      icon: Eye,
+      color: "from-amber-500 to-yellow-500",
+      category: "Personnel terrain",
+      active: false
+    },
+    {
+      role: "analyste",
+      name: "Analyste",
+      description: "Analyse de données - Production de rapports et statistiques sectorielles",
+      detailedDescription: "Analyste spécialisé dans le traitement et l'analyse des données halieutiques. Produit les statistiques sectorielles, élabore les rapports d'activité, réalise les analyses de tendances, et fournit l'aide à la décision par l'analyse de données.",
+      missions: [
+        "Traitement et analyse des données de pêche",
+        "Production des statistiques sectorielles",
+        "Élaboration des rapports d'activité",
+        "Analyses de tendances et aide à la décision"
+      ],
+      email: "analyste@demo.ga",
+      icon: BarChart3,
+      color: "from-pink-500 to-rose-500",
+      category: "Personnel terrain",
+      active: false
     },
     {
       role: "admin",

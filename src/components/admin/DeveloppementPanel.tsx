@@ -57,6 +57,8 @@ const typeLabels = {
 
 const roleLabels: Record<string, string> = {
   ministre: "Ministère",
+  direction_centrale: "Direction Centrale",
+  direction_provinciale: "Direction Provinciale",
   dgpa: "Gestion portuaire",
   anpa: "Contrôle quotas",
   agasa: "Standards & Qualité",
@@ -64,10 +66,15 @@ const roleLabels: Record<string, string> = {
   oprag: "Recherche halieutique",
   anpn: "Conservation",
   corep: "Promotion développement",
+  dgddi: "DGDDI - Douanes",
+  partenaire_international: "Partenaire International",
   pecheur: "Pêcheur Artisanal",
   cooperative: "Coopérative",
   armateur_pi: "Armement Industriel",
+  agent_collecte: "Agent de Collecte",
   inspecteur: "Inspecteur",
+  observateur_pi: "Observateur PI",
+  analyste: "Analyste",
   admin: "Administrateur",
 };
 
@@ -257,11 +264,25 @@ export const DeveloppementPanel = () => {
           <SelectContent>
             <SelectItem value="all">Tous les rôles</SelectItem>
             <SelectItem value="ministre">Ministère de la Mer</SelectItem>
+            <SelectItem value="direction_centrale">Direction Centrale</SelectItem>
+            <SelectItem value="direction_provinciale">Direction Provinciale</SelectItem>
             <SelectItem value="dgpa">Gestion portuaire</SelectItem>
+            <SelectItem value="anpa">Contrôle quotas</SelectItem>
+            <SelectItem value="agasa">Standards & Qualité</SelectItem>
+            <SelectItem value="dgmm">Affaires maritimes</SelectItem>
+            <SelectItem value="oprag">Recherche halieutique</SelectItem>
+            <SelectItem value="anpn">Conservation</SelectItem>
+            <SelectItem value="corep">Promotion développement</SelectItem>
+            <SelectItem value="dgddi">DGDDI - Douanes</SelectItem>
+            <SelectItem value="partenaire_international">Partenaire International</SelectItem>
             <SelectItem value="pecheur">Pêcheur Artisanal</SelectItem>
             <SelectItem value="cooperative">Coopérative</SelectItem>
-            <SelectItem value="armateur">Armement Industriel</SelectItem>
+            <SelectItem value="armateur_pi">Armement Industriel</SelectItem>
+            <SelectItem value="agent_collecte">Agent de Collecte</SelectItem>
             <SelectItem value="inspecteur">Inspecteur</SelectItem>
+            <SelectItem value="observateur_pi">Observateur PI</SelectItem>
+            <SelectItem value="analyste">Analyste</SelectItem>
+            <SelectItem value="admin">Administrateur</SelectItem>
           </SelectContent>
         </Select>
 
