@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
-import { Mic, Send, Volume2, VolumeX, Bot, User, History, Plus } from "lucide-react";
+import { Mic, Send, Volume2, VolumeX, Bot, User, History, Plus, X, Check } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { AudioWaveform } from "./AudioWaveform";
 import { IAstedHistory } from "./IAstedHistory";
@@ -40,6 +40,7 @@ export const IAstedChat = () => {
   const [showAudioPreview, setShowAudioPreview] = useState(false);
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
   const audioPreviewRef = useRef<HTMLAudioElement>(null);
+  const [isEnhancingAudio, setIsEnhancingAudio] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [showHistory, setShowHistory] = useState(false);
@@ -467,12 +468,38 @@ export const IAstedChat = () => {
     if (!audioPreview) return;
     
     setShowAudioPreview(false);
+    setIsEnhancingAudio(true);
     setPlaybackSpeed(1); // Reset speed
-    await transcribeAudio(audioPreview.blob);
     
-    // Clean up
-    URL.revokeObjectURL(audioPreview.url);
-    setAudioPreview(null);
+    try {
+      toast({
+        title: "Amélioration de l'audio...",
+        description: "Application de filtres pour une meilleure qualité de transcription.",
+      });
+      
+      // Enhance audio quality
+      const enhancedBlob = await enhanceAudioQuality(audioPreview.blob);
+      
+      toast({
+        title: "Audio amélioré",
+        description: "Transcription en cours...",
+      });
+      
+      await transcribeAudio(enhancedBlob);
+    } catch (error) {
+      console.error('Error in audio validation:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible d'améliorer l'audio. Tentative avec l'original...",
+        variant: "destructive",
+      });
+      await transcribeAudio(audioPreview.blob);
+    } finally {
+      setIsEnhancingAudio(false);
+      // Clean up
+      URL.revokeObjectURL(audioPreview.url);
+      setAudioPreview(null);
+    }
   };
 
   const handleDiscardAudio = () => {
@@ -493,6 +520,108 @@ export const IAstedChat = () => {
     setPlaybackSpeed(speed);
     if (audioPreviewRef.current) {
       audioPreviewRef.current.playbackRate = speed;
+    }
+  };
+
+  const enhanceAudioQuality = async (audioBlob: Blob): Promise<Blob> => {
+    try {
+      const arrayBuffer = await audioBlob.arrayBuffer();
+      const audioContext = new AudioContext();
+      const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+      
+      // Create offline context for processing
+      const offlineContext = new OfflineAudioContext(
+        audioBuffer.numberOfChannels,
+        audioBuffer.length,
+        audioBuffer.sampleRate
+      );
+      
+      // Create source
+      const source = offlineContext.createBufferSource();
+      source.buffer = audioBuffer;
+      
+      // Create filters for enhancement
+      // High-pass filter to remove low-frequency noise
+      const highPassFilter = offlineContext.createBiquadFilter();
+      highPassFilter.type = 'highpass';
+      highPassFilter.frequency.value = 80; // Remove frequencies below 80Hz
+      
+      // Low-pass filter to remove high-frequency noise
+      const lowPassFilter = offlineContext.createBiquadFilter();
+      lowPassFilter.type = 'lowpass';
+      lowPassFilter.frequency.value = 8000; // Remove frequencies above 8kHz
+      
+      // Compressor for dynamic range and volume normalization
+      const compressor = offlineContext.createDynamicsCompressor();
+      compressor.threshold.value = -24;
+      compressor.knee.value = 30;
+      compressor.ratio.value = 12;
+      compressor.attack.value = 0.003;
+      compressor.release.value = 0.25;
+      
+      // Gain node for final volume adjustment
+      const gainNode = offlineContext.createGain();
+      gainNode.gain.value = 1.5; // Boost volume slightly
+      
+      // Connect the audio graph
+      source.connect(highPassFilter);
+      highPassFilter.connect(lowPassFilter);
+      lowPassFilter.connect(compressor);
+      compressor.connect(gainNode);
+      gainNode.connect(offlineContext.destination);
+      
+      // Start processing
+      source.start(0);
+      const renderedBuffer = await offlineContext.startRendering();
+      
+      // Convert back to blob
+      const numberOfChannels = renderedBuffer.numberOfChannels;
+      const length = renderedBuffer.length * numberOfChannels * 2; // 16-bit audio
+      const buffer = new ArrayBuffer(44 + length);
+      const view = new DataView(buffer);
+      
+      // Write WAV header
+      const writeString = (offset: number, string: string) => {
+        for (let i = 0; i < string.length; i++) {
+          view.setUint8(offset + i, string.charCodeAt(i));
+        }
+      };
+      
+      writeString(0, 'RIFF');
+      view.setUint32(4, 36 + length, true);
+      writeString(8, 'WAVE');
+      writeString(12, 'fmt ');
+      view.setUint32(16, 16, true);
+      view.setUint16(20, 1, true);
+      view.setUint16(22, numberOfChannels, true);
+      view.setUint32(24, renderedBuffer.sampleRate, true);
+      view.setUint32(28, renderedBuffer.sampleRate * 2 * numberOfChannels, true);
+      view.setUint16(32, numberOfChannels * 2, true);
+      view.setUint16(34, 16, true);
+      writeString(36, 'data');
+      view.setUint32(40, length, true);
+      
+      // Write audio data
+      const channelData: Float32Array[] = [];
+      for (let i = 0; i < numberOfChannels; i++) {
+        channelData.push(renderedBuffer.getChannelData(i));
+      }
+      
+      let offset = 44;
+      for (let i = 0; i < renderedBuffer.length; i++) {
+        for (let channel = 0; channel < numberOfChannels; channel++) {
+          const sample = Math.max(-1, Math.min(1, channelData[channel][i]));
+          view.setInt16(offset, sample < 0 ? sample * 0x8000 : sample * 0x7FFF, true);
+          offset += 2;
+        }
+      }
+      
+      await audioContext.close();
+      return new Blob([buffer], { type: 'audio/wav' });
+    } catch (error) {
+      console.error('Error enhancing audio:', error);
+      // Return original blob if enhancement fails
+      return audioBlob;
     }
   };
 
@@ -727,15 +856,29 @@ export const IAstedChat = () => {
               variant="outline"
               onClick={handleDiscardAudio}
               className="w-full sm:w-auto"
+              disabled={isEnhancingAudio}
             >
+              <X className="h-4 w-4 mr-2" />
               Réenregistrer
             </Button>
             <Button
               onClick={handleValidateAudio}
               className="w-full sm:w-auto"
-              disabled={isLoading}
+              disabled={isLoading || isEnhancingAudio}
             >
-              {isLoading ? "Transcription..." : "Valider et transcrire"}
+              {isEnhancingAudio ? (
+                <>
+                  <div className="h-4 w-4 mr-2 animate-spin rounded-full border-2 border-background border-t-transparent" />
+                  Amélioration...
+                </>
+              ) : isLoading ? (
+                "Transcription..."
+              ) : (
+                <>
+                  <Check className="h-4 w-4 mr-2" />
+                  Valider et transcrire
+                </>
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
