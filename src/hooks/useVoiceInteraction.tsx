@@ -318,7 +318,22 @@ export const useVoiceInteraction = () => {
       };
 
       recorder.onstop = async () => {
+        console.log('📼 Recorder stopped, processing audio...');
         const audioBlob = new Blob(chunks, { type: 'audio/webm' });
+        console.log('📦 Audio blob size:', audioBlob.size, 'bytes');
+        
+        if (audioBlob.size === 0) {
+          console.error('❌ Audio blob is empty!');
+          setVoiceState('idle');
+          toast({
+            title: "Erreur",
+            description: "Aucun audio enregistré. Veuillez réessayer.",
+            variant: "destructive"
+          });
+          stream.getTracks().forEach(track => track.stop());
+          return;
+        }
+        
         await processAudio(audioBlob);
         stream.getTracks().forEach(track => track.stop());
         
@@ -338,6 +353,7 @@ export const useVoiceInteraction = () => {
       };
 
       recorder.start();
+      console.log('🎙️ Recording started');
       setMediaRecorder(recorder);
       setAudioChunks(chunks);
       setVoiceState('listening');
@@ -370,6 +386,7 @@ export const useVoiceInteraction = () => {
   };
 
   const stopListening = () => {
+    console.log('🛑 Stopping listening... State:', mediaRecorder?.state);
     if (mediaRecorder && mediaRecorder.state === 'recording') {
       // Clear silence timer and countdown
       if (silenceTimerRef.current) {
@@ -383,29 +400,44 @@ export const useVoiceInteraction = () => {
       
       setSilenceDetected(false);
       setSilenceTimeRemaining(0);
-      mediaRecorder.stop();
       setVoiceState('thinking');
+      console.log('🔄 State changed to thinking, stopping recorder...');
+      mediaRecorder.stop();
+      console.log('✅ Recorder.stop() called');
+    } else {
+      console.warn('⚠️ Cannot stop - recorder state:', mediaRecorder?.state);
     }
   };
 
   const processAudio = async (audioBlob: Blob) => {
+    console.log('🎤 Processing audio... Blob size:', audioBlob.size);
+    
     if (!sessionId) {
-      console.error('No session ID available');
+      console.error('❌ No session ID available');
+      setVoiceState('idle');
+      return;
+    }
+
+    if (audioBlob.size === 0) {
+      console.error('❌ Audio blob is empty in processAudio');
       setVoiceState('idle');
       return;
     }
 
     try {
       const startTime = Date.now();
+      console.log('📝 Converting audio to base64...');
       
       // Convert to base64
       const reader = new FileReader();
       reader.readAsDataURL(audioBlob);
       
       reader.onloadend = async () => {
+        console.log('✅ Base64 conversion complete');
         const base64Audio = reader.result as string;
         const base64Data = base64Audio.split(',')[1];
 
+        console.log('🌐 Calling chat-with-iasted...');
         // Call new chat-with-iasted endpoint
         const { data: chatData, error: chatError } = await supabase.functions.invoke('chat-with-iasted', {
           body: { 
@@ -422,11 +454,17 @@ export const useVoiceInteraction = () => {
         });
 
         if (chatError) {
-          console.error('Chat error:', chatError);
-          throw new Error('Chat failed');
+          console.error('❌ Chat error:', chatError);
+          toast({
+            title: "Erreur",
+            description: "Erreur lors de la communication avec iAsted.",
+            variant: "destructive"
+          });
+          setVoiceState('idle');
+          return;
         }
 
-        console.log('Chat response:', chatData);
+        console.log('✅ Chat response received:', chatData);
 
         // Handle voice commands
         if (chatData.route?.category === 'voice_command') {
@@ -469,19 +507,21 @@ export const useVoiceInteraction = () => {
 
         // Play audio response
         if (chatData.audio_base64) {
+          console.log('🔊 Playing audio response...');
           await playAudioResponse(chatData.audio_base64);
         } else {
+          console.log('ℹ️ No audio to play, returning to idle');
           setVoiceState('idle');
         }
       };
 
       reader.onerror = () => {
-        console.error('Error reading audio file');
+        console.error('❌ Error reading audio file');
         setVoiceState('idle');
       };
 
     } catch (error) {
-      console.error('Error processing audio:', error);
+      console.error('❌ Error processing audio:', error);
       toast({
         title: "Erreur",
         description: "Impossible de traiter l'audio.",
@@ -545,6 +585,7 @@ export const useVoiceInteraction = () => {
   };
 
   const playAudioResponse = async (base64Audio: string) => {
+    console.log('🔊 Starting audio playback...');
     try {
       setVoiceState('speaking');
 
@@ -559,59 +600,72 @@ export const useVoiceInteraction = () => {
       }
       const arrayBuffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
 
+      console.log('🎵 Audio data prepared, size:', bytes.length, 'bytes');
       if (playbackAudioContextRef.current) {
         const ctx = playbackAudioContextRef.current;
 
         try {
+          console.log('🎼 Attempting WebAudio decode...');
           const audioBuffer = await ctx.decodeAudioData(arrayBuffer.slice(0));
+          console.log('✅ Audio decoded successfully, duration:', audioBuffer.duration, 's');
+          
           await new Promise<void>((resolve) => {
             const source = ctx.createBufferSource();
             source.buffer = audioBuffer;
             source.connect(ctx.destination);
-            source.onended = () => resolve();
+            source.onended = () => {
+              console.log('✅ WebAudio playback complete');
+              resolve();
+            };
             source.start(0);
           });
           setVoiceState('idle');
           
           // Mode continu: relancer l'écoute
           if (continuousMode && !continuousModePaused) {
-            console.log('Mode continu activé, redémarrage de l\'écoute (WebAudio)...');
+            console.log('♻️ Continuous mode active, restarting listening (WebAudio)...');
             setTimeout(() => startListening(), 300);
           }
           return;
         } catch (decodeErr) {
-          console.warn('decodeAudioData failed, falling back to HTMLAudio', decodeErr);
+          console.warn('⚠️ decodeAudioData failed, falling back to HTMLAudio', decodeErr);
         }
       }
 
       // Fallback to HTMLAudioElement
+      console.log('🔄 Using HTMLAudioElement fallback...');
       const audioBlob = new Blob([bytes], { type: 'audio/mpeg' });
       const audioUrl = URL.createObjectURL(audioBlob);
       const audio = new Audio(audioUrl);
 
       await new Promise<void>((resolve, reject) => {
         audio.onended = () => {
+          console.log('✅ HTMLAudio playback complete');
           URL.revokeObjectURL(audioUrl);
           resolve();
         };
-        audio.onerror = () => {
+        audio.onerror = (err) => {
+          console.error('❌ HTMLAudio error:', err);
           URL.revokeObjectURL(audioUrl);
           reject(new Error('Error playing audio'));
         };
         setCurrentAudio(audio);
-        audio.play().catch(reject);
+        audio.play().catch(err => {
+          console.error('❌ Audio play() failed:', err);
+          reject(err);
+        });
       });
 
       setCurrentAudio(null);
       setVoiceState('idle');
 
       if (continuousMode && !continuousModePaused) {
-        console.log('Mode continu activé, redémarrage de l\'écoute (fallback)...');
+        console.log('♻️ Continuous mode active, restarting listening (fallback)...');
         setTimeout(() => startListening(), 300);
       }
 
     } catch (error) {
-      console.error('Error playing audio:', error);
+      console.error('❌ Error playing audio:', error);
       setVoiceState('idle');
     }
   };
