@@ -917,14 +917,14 @@ const Demo = () => {
             </div>
           </div>
 
-          {/* Analyse et Administration */}
+          {/* Analyse */}
           <div className="space-y-4">
             <h3 className="text-2xl font-semibold text-primary flex items-center gap-2">
               <div className="h-1 w-12 bg-gradient-to-r from-primary to-primary/50 rounded" />
-              Analyse et Administration
+              Analyse de Données
             </h3>
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {['analyste', 'admin', 'super_admin'].map(roleId => {
+              {['analyste'].map(roleId => {
                 const account = demoAccounts.find(a => a.role === roleId);
                 if (!account) return null;
                 const IconComponent = account.icon;
@@ -981,6 +981,98 @@ const Demo = () => {
                       <Button 
                         onClick={() => handleQuickAccess(account.email, account.name)}
                         className="w-full"
+                        variant={isActive ? "default" : "secondary"}
+                        disabled={!isActive}
+                      >
+                        {isActive ? "Accès rapide" : "Bientôt disponible"}
+                      </Button>
+                      <DemoFeedbackDialog roleDemo={account.role} roleName={account.name} />
+                    </CardFooter>
+                  </Card>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Gestion Système */}
+          <div className="space-y-4">
+            <div className="relative">
+              <div className="absolute inset-0 bg-gradient-to-r from-slate-900/5 via-zinc-900/5 to-slate-900/5 rounded-lg -z-10" />
+              <h3 className="text-2xl font-semibold flex items-center gap-2 text-slate-900 dark:text-slate-100 py-2">
+                <div className="h-1 w-12 bg-gradient-to-r from-slate-700 via-zinc-800 to-slate-900 rounded" />
+                Gestion Système
+                <Badge variant="outline" className="ml-2 border-slate-700 text-slate-700 dark:border-slate-400 dark:text-slate-400">
+                  Accès Technique
+                </Badge>
+              </h3>
+            </div>
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2">
+              {['admin', 'super_admin'].map(roleId => {
+                const account = demoAccounts.find(a => a.role === roleId);
+                if (!account) return null;
+                const IconComponent = account.icon;
+                const isActive = account.active;
+                return (
+                  <Card 
+                    key={account.role} 
+                    className={`relative overflow-hidden transition-all border-2 ${
+                      isActive 
+                        ? "hover:shadow-xl border-slate-700/30 dark:border-slate-500/30 shadow-lg" 
+                        : "opacity-60 grayscale hover:opacity-70"
+                    }`}
+                  >
+                    <div className={`absolute top-0 left-0 right-0 h-3 bg-gradient-to-r ${account.color}`} />
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-slate-900/5 to-transparent rounded-bl-full -z-10" />
+                    <CardHeader className="pb-3">
+                      <div className="flex items-start gap-3">
+                        <div className={`p-3 rounded-lg bg-gradient-to-br ${account.color} ${!isActive && "opacity-50"} shadow-md`}>
+                          <IconComponent className="h-7 w-7 text-white" />
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <CardTitle className="text-lg font-bold">{account.name}</CardTitle>
+                            {!isActive && (
+                              <Badge variant="secondary" className="text-xs">
+                                Bientôt
+                              </Badge>
+                            )}
+                          </div>
+                          <CardDescription className="text-sm font-medium">
+                            {account.description}
+                          </CardDescription>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="pb-3 space-y-3">
+                      <div className="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-md border border-slate-200 dark:border-slate-800">
+                        <p className="text-sm text-muted-foreground leading-relaxed">
+                          {account.detailedDescription}
+                        </p>
+                      </div>
+                      <Separator />
+                      <div className="space-y-2">
+                        <p className="text-sm font-semibold flex items-center gap-2">
+                          <Shield className="h-4 w-4 text-slate-700 dark:text-slate-400" />
+                          Missions principales:
+                        </p>
+                        <ul className="text-sm text-muted-foreground space-y-1.5 pl-6">
+                          {account.missions.map((mission, idx) => (
+                            <li key={idx} className="flex items-start gap-2">
+                              <span className="text-slate-400 mt-1">•</span>
+                              <span>{mission}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                      <Separator />
+                      <div className="bg-muted/30 p-2 rounded text-sm font-mono">
+                        <strong className="text-foreground">Email:</strong> {account.email}
+                      </div>
+                    </CardContent>
+                    <CardFooter className="flex flex-col gap-2 bg-slate-50/50 dark:bg-slate-900/20">
+                      <Button 
+                        onClick={() => handleQuickAccess(account.email, account.name)}
+                        className={`w-full ${isActive ? 'bg-slate-800 hover:bg-slate-900 dark:bg-slate-700 dark:hover:bg-slate-600' : ''}`}
                         variant={isActive ? "default" : "secondary"}
                         disabled={!isActive}
                       >
