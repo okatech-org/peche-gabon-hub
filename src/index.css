@@ -163,6 +163,26 @@ All colors MUST be HSL.
     }
   }
 
+  /* Animation checkmark */
+  @keyframes check-draw {
+    0% {
+      opacity: 0;
+      transform: scale(0) rotate(-45deg);
+    }
+    50% {
+      opacity: 1;
+      transform: scale(1.2) rotate(0deg);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1) rotate(0deg);
+    }
+  }
+
+  .animate-check-draw {
+    animation: check-draw 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  }
+
   /* Webkit scrollbar (Chrome, Safari, Edge) */
   .scrollbar-thin::-webkit-scrollbar {
     height: 6px;

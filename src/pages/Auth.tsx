@@ -10,6 +10,7 @@ import { Waves, Fish, ArrowLeft, AlertCircle, Loader2, Users } from "lucide-reac
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { SuccessAnimation } from "@/components/auth/SuccessAnimation";
 import { z } from "zod";
 
 // Schemas de validation
@@ -31,6 +32,8 @@ const Auth = () => {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
 
   // Redirect if already logged in
   useEffect(() => {
@@ -84,6 +87,11 @@ const Auth = () => {
     try {
       const validated = signInSchema.parse(signInData);
       await signIn(validated.email, validated.password);
+      
+      // Afficher l'animation de succès
+      setSuccessMessage("Connexion réussie");
+      setShowSuccess(true);
+      
       toast({
         title: "Connexion réussie",
         description: "Bienvenue sur PÊCHE GABON",
@@ -119,6 +127,11 @@ const Auth = () => {
         validated.firstName,
         validated.lastName
       );
+      
+      // Afficher l'animation de succès
+      setSuccessMessage("Compte créé avec succès");
+      setShowSuccess(true);
+      
       toast({
         title: "Compte créé avec succès",
         description: "Vous pouvez maintenant vous connecter.",
@@ -142,7 +155,17 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col lg:flex-row">
+    <>
+      {showSuccess && (
+        <SuccessAnimation 
+          message={successMessage}
+          onComplete={() => {
+            // La redirection sera gérée par le useEffect qui détecte user + roles
+          }}
+        />
+      )}
+      
+      <div className="min-h-screen flex flex-col lg:flex-row">
       {/* Back button & Theme toggle */}
       <div className="absolute top-4 left-4 right-4 flex justify-between items-center z-10">
         <Button
@@ -398,6 +421,7 @@ const Auth = () => {
         </Card>
       </div>
     </div>
+    </>
   );
 };
 
