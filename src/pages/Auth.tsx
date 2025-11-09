@@ -34,6 +34,7 @@ const Auth = () => {
   const [error, setError] = useState<string | null>(null);
   const [showSuccess, setShowSuccess] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<Record<string, boolean>>({});
 
   // Redirect if already logged in
   useEffect(() => {
@@ -82,6 +83,7 @@ const Auth = () => {
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setFieldErrors({});
     setIsLoading(true);
     
     try {
@@ -98,11 +100,26 @@ const Auth = () => {
       });
     } catch (err) {
       if (err instanceof z.ZodError) {
+        // Marquer les champs avec erreur pour l'animation shake
+        const errors: Record<string, boolean> = {};
+        err.errors.forEach((error) => {
+          if (error.path[0]) {
+            errors[`signin-${error.path[0]}`] = true;
+          }
+        });
+        setFieldErrors(errors);
         setError(err.errors[0].message);
+        
+        // Retirer l'animation après 500ms
+        setTimeout(() => setFieldErrors({}), 500);
       } else if (err instanceof Error) {
         setError(err.message || "Erreur de connexion. Vérifiez vos identifiants.");
+        setFieldErrors({ 'signin-email': true, 'signin-password': true });
+        setTimeout(() => setFieldErrors({}), 500);
       } else {
         setError("Erreur de connexion. Vérifiez vos identifiants.");
+        setFieldErrors({ 'signin-email': true, 'signin-password': true });
+        setTimeout(() => setFieldErrors({}), 500);
       }
       toast({
         title: "Erreur de connexion",
@@ -117,6 +134,7 @@ const Auth = () => {
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setFieldErrors({});
     setIsLoading(true);
     
     try {
@@ -138,7 +156,18 @@ const Auth = () => {
       });
     } catch (err) {
       if (err instanceof z.ZodError) {
+        // Marquer les champs avec erreur pour l'animation shake
+        const errors: Record<string, boolean> = {};
+        err.errors.forEach((error) => {
+          if (error.path[0]) {
+            errors[`signup-${error.path[0]}`] = true;
+          }
+        });
+        setFieldErrors(errors);
         setError(err.errors[0].message);
+        
+        // Retirer l'animation après 500ms
+        setTimeout(() => setFieldErrors({}), 500);
       } else if (err instanceof Error) {
         setError(err.message || "Erreur lors de la création du compte.");
       } else {
@@ -269,7 +298,7 @@ const Auth = () => {
                         setError(null);
                       }}
                       disabled={isLoading}
-                      className="transition-colors"
+                      className={`transition-colors ${fieldErrors['signin-email'] ? 'field-error' : ''}`}
                     />
                   </div>
                   <div className="space-y-2">
@@ -297,7 +326,7 @@ const Auth = () => {
                         setError(null);
                       }}
                       disabled={isLoading}
-                      className="transition-colors"
+                      className={`transition-colors ${fieldErrors['signin-password'] ? 'field-error' : ''}`}
                     />
                   </div>
                   <Button type="submit" className="w-full shadow-glow" disabled={isLoading}>
@@ -329,7 +358,7 @@ const Auth = () => {
                         }}
                         disabled={isLoading}
                         maxLength={100}
-                        className="transition-colors"
+                        className={`transition-colors ${fieldErrors['signup-firstName'] ? 'field-error' : ''}`}
                       />
                     </div>
                     <div className="space-y-2">
@@ -345,7 +374,7 @@ const Auth = () => {
                         }}
                         disabled={isLoading}
                         maxLength={100}
-                        className="transition-colors"
+                        className={`transition-colors ${fieldErrors['signup-lastName'] ? 'field-error' : ''}`}
                       />
                     </div>
                   </div>
@@ -362,7 +391,7 @@ const Auth = () => {
                       }}
                       disabled={isLoading}
                       maxLength={255}
-                      className="transition-colors"
+                      className={`transition-colors ${fieldErrors['signup-email'] ? 'field-error' : ''}`}
                     />
                   </div>
                   <div className="space-y-2">
@@ -379,7 +408,7 @@ const Auth = () => {
                       disabled={isLoading}
                       minLength={6}
                       maxLength={100}
-                      className="transition-colors"
+                      className={`transition-colors ${fieldErrors['signup-password'] ? 'field-error' : ''}`}
                     />
                     <p className="text-xs text-muted-foreground">
                       Le mot de passe doit contenir au moins 6 caractères
