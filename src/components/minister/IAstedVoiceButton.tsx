@@ -80,35 +80,15 @@ export const IAstedVoiceButton = ({ className = '', size = 'md' }: IAstedVoiceBu
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [voiceState, handleInteraction, cancelInteraction]);
 
-  const handleDoubleClick = () => {
-    const now = Date.now();
-    const timeSinceLastClick = now - lastClickTime.current;
-
-    // Increment click count
-    clickCount.current += 1;
-    lastClickTime.current = now;
-
-    // Clear existing timeout
-    if (clickTimeout.current) {
-      clearTimeout(clickTimeout.current);
-    }
-
-    // If double click (within 400ms), trigger voice interaction
-    if (clickCount.current === 2 && timeSinceLastClick < 400) {
-      clickCount.current = 0;
-      handleInteraction();
-    } else {
-      // Reset count after timeout
-      clickTimeout.current = setTimeout(() => {
-        clickCount.current = 0;
-      }, 400);
-    }
+  const handleClick = () => {
+    // Clic simple: démarrer/arrêter l'interaction vocale
+    handleInteraction();
   };
 
   return (
     <>
       <IAstedButton
-        onClick={handleDoubleClick}
+        onClick={handleClick}
         className={className}
         size={size}
         voiceListening={isListening}
