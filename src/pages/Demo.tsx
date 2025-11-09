@@ -437,89 +437,544 @@ const Demo = () => {
         </div>
 
         <div className="space-y-12 max-w-7xl mx-auto">
-          {Object.entries(
-            demoAccounts.reduce((acc, account) => {
-              if (!acc[account.category]) {
-                acc[account.category] = [];
-              }
-              acc[account.category].push(account);
-              return acc;
-            }, {} as Record<string, typeof demoAccounts>)
-          ).map(([category, accounts]) => (
-            <div key={category} className="space-y-4">
-              <h3 className="text-2xl font-semibold text-primary flex items-center gap-2">
-                <div className="h-1 w-12 bg-gradient-to-r from-primary to-primary/50 rounded" />
-                {category}
-              </h3>
-              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {accounts.map((account) => {
-                  const IconComponent = account.icon;
-                  const isActive = account.active;
-                  return (
-                    <Card 
-                      key={account.role} 
-                      className={`relative overflow-hidden transition-all ${
-                        isActive 
-                          ? "hover:shadow-lg border-primary/20" 
-                          : "opacity-60 grayscale hover:opacity-70"
-                      }`}
-                    >
-                      <div className={`absolute top-0 left-0 right-0 h-2 bg-gradient-to-r ${account.color}`} />
-                      <CardHeader className="pb-3">
-                        <div className="flex items-start gap-3">
-                          <div className={`p-2 rounded-lg bg-gradient-to-br ${account.color} ${!isActive && "opacity-50"}`}>
-                            <IconComponent className="h-6 w-6 text-white" />
-                          </div>
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-1">
-                              <CardTitle className="text-lg">{account.name}</CardTitle>
-                              {!isActive && (
-                                <Badge variant="secondary" className="text-xs">
-                                  Bientôt
-                                </Badge>
-                              )}
-                            </div>
-                            <CardDescription className="text-sm">
-                              {account.description}
-                            </CardDescription>
-                          </div>
+          {/* Gouvernance stratégique */}
+          <div className="space-y-4">
+            <h3 className="text-2xl font-semibold text-primary flex items-center gap-2">
+              <div className="h-1 w-12 bg-gradient-to-r from-primary to-primary/50 rounded" />
+              Gouvernance Stratégique
+            </h3>
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {['ministre', 'direction_centrale', 'direction_provinciale'].map(roleId => {
+                const account = demoAccounts.find(a => a.role === roleId);
+                if (!account) return null;
+                const IconComponent = account.icon;
+                const isActive = account.active;
+                return (
+                  <Card 
+                    key={account.role} 
+                    className={`relative overflow-hidden transition-all ${
+                      isActive 
+                        ? "hover:shadow-lg border-primary/20" 
+                        : "opacity-60 grayscale hover:opacity-70"
+                    }`}
+                  >
+                    <div className={`absolute top-0 left-0 right-0 h-2 bg-gradient-to-r ${account.color}`} />
+                    <CardHeader className="pb-3">
+                      <div className="flex items-start gap-3">
+                        <div className={`p-2 rounded-lg bg-gradient-to-br ${account.color} ${!isActive && "opacity-50"}`}>
+                          <IconComponent className="h-6 w-6 text-white" />
                         </div>
-                      </CardHeader>
-                      <CardContent className="pb-3 space-y-3">
-                        <p className="text-sm text-muted-foreground">
-                          {account.detailedDescription}
-                        </p>
-                        <Separator />
-                        <div className="space-y-2">
-                          <p className="text-sm font-semibold">Missions principales:</p>
-                          <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
-                            {account.missions.map((mission, idx) => (
-                              <li key={idx}>{mission}</li>
-                            ))}
-                          </ul>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <CardTitle className="text-lg">{account.name}</CardTitle>
+                            {!isActive && (
+                              <Badge variant="secondary" className="text-xs">
+                                Bientôt
+                              </Badge>
+                            )}
+                          </div>
+                          <CardDescription className="text-sm">
+                            {account.description}
+                          </CardDescription>
                         </div>
-                        <Separator />
-                        <p className="text-sm text-muted-foreground">
-                          <strong>Email:</strong> {account.email}
-                        </p>
-                      </CardContent>
-                      <CardFooter className="flex flex-col gap-2">
-                        <Button 
-                          onClick={() => handleQuickAccess(account.email, account.name)}
-                          className="w-full"
-                          variant={isActive ? "default" : "secondary"}
-                          disabled={!isActive}
-                        >
-                          {isActive ? "Accès rapide" : "Bientôt disponible"}
-                        </Button>
-                        <DemoFeedbackDialog roleDemo={account.role} roleName={account.name} />
-                      </CardFooter>
-                    </Card>
-                  );
-                })}
-              </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="pb-3 space-y-3">
+                      <p className="text-sm text-muted-foreground">
+                        {account.detailedDescription}
+                      </p>
+                      <Separator />
+                      <div className="space-y-2">
+                        <p className="text-sm font-semibold">Missions principales:</p>
+                        <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
+                          {account.missions.map((mission, idx) => (
+                            <li key={idx}>{mission}</li>
+                          ))}
+                        </ul>
+                      </div>
+                      <Separator />
+                      <p className="text-sm text-muted-foreground">
+                        <strong>Email:</strong> {account.email}
+                      </p>
+                    </CardContent>
+                    <CardFooter className="flex flex-col gap-2">
+                      <Button 
+                        onClick={() => handleQuickAccess(account.email, account.name)}
+                        className="w-full"
+                        variant={isActive ? "default" : "secondary"}
+                        disabled={!isActive}
+                      >
+                        {isActive ? "Accès rapide" : "Bientôt disponible"}
+                      </Button>
+                      <DemoFeedbackDialog roleDemo={account.role} roleName={account.name} />
+                    </CardFooter>
+                  </Card>
+                );
+              })}
             </div>
-          ))}
+          </div>
+
+          {/* Acteurs terrain et Industrie */}
+          <div className="space-y-4">
+            <h3 className="text-2xl font-semibold text-primary flex items-center gap-2">
+              <div className="h-1 w-12 bg-gradient-to-r from-primary to-primary/50 rounded" />
+              Acteurs Terrain et Industrie
+            </h3>
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {['pecheur', 'cooperative', 'armateur_pi'].map(roleId => {
+                const account = demoAccounts.find(a => a.role === roleId);
+                if (!account) return null;
+                const IconComponent = account.icon;
+                const isActive = account.active;
+                return (
+                  <Card 
+                    key={account.role} 
+                    className={`relative overflow-hidden transition-all ${
+                      isActive 
+                        ? "hover:shadow-lg border-primary/20" 
+                        : "opacity-60 grayscale hover:opacity-70"
+                    }`}
+                  >
+                    <div className={`absolute top-0 left-0 right-0 h-2 bg-gradient-to-r ${account.color}`} />
+                    <CardHeader className="pb-3">
+                      <div className="flex items-start gap-3">
+                        <div className={`p-2 rounded-lg bg-gradient-to-br ${account.color} ${!isActive && "opacity-50"}`}>
+                          <IconComponent className="h-6 w-6 text-white" />
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <CardTitle className="text-lg">{account.name}</CardTitle>
+                            {!isActive && (
+                              <Badge variant="secondary" className="text-xs">
+                                Bientôt
+                              </Badge>
+                            )}
+                          </div>
+                          <CardDescription className="text-sm">
+                            {account.description}
+                          </CardDescription>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="pb-3 space-y-3">
+                      <p className="text-sm text-muted-foreground">
+                        {account.detailedDescription}
+                      </p>
+                      <Separator />
+                      <div className="space-y-2">
+                        <p className="text-sm font-semibold">Missions principales:</p>
+                        <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
+                          {account.missions.map((mission, idx) => (
+                            <li key={idx}>{mission}</li>
+                          ))}
+                        </ul>
+                      </div>
+                      <Separator />
+                      <p className="text-sm text-muted-foreground">
+                        <strong>Email:</strong> {account.email}
+                      </p>
+                    </CardContent>
+                    <CardFooter className="flex flex-col gap-2">
+                      <Button 
+                        onClick={() => handleQuickAccess(account.email, account.name)}
+                        className="w-full"
+                        variant={isActive ? "default" : "secondary"}
+                        disabled={!isActive}
+                      >
+                        {isActive ? "Accès rapide" : "Bientôt disponible"}
+                      </Button>
+                      <DemoFeedbackDialog roleDemo={account.role} roleName={account.name} />
+                    </CardFooter>
+                  </Card>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Gestion opérationnelle */}
+          <div className="space-y-4">
+            <h3 className="text-2xl font-semibold text-primary flex items-center gap-2">
+              <div className="h-1 w-12 bg-gradient-to-r from-primary to-primary/50 rounded" />
+              Gestion Opérationnelle
+            </h3>
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {['dgpa', 'agent_collecte', 'observateur_pi'].map(roleId => {
+                const account = demoAccounts.find(a => a.role === roleId);
+                if (!account) return null;
+                const IconComponent = account.icon;
+                const isActive = account.active;
+                return (
+                  <Card 
+                    key={account.role} 
+                    className={`relative overflow-hidden transition-all ${
+                      isActive 
+                        ? "hover:shadow-lg border-primary/20" 
+                        : "opacity-60 grayscale hover:opacity-70"
+                    }`}
+                  >
+                    <div className={`absolute top-0 left-0 right-0 h-2 bg-gradient-to-r ${account.color}`} />
+                    <CardHeader className="pb-3">
+                      <div className="flex items-start gap-3">
+                        <div className={`p-2 rounded-lg bg-gradient-to-br ${account.color} ${!isActive && "opacity-50"}`}>
+                          <IconComponent className="h-6 w-6 text-white" />
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <CardTitle className="text-lg">{account.name}</CardTitle>
+                            {!isActive && (
+                              <Badge variant="secondary" className="text-xs">
+                                Bientôt
+                              </Badge>
+                            )}
+                          </div>
+                          <CardDescription className="text-sm">
+                            {account.description}
+                          </CardDescription>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="pb-3 space-y-3">
+                      <p className="text-sm text-muted-foreground">
+                        {account.detailedDescription}
+                      </p>
+                      <Separator />
+                      <div className="space-y-2">
+                        <p className="text-sm font-semibold">Missions principales:</p>
+                        <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
+                          {account.missions.map((mission, idx) => (
+                            <li key={idx}>{mission}</li>
+                          ))}
+                        </ul>
+                      </div>
+                      <Separator />
+                      <p className="text-sm text-muted-foreground">
+                        <strong>Email:</strong> {account.email}
+                      </p>
+                    </CardContent>
+                    <CardFooter className="flex flex-col gap-2">
+                      <Button 
+                        onClick={() => handleQuickAccess(account.email, account.name)}
+                        className="w-full"
+                        variant={isActive ? "default" : "secondary"}
+                        disabled={!isActive}
+                      >
+                        {isActive ? "Accès rapide" : "Bientôt disponible"}
+                      </Button>
+                      <DemoFeedbackDialog roleDemo={account.role} roleName={account.name} />
+                    </CardFooter>
+                  </Card>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Contrôle et Surveillance */}
+          <div className="space-y-4">
+            <h3 className="text-2xl font-semibold text-primary flex items-center gap-2">
+              <div className="h-1 w-12 bg-gradient-to-r from-primary to-primary/50 rounded" />
+              Contrôle et Surveillance
+            </h3>
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {['anpa', 'inspecteur', 'dgddi'].map(roleId => {
+                const account = demoAccounts.find(a => a.role === roleId);
+                if (!account) return null;
+                const IconComponent = account.icon;
+                const isActive = account.active;
+                return (
+                  <Card 
+                    key={account.role} 
+                    className={`relative overflow-hidden transition-all ${
+                      isActive 
+                        ? "hover:shadow-lg border-primary/20" 
+                        : "opacity-60 grayscale hover:opacity-70"
+                    }`}
+                  >
+                    <div className={`absolute top-0 left-0 right-0 h-2 bg-gradient-to-r ${account.color}`} />
+                    <CardHeader className="pb-3">
+                      <div className="flex items-start gap-3">
+                        <div className={`p-2 rounded-lg bg-gradient-to-br ${account.color} ${!isActive && "opacity-50"}`}>
+                          <IconComponent className="h-6 w-6 text-white" />
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <CardTitle className="text-lg">{account.name}</CardTitle>
+                            {!isActive && (
+                              <Badge variant="secondary" className="text-xs">
+                                Bientôt
+                              </Badge>
+                            )}
+                          </div>
+                          <CardDescription className="text-sm">
+                            {account.description}
+                          </CardDescription>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="pb-3 space-y-3">
+                      <p className="text-sm text-muted-foreground">
+                        {account.detailedDescription}
+                      </p>
+                      <Separator />
+                      <div className="space-y-2">
+                        <p className="text-sm font-semibold">Missions principales:</p>
+                        <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
+                          {account.missions.map((mission, idx) => (
+                            <li key={idx}>{mission}</li>
+                          ))}
+                        </ul>
+                      </div>
+                      <Separator />
+                      <p className="text-sm text-muted-foreground">
+                        <strong>Email:</strong> {account.email}
+                      </p>
+                    </CardContent>
+                    <CardFooter className="flex flex-col gap-2">
+                      <Button 
+                        onClick={() => handleQuickAccess(account.email, account.name)}
+                        className="w-full"
+                        variant={isActive ? "default" : "secondary"}
+                        disabled={!isActive}
+                      >
+                        {isActive ? "Accès rapide" : "Bientôt disponible"}
+                      </Button>
+                      <DemoFeedbackDialog roleDemo={account.role} roleName={account.name} />
+                    </CardFooter>
+                  </Card>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Qualité, Maritime, Recherche */}
+          <div className="space-y-4">
+            <h3 className="text-2xl font-semibold text-primary flex items-center gap-2">
+              <div className="h-1 w-12 bg-gradient-to-r from-primary to-primary/50 rounded" />
+              Qualité, Maritime, Recherche
+            </h3>
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {['agasa', 'dgmm', 'oprag'].map(roleId => {
+                const account = demoAccounts.find(a => a.role === roleId);
+                if (!account) return null;
+                const IconComponent = account.icon;
+                const isActive = account.active;
+                return (
+                  <Card 
+                    key={account.role} 
+                    className={`relative overflow-hidden transition-all ${
+                      isActive 
+                        ? "hover:shadow-lg border-primary/20" 
+                        : "opacity-60 grayscale hover:opacity-70"
+                    }`}
+                  >
+                    <div className={`absolute top-0 left-0 right-0 h-2 bg-gradient-to-r ${account.color}`} />
+                    <CardHeader className="pb-3">
+                      <div className="flex items-start gap-3">
+                        <div className={`p-2 rounded-lg bg-gradient-to-br ${account.color} ${!isActive && "opacity-50"}`}>
+                          <IconComponent className="h-6 w-6 text-white" />
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <CardTitle className="text-lg">{account.name}</CardTitle>
+                            {!isActive && (
+                              <Badge variant="secondary" className="text-xs">
+                                Bientôt
+                              </Badge>
+                            )}
+                          </div>
+                          <CardDescription className="text-sm">
+                            {account.description}
+                          </CardDescription>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="pb-3 space-y-3">
+                      <p className="text-sm text-muted-foreground">
+                        {account.detailedDescription}
+                      </p>
+                      <Separator />
+                      <div className="space-y-2">
+                        <p className="text-sm font-semibold">Missions principales:</p>
+                        <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
+                          {account.missions.map((mission, idx) => (
+                            <li key={idx}>{mission}</li>
+                          ))}
+                        </ul>
+                      </div>
+                      <Separator />
+                      <p className="text-sm text-muted-foreground">
+                        <strong>Email:</strong> {account.email}
+                      </p>
+                    </CardContent>
+                    <CardFooter className="flex flex-col gap-2">
+                      <Button 
+                        onClick={() => handleQuickAccess(account.email, account.name)}
+                        className="w-full"
+                        variant={isActive ? "default" : "secondary"}
+                        disabled={!isActive}
+                      >
+                        {isActive ? "Accès rapide" : "Bientôt disponible"}
+                      </Button>
+                      <DemoFeedbackDialog roleDemo={account.role} roleName={account.name} />
+                    </CardFooter>
+                  </Card>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Environnement, Développement, Coopération */}
+          <div className="space-y-4">
+            <h3 className="text-2xl font-semibold text-primary flex items-center gap-2">
+              <div className="h-1 w-12 bg-gradient-to-r from-primary to-primary/50 rounded" />
+              Environnement, Développement, Coopération
+            </h3>
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {['anpn', 'corep', 'partenaire_international'].map(roleId => {
+                const account = demoAccounts.find(a => a.role === roleId);
+                if (!account) return null;
+                const IconComponent = account.icon;
+                const isActive = account.active;
+                return (
+                  <Card 
+                    key={account.role} 
+                    className={`relative overflow-hidden transition-all ${
+                      isActive 
+                        ? "hover:shadow-lg border-primary/20" 
+                        : "opacity-60 grayscale hover:opacity-70"
+                    }`}
+                  >
+                    <div className={`absolute top-0 left-0 right-0 h-2 bg-gradient-to-r ${account.color}`} />
+                    <CardHeader className="pb-3">
+                      <div className="flex items-start gap-3">
+                        <div className={`p-2 rounded-lg bg-gradient-to-br ${account.color} ${!isActive && "opacity-50"}`}>
+                          <IconComponent className="h-6 w-6 text-white" />
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <CardTitle className="text-lg">{account.name}</CardTitle>
+                            {!isActive && (
+                              <Badge variant="secondary" className="text-xs">
+                                Bientôt
+                              </Badge>
+                            )}
+                          </div>
+                          <CardDescription className="text-sm">
+                            {account.description}
+                          </CardDescription>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="pb-3 space-y-3">
+                      <p className="text-sm text-muted-foreground">
+                        {account.detailedDescription}
+                      </p>
+                      <Separator />
+                      <div className="space-y-2">
+                        <p className="text-sm font-semibold">Missions principales:</p>
+                        <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
+                          {account.missions.map((mission, idx) => (
+                            <li key={idx}>{mission}</li>
+                          ))}
+                        </ul>
+                      </div>
+                      <Separator />
+                      <p className="text-sm text-muted-foreground">
+                        <strong>Email:</strong> {account.email}
+                      </p>
+                    </CardContent>
+                    <CardFooter className="flex flex-col gap-2">
+                      <Button 
+                        onClick={() => handleQuickAccess(account.email, account.name)}
+                        className="w-full"
+                        variant={isActive ? "default" : "secondary"}
+                        disabled={!isActive}
+                      >
+                        {isActive ? "Accès rapide" : "Bientôt disponible"}
+                      </Button>
+                      <DemoFeedbackDialog roleDemo={account.role} roleName={account.name} />
+                    </CardFooter>
+                  </Card>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Analyse et Administration */}
+          <div className="space-y-4">
+            <h3 className="text-2xl font-semibold text-primary flex items-center gap-2">
+              <div className="h-1 w-12 bg-gradient-to-r from-primary to-primary/50 rounded" />
+              Analyse et Administration
+            </h3>
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {['analyste', 'admin'].map(roleId => {
+                const account = demoAccounts.find(a => a.role === roleId);
+                if (!account) return null;
+                const IconComponent = account.icon;
+                const isActive = account.active;
+                return (
+                  <Card 
+                    key={account.role} 
+                    className={`relative overflow-hidden transition-all ${
+                      isActive 
+                        ? "hover:shadow-lg border-primary/20" 
+                        : "opacity-60 grayscale hover:opacity-70"
+                    }`}
+                  >
+                    <div className={`absolute top-0 left-0 right-0 h-2 bg-gradient-to-r ${account.color}`} />
+                    <CardHeader className="pb-3">
+                      <div className="flex items-start gap-3">
+                        <div className={`p-2 rounded-lg bg-gradient-to-br ${account.color} ${!isActive && "opacity-50"}`}>
+                          <IconComponent className="h-6 w-6 text-white" />
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <CardTitle className="text-lg">{account.name}</CardTitle>
+                            {!isActive && (
+                              <Badge variant="secondary" className="text-xs">
+                                Bientôt
+                              </Badge>
+                            )}
+                          </div>
+                          <CardDescription className="text-sm">
+                            {account.description}
+                          </CardDescription>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="pb-3 space-y-3">
+                      <p className="text-sm text-muted-foreground">
+                        {account.detailedDescription}
+                      </p>
+                      <Separator />
+                      <div className="space-y-2">
+                        <p className="text-sm font-semibold">Missions principales:</p>
+                        <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
+                          {account.missions.map((mission, idx) => (
+                            <li key={idx}>{mission}</li>
+                          ))}
+                        </ul>
+                      </div>
+                      <Separator />
+                      <p className="text-sm text-muted-foreground">
+                        <strong>Email:</strong> {account.email}
+                      </p>
+                    </CardContent>
+                    <CardFooter className="flex flex-col gap-2">
+                      <Button 
+                        onClick={() => handleQuickAccess(account.email, account.name)}
+                        className="w-full"
+                        variant={isActive ? "default" : "secondary"}
+                        disabled={!isActive}
+                      >
+                        {isActive ? "Accès rapide" : "Bientôt disponible"}
+                      </Button>
+                      <DemoFeedbackDialog roleDemo={account.role} roleName={account.name} />
+                    </CardFooter>
+                  </Card>
+                );
+              })}
+            </div>
+          </div>
         </div>
 
         <div className="mt-12 text-center">
