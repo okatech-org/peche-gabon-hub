@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import mapboxgl from "mapbox-gl";
+import type * as GeoJSON from "geojson";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -112,7 +113,6 @@ const mockInspections: Inspection[] = [
 export default function Carte() {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
-  const markersRef = useRef<mapboxgl.Marker[]>([]);
   
   const [isMapReady, setIsMapReady] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -182,13 +182,17 @@ export default function Carte() {
     };
   }, [mapboxToken]);
 
-  // Ajouter les marqueurs
+  // Ajouter les marqueurs avec clustering
   useEffect(() => {
     if (!map.current || !isMapReady) return;
 
-    // Supprimer les anciens marqueurs
-    markersRef.current.forEach((marker) => marker.remove());
-    markersRef.current = [];
+    console.log("🎯 Configuration des marqueurs avec clusters...");
+
+    // Supprimer les anciennes sources et layers si elles existent
+    if (map.current.getLayer('clusters')) map.current.removeLayer('clusters');
+    if (map.current.getLayer('cluster-count')) map.current.removeLayer('cluster-count');
+    if (map.current.getLayer('unclustered-point')) map.current.removeLayer('unclustered-point');
+    if (map.current.getSource('inspections')) map.current.removeSource('inspections');
 
     // Filtrer les inspections
     let filtered = inspections;
@@ -199,68 +203,202 @@ export default function Carte() {
       filtered = filtered.filter((i) => i.statut === filterStatut);
     }
 
-    // Ajouter les nouveaux marqueurs
-    filtered.forEach((inspection) => {
-      const color = getMarkerColor(inspection.statut);
-      
-      // Créer l'élément HTML du marqueur
-      const el = document.createElement("div");
-      el.className = "custom-marker";
-      el.style.width = "32px";
-      el.style.height = "32px";
-      el.style.borderRadius = "50%";
-      el.style.backgroundColor = color;
-      el.style.border = "3px solid white";
-      el.style.boxShadow = "0 2px 8px rgba(0,0,0,0.3)";
-      el.style.cursor = "pointer";
-      el.style.display = "flex";
-      el.style.alignItems = "center";
-      el.style.justifyContent = "center";
-      
-      // Icône selon le statut
-      const icon = document.createElement("div");
-      icon.innerHTML = getMarkerIcon(inspection.statut);
-      icon.style.color = "white";
-      icon.style.fontSize = "14px";
-      el.appendChild(icon);
+    // Créer le GeoJSON pour les inspections
+    const geojson: GeoJSON.FeatureCollection = {
+      type: 'FeatureCollection',
+      features: filtered.map((inspection) => ({
+        type: 'Feature',
+        geometry: {
+          type: 'Point',
+          coordinates: [inspection.lng, inspection.lat]
+        },
+        properties: {
+          id: inspection.id,
+          numero: inspection.numero,
+          type: inspection.type,
+          cible: inspection.cible,
+          site: inspection.site,
+          date: inspection.date,
+          statut: inspection.statut,
+          observations: inspection.observations || '',
+          color: getMarkerColor(inspection.statut)
+        }
+      }))
+    };
 
-      // Créer le popup
-      const popup = new mapboxgl.Popup({ offset: 25 }).setHTML(`
-        <div style="padding: 8px; min-width: 200px;">
-          <h3 style="font-weight: bold; margin-bottom: 8px; font-size: 14px;">${inspection.numero}</h3>
-          <div style="font-size: 12px; color: #666; margin-bottom: 4px;">
-            <strong>Type:</strong> ${inspection.type}
-          </div>
-          <div style="font-size: 12px; color: #666; margin-bottom: 4px;">
-            <strong>Cible:</strong> ${inspection.cible}
-          </div>
-          <div style="font-size: 12px; color: #666; margin-bottom: 4px;">
-            <strong>Site:</strong> ${inspection.site}
-          </div>
-          <div style="font-size: 12px; color: #666; margin-bottom: 4px;">
-            <strong>Date:</strong> ${new Date(inspection.date).toLocaleDateString("fr-FR")}
-          </div>
-          ${inspection.observations ? `<div style="font-size: 11px; color: #888; margin-top: 8px; font-style: italic;">${inspection.observations}</div>` : ""}
-        </div>
-      `);
-
-      // Créer et ajouter le marqueur
-      const marker = new mapboxgl.Marker(el)
-        .setLngLat([inspection.lng, inspection.lat])
-        .setPopup(popup)
-        .addTo(map.current!);
-
-      markersRef.current.push(marker);
+    // Ajouter la source avec clustering
+    map.current.addSource('inspections', {
+      type: 'geojson',
+      data: geojson,
+      cluster: true,
+      clusterMaxZoom: 14,
+      clusterRadius: 50
     });
 
-    // Ajuster la vue pour voir tous les marqueurs
-    if (filtered.length > 0) {
-      const bounds = new mapboxgl.LngLatBounds();
-      filtered.forEach((inspection) => {
-        bounds.extend([inspection.lng, inspection.lat]);
+    // Layer pour les clusters
+    map.current.addLayer({
+      id: 'clusters',
+      type: 'circle',
+      source: 'inspections',
+      filter: ['has', 'point_count'],
+      paint: {
+        'circle-color': [
+          'step',
+          ['get', 'point_count'],
+          '#3b82f6',
+          5,
+          '#f59e0b',
+          10,
+          '#ef4444'
+        ],
+        'circle-radius': [
+          'step',
+          ['get', 'point_count'],
+          20,
+          5,
+          30,
+          10,
+          40
+        ],
+        'circle-stroke-width': 3,
+        'circle-stroke-color': '#ffffff'
+      }
+    });
+
+    // Layer pour le nombre dans les clusters
+    map.current.addLayer({
+      id: 'cluster-count',
+      type: 'symbol',
+      source: 'inspections',
+      filter: ['has', 'point_count'],
+      layout: {
+        'text-field': ['get', 'point_count_abbreviated'],
+        'text-font': ['DIN Offc Pro Medium', 'Arial Unicode MS Bold'],
+        'text-size': 14
+      },
+      paint: {
+        'text-color': '#ffffff'
+      }
+    });
+
+    // Layer pour les marqueurs individuels
+    map.current.addLayer({
+      id: 'unclustered-point',
+      type: 'circle',
+      source: 'inspections',
+      filter: ['!', ['has', 'point_count']],
+      paint: {
+        'circle-color': ['get', 'color'],
+        'circle-radius': 10,
+        'circle-stroke-width': 3,
+        'circle-stroke-color': '#ffffff'
+      }
+    });
+
+    // Popup pour survol des clusters
+    const popup = new mapboxgl.Popup({
+      closeButton: false,
+      closeOnClick: false
+    });
+
+    // Survol des clusters
+    map.current.on('mouseenter', 'clusters', (e) => {
+      if (!map.current) return;
+      map.current.getCanvas().style.cursor = 'pointer';
+      
+      const features = map.current.queryRenderedFeatures(e.point, {
+        layers: ['clusters']
       });
-      map.current?.fitBounds(bounds, { padding: 50, maxZoom: 12 });
-    }
+
+      if (features.length > 0) {
+        const clusterId = features[0].properties?.cluster_id;
+        const pointCount = features[0].properties?.point_count;
+        const coordinates = (features[0].geometry as any).coordinates.slice();
+
+        popup
+          .setLngLat(coordinates)
+          .setHTML(`
+            <div style="padding: 8px; text-align: center;">
+              <div style="font-weight: bold; font-size: 16px;">${pointCount}</div>
+              <div style="font-size: 12px; color: #666;">inspection${pointCount > 1 ? 's' : ''}</div>
+            </div>
+          `)
+          .addTo(map.current);
+      }
+    });
+
+    map.current.on('mouseleave', 'clusters', () => {
+      if (!map.current) return;
+      map.current.getCanvas().style.cursor = '';
+      popup.remove();
+    });
+
+    // Clic sur cluster pour zoomer
+    map.current.on('click', 'clusters', (e) => {
+      if (!map.current) return;
+      const features = map.current.queryRenderedFeatures(e.point, {
+        layers: ['clusters']
+      });
+
+      if (features.length > 0) {
+        const clusterId = features[0].properties?.cluster_id;
+        const source = map.current.getSource('inspections') as mapboxgl.GeoJSONSource;
+        
+        source.getClusterExpansionZoom(clusterId, (err, zoom) => {
+          if (err || !map.current) return;
+          
+          map.current.easeTo({
+            center: (features[0].geometry as any).coordinates,
+            zoom: zoom
+          });
+        });
+      }
+    });
+
+    // Popup pour les marqueurs individuels
+    map.current.on('click', 'unclustered-point', (e) => {
+      if (!map.current || !e.features || e.features.length === 0) return;
+
+      const feature = e.features[0];
+      const props = feature.properties;
+      const coordinates = (feature.geometry as any).coordinates.slice();
+
+      new mapboxgl.Popup()
+        .setLngLat(coordinates)
+        .setHTML(`
+          <div style="padding: 8px; min-width: 200px;">
+            <h3 style="font-weight: bold; margin-bottom: 8px; font-size: 14px;">${props?.numero}</h3>
+            <div style="font-size: 12px; color: #666; margin-bottom: 4px;">
+              <strong>Type:</strong> ${props?.type}
+            </div>
+            <div style="font-size: 12px; color: #666; margin-bottom: 4px;">
+              <strong>Cible:</strong> ${props?.cible}
+            </div>
+            <div style="font-size: 12px; color: #666; margin-bottom: 4px;">
+              <strong>Site:</strong> ${props?.site}
+            </div>
+            <div style="font-size: 12px; color: #666; margin-bottom: 4px;">
+              <strong>Date:</strong> ${new Date(props?.date).toLocaleDateString("fr-FR")}
+            </div>
+            ${props?.observations ? `<div style="font-size: 11px; color: #888; margin-top: 8px; font-style: italic;">${props?.observations}</div>` : ''}
+          </div>
+        `)
+        .addTo(map.current);
+    });
+
+    // Changement de curseur sur survol des marqueurs individuels
+    map.current.on('mouseenter', 'unclustered-point', () => {
+      if (!map.current) return;
+      map.current.getCanvas().style.cursor = 'pointer';
+    });
+
+    map.current.on('mouseleave', 'unclustered-point', () => {
+      if (!map.current) return;
+      map.current.getCanvas().style.cursor = '';
+    });
+
+    console.log(`✅ ${filtered.length} inspections affichées avec clustering`);
+
   }, [inspections, isMapReady, filterType, filterStatut]);
 
   const getMarkerColor = (statut: string) => {
@@ -275,21 +413,6 @@ export default function Carte() {
         return "#ef4444"; // red
       default:
         return "#6b7280"; // gray
-    }
-  };
-
-  const getMarkerIcon = (statut: string) => {
-    switch (statut) {
-      case "en_cours":
-        return "⏱";
-      case "terminee":
-        return "✓";
-      case "conforme":
-        return "✓";
-      case "non_conforme":
-        return "✕";
-      default:
-        return "•";
     }
   };
 
