@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
+import { useMapboxToken } from '@/hooks/useMapboxToken';
+import { logger } from '@/lib/logger';
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -71,6 +73,7 @@ export function RemonteesMap({ remontees, onRemonteeSelect }: RemonteesMapProps)
   const [mapLoaded, setMapLoaded] = useState(false);
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
   const markersRef = useRef<mapboxgl.Marker[]>([]);
+  const { token: mapboxToken, isLoading, error } = useMapboxToken();
 
   const getStatutColor = (statut: string) => {
     switch (statut) {
@@ -117,38 +120,43 @@ export function RemonteesMap({ remontees, onRemonteeSelect }: RemonteesMapProps)
   };
 
   useEffect(() => {
-    if (!mapContainer.current || map.current) return;
+    if (!mapContainer.current || map.current || !mapboxToken) return;
 
-    // Initialize map with Mapbox token from environment
-    const mapboxToken = import.meta.env.VITE_MAPBOX_TOKEN;
-    if (!mapboxToken) {
-      console.error("Mapbox token not found");
-      return;
+    logger.info("🗺️ Initialisation de RemonteesMap (minister)...");
+
+    try {
+      mapboxgl.accessToken = mapboxToken;
+
+      map.current = new mapboxgl.Map({
+        container: mapContainer.current,
+        style: "mapbox://styles/mapbox/streets-v12",
+        center: [11.6094, -0.8037], // Centre du Gabon
+        zoom: 5.5,
+      });
+
+      // Add navigation controls
+      map.current.addControl(
+        new mapboxgl.NavigationControl({
+          visualizePitch: true,
+        }),
+        "top-right"
+      );
+
+      // Add fullscreen control
+      map.current.addControl(new mapboxgl.FullscreenControl(), "top-right");
+
+      map.current.on("load", () => {
+        logger.info("✅ RemonteesMap (minister) chargée");
+        setMapLoaded(true);
+      });
+
+      map.current.on("error", (e) => {
+        logger.warn("⚠️ Erreur RemonteesMap (minister) (ignorée si non critique)", e);
+      });
+
+    } catch (err) {
+      logger.error("❌ Erreur initialisation RemonteesMap (minister):", err);
     }
-
-    mapboxgl.accessToken = mapboxToken;
-
-    map.current = new mapboxgl.Map({
-      container: mapContainer.current,
-      style: "mapbox://styles/mapbox/streets-v12",
-      center: [11.6094, -0.8037], // Centre du Gabon
-      zoom: 5.5,
-    });
-
-    // Add navigation controls
-    map.current.addControl(
-      new mapboxgl.NavigationControl({
-        visualizePitch: true,
-      }),
-      "top-right"
-    );
-
-    // Add fullscreen control
-    map.current.addControl(new mapboxgl.FullscreenControl(), "top-right");
-
-    map.current.on("load", () => {
-      setMapLoaded(true);
-    });
 
     return () => {
       // Clean up markers
@@ -158,7 +166,7 @@ export function RemonteesMap({ remontees, onRemonteeSelect }: RemonteesMapProps)
       map.current?.remove();
       map.current = null;
     };
-  }, []);
+  }, [mapboxToken]);
 
   useEffect(() => {
     if (!map.current || !mapLoaded) return;

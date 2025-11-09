@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
+import { useMapboxToken } from '@/hooks/useMapboxToken';
+import { logger } from '@/lib/logger';
 import { Button } from '@/components/ui/button';
 import { MapPin, Navigation } from 'lucide-react';
 
@@ -21,72 +23,82 @@ export function MapLocationPicker({
   const map = useRef<mapboxgl.Map | null>(null);
   const marker = useRef<mapboxgl.Marker | null>(null);
   const [isLocating, setIsLocating] = useState(false);
+  const { token: mapboxToken, isLoading, error } = useMapboxToken();
 
   useEffect(() => {
-    if (!mapContainer.current) return;
+    if (!mapContainer.current || map.current || !mapboxToken) return;
 
-    // Initialize map
-    const mapboxToken = import.meta.env.VITE_MAPBOX_TOKEN;
-    if (!mapboxToken) {
-      console.error('VITE_MAPBOX_TOKEN is not defined');
-      return;
+    logger.info("🗺️ Initialisation de MapLocationPicker...");
+
+    try {
+      mapboxgl.accessToken = mapboxToken;
+      
+      // Default center on Gabon
+      const initialLat = latitude || -0.8037;
+      const initialLng = longitude || 11.6094;
+      
+      map.current = new mapboxgl.Map({
+        container: mapContainer.current,
+        style: 'mapbox://styles/mapbox/satellite-streets-v12',
+        center: [initialLng, initialLat],
+        zoom: latitude && longitude ? 12 : 6,
+      });
+
+      // Add navigation controls
+      map.current.addControl(
+        new mapboxgl.NavigationControl(),
+        'top-right'
+      );
+
+      // Add scale control
+      map.current.addControl(
+        new mapboxgl.ScaleControl(),
+        'bottom-left'
+      );
+
+      // Create draggable marker
+      marker.current = new mapboxgl.Marker({
+        draggable: true,
+        color: '#3b82f6'
+      })
+        .setLngLat([initialLng, initialLat])
+        .addTo(map.current);
+
+      // Update location when marker is dragged
+      marker.current.on('dragend', () => {
+        if (marker.current) {
+          const lngLat = marker.current.getLngLat();
+          onLocationChange(lngLat.lat, lngLat.lng);
+        }
+      });
+
+      // Update marker position on map click
+      map.current.on('click', (e) => {
+        if (marker.current) {
+          marker.current.setLngLat(e.lngLat);
+          onLocationChange(e.lngLat.lat, e.lngLat.lng);
+        }
+      });
+
+      map.current.on("load", () => {
+        logger.info("✅ MapLocationPicker chargée");
+      });
+
+      map.current.on("error", (e) => {
+        logger.warn("⚠️ Erreur MapLocationPicker (ignorée si non critique)", e);
+      });
+
+    } catch (err) {
+      logger.error("❌ Erreur initialisation MapLocationPicker:", err);
     }
-    
-    mapboxgl.accessToken = mapboxToken;
-    
-    // Default center on Gabon
-    const initialLat = latitude || -0.8037;
-    const initialLng = longitude || 11.6094;
-    
-    map.current = new mapboxgl.Map({
-      container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/satellite-streets-v12',
-      center: [initialLng, initialLat],
-      zoom: latitude && longitude ? 12 : 6,
-    });
-
-    // Add navigation controls
-    map.current.addControl(
-      new mapboxgl.NavigationControl(),
-      'top-right'
-    );
-
-    // Add scale control
-    map.current.addControl(
-      new mapboxgl.ScaleControl(),
-      'bottom-left'
-    );
-
-    // Create draggable marker
-    marker.current = new mapboxgl.Marker({
-      draggable: true,
-      color: '#3b82f6'
-    })
-      .setLngLat([initialLng, initialLat])
-      .addTo(map.current);
-
-    // Update location when marker is dragged
-    marker.current.on('dragend', () => {
-      if (marker.current) {
-        const lngLat = marker.current.getLngLat();
-        onLocationChange(lngLat.lat, lngLat.lng);
-      }
-    });
-
-    // Update marker position on map click
-    map.current.on('click', (e) => {
-      if (marker.current) {
-        marker.current.setLngLat(e.lngLat);
-        onLocationChange(e.lngLat.lat, e.lngLat.lng);
-      }
-    });
 
     // Cleanup
     return () => {
       marker.current?.remove();
       map.current?.remove();
+      map.current = null;
     };
-  }, []);
+  }, [mapboxToken]);
 
   // Update marker position when props change
   useEffect(() => {
@@ -140,6 +152,26 @@ export function MapLocationPicker({
       console.error('Geolocation is not supported by this browser.');
     }
   };
+
+  if (error) {
+    return (
+      <div className="space-y-2">
+        <div className="rounded-lg border shadow-sm bg-muted/50 flex items-center justify-center p-4" style={{ height }}>
+          <p className="text-sm text-destructive">{error}</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="space-y-2">
+        <div className="rounded-lg border shadow-sm bg-muted/50 flex items-center justify-center" style={{ height }}>
+          <div className="w-6 h-6 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-2">

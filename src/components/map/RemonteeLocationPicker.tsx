@@ -1,6 +1,8 @@
-import React, { useEffect, useRef, useState } from 'react';
-import mapboxgl from 'mapbox-gl';
-import 'mapbox-gl/dist/mapbox-gl.css';
+import { useEffect, useRef, useState } from "react";
+import mapboxgl from "mapbox-gl";
+import "mapbox-gl/dist/mapbox-gl.css";
+import { useMapboxToken } from '@/hooks/useMapboxToken';
+import { logger } from '@/lib/logger';
 import { Button } from '@/components/ui/button';
 import { MapPin, X } from 'lucide-react';
 
@@ -23,80 +25,116 @@ export function RemonteeLocationPicker({
   const [selectedCoords, setSelectedCoords] = useState<{ lat: number; lng: number } | null>(
     latitude && longitude ? { lat: latitude, lng: longitude } : null
   );
+  const { token: mapboxToken, isLoading, error } = useMapboxToken();
 
   useEffect(() => {
-    if (!mapContainer.current) return;
+    if (!mapContainer.current || map.current || !mapboxToken) return;
 
-    // Initialize map with Gabon centered
-    mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
+    logger.info("🗺️ Initialisation de RemonteeLocationPicker...");
 
-    map.current = new mapboxgl.Map({
-      container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/satellite-streets-v12',
-      center: longitude && latitude ? [longitude, latitude] : [9.4544, -0.8037], // Gabon coordinates
-      zoom: longitude && latitude ? 12 : 6,
-    });
+    try {
+      mapboxgl.accessToken = mapboxToken;
 
-    // Add navigation controls
-    map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
-
-    // Add geolocate control
-    const geolocateControl = new mapboxgl.GeolocateControl({
-      positionOptions: {
-        enableHighAccuracy: true,
-      },
-      trackUserLocation: true,
-      showUserHeading: true,
-    });
-    map.current.addControl(geolocateControl, 'top-right');
-
-    // If initial coordinates provided, add marker
-    if (longitude && latitude) {
-      marker.current = new mapboxgl.Marker({ draggable: true, color: '#3b82f6' })
-        .setLngLat([longitude, latitude])
-        .addTo(map.current);
-
-      marker.current.on('dragend', () => {
-        if (!marker.current) return;
-        const lngLat = marker.current.getLngLat();
-        setSelectedCoords({ lat: lngLat.lat, lng: lngLat.lng });
+      map.current = new mapboxgl.Map({
+        container: mapContainer.current,
+        style: 'mapbox://styles/mapbox/satellite-streets-v12',
+        center: longitude && latitude ? [longitude, latitude] : [9.4544, -0.8037], // Gabon coordinates
+        zoom: longitude && latitude ? 12 : 6,
       });
-    }
 
-    // Add click event to place marker
-    map.current.on('click', (e) => {
-      if (!map.current) return;
+      // Add navigation controls
+      map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
 
-      // Remove existing marker if any
-      if (marker.current) {
-        marker.current.remove();
+      // Add geolocate control
+      const geolocateControl = new mapboxgl.GeolocateControl({
+        positionOptions: {
+          enableHighAccuracy: true,
+        },
+        trackUserLocation: true,
+        showUserHeading: true,
+      });
+      map.current.addControl(geolocateControl, 'top-right');
+
+      // If initial coordinates provided, add marker
+      if (longitude && latitude) {
+        marker.current = new mapboxgl.Marker({ draggable: true, color: '#3b82f6' })
+          .setLngLat([longitude, latitude])
+          .addTo(map.current);
+
+        marker.current.on('dragend', () => {
+          if (!marker.current) return;
+          const lngLat = marker.current.getLngLat();
+          setSelectedCoords({ lat: lngLat.lat, lng: lngLat.lng });
+        });
       }
 
-      // Create new draggable marker
-      marker.current = new mapboxgl.Marker({ draggable: true, color: '#3b82f6' })
-        .setLngLat([e.lngLat.lng, e.lngLat.lat])
-        .addTo(map.current);
+      // Add click event to place marker
+      map.current.on('click', (e) => {
+        if (!map.current) return;
 
-      setSelectedCoords({ lat: e.lngLat.lat, lng: e.lngLat.lng });
+        // Remove existing marker if any
+        if (marker.current) {
+          marker.current.remove();
+        }
 
-      marker.current.on('dragend', () => {
-        if (!marker.current) return;
-        const lngLat = marker.current.getLngLat();
-        setSelectedCoords({ lat: lngLat.lat, lng: lngLat.lng });
+        // Create new draggable marker
+        marker.current = new mapboxgl.Marker({ draggable: true, color: '#3b82f6' })
+          .setLngLat([e.lngLat.lng, e.lngLat.lat])
+          .addTo(map.current);
+
+        setSelectedCoords({ lat: e.lngLat.lat, lng: e.lngLat.lng });
+
+        marker.current.on('dragend', () => {
+          if (!marker.current) return;
+          const lngLat = marker.current.getLngLat();
+          setSelectedCoords({ lat: lngLat.lat, lng: lngLat.lng });
+        });
       });
-    });
+
+      map.current.on("load", () => {
+        logger.info("✅ RemonteeLocationPicker chargée");
+      });
+
+      map.current.on("error", (e) => {
+        logger.warn("⚠️ Erreur RemonteeLocationPicker (ignorée si non critique)", e);
+      });
+
+    } catch (err) {
+      logger.error("❌ Erreur initialisation RemonteeLocationPicker:", err);
+    }
 
     // Cleanup
     return () => {
       map.current?.remove();
+      map.current = null;
     };
-  }, []);
+  }, [mapboxToken]);
 
   const handleConfirm = () => {
     if (selectedCoords) {
       onLocationSelect(selectedCoords.lat, selectedCoords.lng);
     }
   };
+
+  if (error) {
+    return (
+      <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm">
+        <div className="fixed inset-4 md:inset-10 bg-background border rounded-lg shadow-lg overflow-hidden flex items-center justify-center">
+          <p className="text-sm text-destructive">{error}</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm">
+        <div className="fixed inset-4 md:inset-10 bg-background border rounded-lg shadow-lg overflow-hidden flex items-center justify-center">
+          <div className="w-6 h-6 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm">

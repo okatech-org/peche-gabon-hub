@@ -3,6 +3,8 @@ import mapboxgl from "mapbox-gl";
 import MapboxDraw from "@mapbox/mapbox-gl-draw";
 import "@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css";
 import "mapbox-gl/dist/mapbox-gl.css";
+import { useMapboxToken } from '@/hooks/useMapboxToken';
+import { logger } from '@/lib/logger';
 import { point } from "@turf/helpers";
 import booleanPointInPolygon from "@turf/boolean-point-in-polygon";
 import { supabase } from "@/integrations/supabase/client";
@@ -52,35 +54,30 @@ const SurveillanceMap = () => {
     zonesRestreintes: 0,
     capturesTotal: 0,
   });
+  const { token: mapboxToken, isLoading: tokenLoading, error: tokenError } = useMapboxToken();
 
   useEffect(() => {
-    if (!mapContainer.current) return;
+    if (!mapContainer.current || !mapboxToken) return;
 
-    // Vérifier que le token Mapbox est défini
-    const mapboxToken = import.meta.env.VITE_MAPBOX_TOKEN;
-    if (!mapboxToken) {
-      setError("Token Mapbox manquant. Veuillez configurer VITE_MAPBOX_TOKEN dans les secrets.");
-      setLoading(false);
-      return;
-    }
+    logger.info("🗺️ Initialisation de SurveillanceMap...");
 
-    // Initialize map
-    mapboxgl.accessToken = mapboxToken;
+    try {
+      mapboxgl.accessToken = mapboxToken;
 
-    map.current = new mapboxgl.Map({
-      container: mapContainer.current,
-      style: "mapbox://styles/mapbox/light-v11",
-      center: [10.0, -1.0], // Centre sur le Gabon
-      zoom: 6,
-    });
+      map.current = new mapboxgl.Map({
+        container: mapContainer.current,
+        style: "mapbox://styles/mapbox/light-v11",
+        center: [10.0, -1.0], // Centre sur le Gabon
+        zoom: 6,
+      });
 
-    // Add navigation controls
-    map.current.addControl(
-      new mapboxgl.NavigationControl({
-        visualizePitch: true,
-      }),
-      "top-right"
-    );
+      // Add navigation controls
+      map.current.addControl(
+        new mapboxgl.NavigationControl({
+          visualizePitch: true,
+        }),
+        "top-right"
+      );
 
     // Initialize Mapbox Draw
     draw.current = new MapboxDraw({
@@ -121,16 +118,27 @@ const SurveillanceMap = () => {
       ],
     });
 
-    map.current.addControl(draw.current as any);
+      map.current.addControl(draw.current as any);
 
-    map.current.on("load", async () => {
-      await loadMapData();
+      map.current.on("load", async () => {
+        logger.info("✅ SurveillanceMap chargée");
+        await loadMapData();
+        setLoading(false);
+      });
+
+      map.current.on("error", (e) => {
+        logger.warn("⚠️ Erreur SurveillanceMap (ignorée si non critique)", e);
+      });
+
+      // Écouter les événements de dessin
+      map.current.on("draw.create", handleDrawCreate);
+      map.current.on("draw.update", handleDrawCreate);
+
+    } catch (err) {
+      logger.error("❌ Erreur initialisation SurveillanceMap:", err);
+      setError("Erreur initialisation carte");
       setLoading(false);
-    });
-
-    // Écouter les événements de dessin
-    map.current.on("draw.create", handleDrawCreate);
-    map.current.on("draw.update", handleDrawCreate);
+    }
 
     // Cleanup
     return () => {
@@ -138,7 +146,7 @@ const SurveillanceMap = () => {
       map.current?.off("draw.update", handleDrawCreate);
       map.current?.remove();
     };
-  }, []);
+  }, [mapboxToken]);
 
   const loadMapData = async () => {
     try {

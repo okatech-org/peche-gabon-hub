@@ -1,6 +1,8 @@
 import React, { useEffect, useRef } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
+import { useMapboxToken } from '@/hooks/useMapboxToken';
+import { logger } from '@/lib/logger';
 
 interface Remontee {
   id: string;
@@ -28,29 +30,44 @@ export function RemonteesMap({ remontees, onMarkerClick }: RemonteesMapProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const markers = useRef<mapboxgl.Marker[]>([]);
+  const { token: mapboxToken, isLoading, error } = useMapboxToken();
 
   useEffect(() => {
-    if (!mapContainer.current) return;
+    if (!mapContainer.current || map.current || !mapboxToken) return;
 
-    // Initialize map centered on Gabon
-    mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
+    logger.info("🗺️ Initialisation de RemonteesMap...");
 
-    map.current = new mapboxgl.Map({
-      container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/light-v11',
-      center: [9.4544, -0.8037], // Gabon coordinates
-      zoom: 6,
-    });
+    try {
+      mapboxgl.accessToken = mapboxToken;
 
-    // Add navigation controls
-    map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
+      map.current = new mapboxgl.Map({
+        container: mapContainer.current,
+        style: 'mapbox://styles/mapbox/light-v11',
+        center: [9.4544, -0.8037], // Gabon coordinates
+        zoom: 6,
+      });
+
+      // Add navigation controls
+      map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
+
+      map.current.on("load", () => {
+        logger.info("✅ RemonteesMap chargée");
+      });
+
+      map.current.on("error", (e) => {
+        logger.warn("⚠️ Erreur RemonteesMap (ignorée si non critique)", e);
+      });
+    } catch (err) {
+      logger.error("❌ Erreur initialisation RemonteesMap:", err);
+    }
 
     // Cleanup
     return () => {
       markers.current.forEach(marker => marker.remove());
       map.current?.remove();
+      map.current = null;
     };
-  }, []);
+  }, [mapboxToken]);
 
   useEffect(() => {
     if (!map.current) return;
@@ -122,6 +139,22 @@ export function RemonteesMap({ remontees, onMarkerClick }: RemonteesMapProps) {
       map.current.fitBounds(bounds, { padding: 50, maxZoom: 12 });
     }
   }, [remontees, onMarkerClick]);
+
+  if (error) {
+    return (
+      <div className="w-full h-full rounded-lg bg-muted/50 flex items-center justify-center">
+        <p className="text-sm text-destructive">{error}</p>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="w-full h-full rounded-lg bg-muted/50 flex items-center justify-center">
+        <div className="w-6 h-6 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return <div ref={mapContainer} className="w-full h-full rounded-lg" />;
 }
