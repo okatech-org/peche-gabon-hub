@@ -34,7 +34,7 @@ const Index = () => {
         <div className="relative container mx-auto max-w-6xl py-24 px-4">
           <div className="max-w-2xl">
             <div className="flex items-center gap-3 mb-6">
-              <Logo size="xl" className="drop-shadow-lg" />
+              <Logo size="xl" className="drop-shadow-lg h-24 w-24 lg:h-32 lg:w-32" />
               <h1 className="text-5xl lg:text-7xl font-bold text-white">{t("hero.title")}</h1>
             </div>
             <p className="text-2xl lg:text-3xl mb-6 text-primary font-semibold">
