@@ -127,6 +127,8 @@ export default function Carte() {
   const [heatmapFilter, setHeatmapFilter] = useState<string>("tous");
   const [retryCount, setRetryCount] = useState(0);
   const [isRetrying, setIsRetrying] = useState(false);
+  const [retryProgress, setRetryProgress] = useState(0);
+  const [retryDelay, setRetryDelay] = useState(0);
   const maxRetries = 3;
 
   // Token Mapbox via hook sécurisé
@@ -140,25 +142,42 @@ export default function Carte() {
     }
   }, [tokenError]);
 
-  // Fonction de retry avec backoff exponentiel
+  // Fonction de retry avec backoff exponentiel et progression animée
   const retryMapLoad = () => {
     if (retryCount >= maxRetries) {
       setErrorMsg("Impossible de charger la carte après plusieurs tentatives.");
       setIsLoading(false);
       setIsRetrying(false);
+      setRetryProgress(0);
       return;
     }
 
     setIsRetrying(true);
     setErrorMsg(null);
+    setRetryProgress(0);
     const delay = Math.min(1000 * Math.pow(2, retryCount), 8000); // Max 8s
+    setRetryDelay(delay);
     
     logger.info(`⏳ Nouvelle tentative (${retryCount + 1}/${maxRetries}) dans ${delay}ms...`);
-    toast.info(`Nouvelle tentative ${retryCount + 1}/${maxRetries}...`);
+    toast.info(`Nouvelle tentative ${retryCount + 1}/${maxRetries} dans ${delay / 1000}s...`);
+
+    // Animation de progression
+    const startTime = Date.now();
+    const progressInterval = setInterval(() => {
+      const elapsed = Date.now() - startTime;
+      const progress = Math.min((elapsed / delay) * 100, 100);
+      setRetryProgress(progress);
+
+      if (progress >= 100) {
+        clearInterval(progressInterval);
+      }
+    }, 50); // Update every 50ms for smooth animation
 
     setTimeout(() => {
+      clearInterval(progressInterval);
       setRetryCount(prev => prev + 1);
       setIsRetrying(false);
+      setRetryProgress(0);
       // Force map reload
       if (map.current) {
         map.current.remove();
@@ -175,6 +194,8 @@ export default function Carte() {
     setErrorMsg(null);
     setIsLoading(true);
     setIsRetrying(false);
+    setRetryProgress(0);
+    setRetryDelay(0);
     if (map.current) {
       map.current.remove();
       map.current = null;
@@ -733,16 +754,53 @@ export default function Carte() {
                   Vérifiez que la clé API Mapbox est correctement configurée dans les secrets du projet.
                 </p>
               </div>
+
+              {/* Indicateur de progression du retry */}
+              {isRetrying && (
+                <div className="space-y-3 animate-fade-in">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">
+                      Tentative {retryCount + 1}/{maxRetries}
+                    </span>
+                    <span className="text-primary font-medium">
+                      {Math.ceil((retryDelay - (retryProgress / 100 * retryDelay)) / 1000)}s
+                    </span>
+                  </div>
+                  
+                  {/* Barre de progression */}
+                  <div className="relative h-2 w-full bg-muted rounded-full overflow-hidden">
+                    <div 
+                      className="absolute inset-y-0 left-0 bg-primary transition-all duration-100 ease-linear rounded-full"
+                      style={{ width: `${retryProgress}%` }}
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse" />
+                    </div>
+                  </div>
+                  
+                  <p className="text-xs text-muted-foreground animate-pulse">
+                    Rechargement automatique en cours...
+                  </p>
+                </div>
+              )}
+
               <div className="flex flex-col sm:flex-row gap-2 justify-center">
                 <Button 
                   variant="default" 
                   onClick={handleManualReload}
                   disabled={isRetrying}
+                  className="gap-2"
                 >
-                  {isRetrying ? "Rechargement..." : "Recharger la carte"}
+                  {isRetrying ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
+                      Rechargement...
+                    </>
+                  ) : (
+                    "Recharger la carte"
+                  )}
                 </Button>
-                {retryCount > 0 && retryCount < maxRetries && (
-                  <Badge variant="outline">
+                {retryCount > 0 && retryCount < maxRetries && !isRetrying && (
+                  <Badge variant="outline" className="self-center">
                     Tentative {retryCount}/{maxRetries}
                   </Badge>
                 )}
