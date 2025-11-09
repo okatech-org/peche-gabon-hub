@@ -61,14 +61,18 @@ export const AudioWaveform = ({ isRecording, audioStream }: AudioWaveformProps) 
       const barWidth = (canvas.width / bufferLength) * 2.5;
       let x = 0;
 
+      // Get the computed CSS variable value
+      const rootStyles = getComputedStyle(document.documentElement);
+      const primaryHsl = rootStyles.getPropertyValue('--primary').trim();
+
       for (let i = 0; i < bufferLength; i++) {
         const barHeight = (dataArray[i] / 255) * canvas.height;
         
         // Create gradient for bars
         const gradient = ctx.createLinearGradient(0, canvas.height - barHeight, 0, canvas.height);
-        gradient.addColorStop(0, 'hsl(var(--primary))');
-        gradient.addColorStop(0.5, 'hsl(var(--primary) / 0.7)');
-        gradient.addColorStop(1, 'hsl(var(--primary) / 0.3)');
+        gradient.addColorStop(0, `hsl(${primaryHsl})`);
+        gradient.addColorStop(0.5, `hsl(${primaryHsl} / 0.7)`);
+        gradient.addColorStop(1, `hsl(${primaryHsl} / 0.3)`);
         
         ctx.fillStyle = gradient;
         ctx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
