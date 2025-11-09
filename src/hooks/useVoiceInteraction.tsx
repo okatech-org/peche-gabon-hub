@@ -18,7 +18,7 @@ export const useVoiceInteraction = () => {
   const [audioChunks, setAudioChunks] = useState<Blob[]>([]);
   const [currentAudio, setCurrentAudio] = useState<HTMLAudioElement | null>(null);
   const [audioLevel, setAudioLevel] = useState<number>(0);
-  const [silenceDuration, setSilenceDuration] = useState<number>(2000);
+  const [silenceDuration, setSilenceDuration] = useState<number>(1500);
   const [silenceThreshold, setSilenceThreshold] = useState<number>(10);
   const [continuousMode, setContinuousMode] = useState<boolean>(false);
   const [continuousModePaused, setContinuousModePaused] = useState<boolean>(false);
@@ -27,6 +27,7 @@ export const useVoiceInteraction = () => {
   const [selectedVoiceId, setSelectedVoiceId] = useState<string | null>(null);
   const continuousModeToastShownRef = useRef<boolean>(false);
   const audioContextRef = useRef<AudioContext | null>(null);
+  const playbackAudioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const animationFrameRef = useRef<number | null>(null);
   const silenceTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -34,7 +35,10 @@ export const useVoiceInteraction = () => {
   const { toast } = useToast();
   const { user } = useAuth();
 
+  // Initialize playback audio context once
   useEffect(() => {
+    playbackAudioContextRef.current = new AudioContext();
+    
     return () => {
       if (currentAudio) {
         currentAudio.pause();
@@ -42,6 +46,9 @@ export const useVoiceInteraction = () => {
       }
       if (audioContextRef.current) {
         audioContextRef.current.close();
+      }
+      if (playbackAudioContextRef.current) {
+        playbackAudioContextRef.current.close();
       }
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current);
@@ -51,6 +58,14 @@ export const useVoiceInteraction = () => {
       }
     };
   }, [currentAudio]);
+
+  // Resume audio context if suspended
+  const ensureAudioContextResumed = async () => {
+    if (playbackAudioContextRef.current && playbackAudioContextRef.current.state === 'suspended') {
+      console.log('Resuming suspended AudioContext');
+      await playbackAudioContextRef.current.resume();
+    }
+  };
 
   // Créer ou charger une session
   useEffect(() => {
@@ -105,7 +120,7 @@ export const useVoiceInteraction = () => {
         }
 
         if (data) {
-          setSilenceDuration(data.voice_silence_duration || 2000);
+          setSilenceDuration(data.voice_silence_duration || 1500);
           setSilenceThreshold(data.voice_silence_threshold || 10);
           const newContinuousMode = data.voice_continuous_mode || false;
           setContinuousMode(newContinuousMode);
@@ -165,6 +180,9 @@ export const useVoiceInteraction = () => {
       
       console.log('Playing greeting:', greetingMessage);
       
+      // Ensure audio context is ready
+      await ensureAudioContextResumed();
+      
       // Generate audio for greeting (simple TTS without AI conversation)
       const { data: greetingData, error: greetingError } = await supabase.functions.invoke('generate-greeting-audio', {
         body: { text: greetingMessage }
@@ -197,7 +215,10 @@ export const useVoiceInteraction = () => {
         };
 
         setCurrentAudio(audio);
-        audio.play();
+        audio.play().catch(err => {
+          console.error('Error playing audio:', err);
+          reject(err);
+        });
       });
 
       setCurrentAudio(null);
@@ -208,7 +229,7 @@ export const useVoiceInteraction = () => {
   };
 
   const analyzeAudioLevel = () => {
-    if (!analyserRef.current) return;
+    if (!analyserRef.current || voiceState !== 'listening') return;
 
     const dataArray = new Uint8Array(analyserRef.current.frequencyBinCount);
     analyserRef.current.getByteFrequencyData(dataArray);
@@ -229,16 +250,14 @@ export const useVoiceInteraction = () => {
         silenceTimerRef.current = null;
       }
     } else {
-      // If we're below threshold and no timer is running, start one
-      if (!silenceTimerRef.current && voiceState === 'listening') {
-        silenceTimerRef.current = setTimeout(() => {
-          const timeSinceLastSound = Date.now() - lastSoundTimeRef.current;
-          if (timeSinceLastSound >= silenceDuration) {
-            console.log('Silence detected, stopping recording');
-            stopListening();
-          }
-          silenceTimerRef.current = null;
-        }, silenceDuration);
+      // Check if enough time has passed since last sound
+      const timeSinceLastSound = Date.now() - lastSoundTimeRef.current;
+      
+      // If we've been silent long enough and no timer is running, stop listening
+      if (timeSinceLastSound >= silenceDuration && !silenceTimerRef.current) {
+        console.log('Silence detected, stopping recording');
+        stopListening();
+        return;
       }
     }
 
@@ -295,13 +314,13 @@ export const useVoiceInteraction = () => {
       // Start analyzing audio level
       analyzeAudioLevel();
 
-      // Auto stop after 10 seconds as fallback
+      // Auto stop after 15 seconds as fallback
       setTimeout(() => {
         if (recorder.state === 'recording') {
           console.log('Max recording time reached, stopping');
           stopListening();
         }
-      }, 10000);
+      }, 15000);
 
     } catch (error) {
       console.error('Error accessing microphone:', error);
@@ -486,6 +505,9 @@ export const useVoiceInteraction = () => {
   const playAudioResponse = async (base64Audio: string) => {
     try {
       setVoiceState('speaking');
+
+      // Ensure audio context is ready before playing
+      await ensureAudioContextResumed();
 
       // Convert base64 to audio blob
       const binaryString = atob(base64Audio);
