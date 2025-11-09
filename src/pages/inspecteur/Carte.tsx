@@ -4,7 +4,7 @@ import "mapbox-gl/dist/mapbox-gl.css";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import surveillanceImg from "@/assets/surveillance.jpg";
+
 import {
   Select,
   SelectContent,
@@ -117,7 +117,6 @@ export default function Carte() {
   const [isMapReady, setIsMapReady] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [showFallbackImage, setShowFallbackImage] = useState(false);
   const [initNonce, setInitNonce] = useState(0);
   const [inspections, setInspections] = useState<Inspection[]>(mockInspections);
   const [filterType, setFilterType] = useState<string>("tous");
@@ -153,7 +152,6 @@ export default function Carte() {
       map.current.on("load", () => {
         console.log("Carte Mapbox chargée avec succès");
         setErrorMsg(null);
-        setShowFallbackImage(false);
         setIsMapReady(true);
         setIsLoading(false);
       });
@@ -425,28 +423,15 @@ export default function Carte() {
                 >
                   Réessayer
                 </Button>
-                <Button 
-                  variant="outline" 
-                  onClick={() => { 
-                    setErrorMsg(null); 
-                    setShowFallbackImage(true); 
-                  }}
-                >
-                  Vue alternative
-                </Button>
               </div>
             </div>
           </div>
         )}
 
-        {showFallbackImage ? (
-          <img src={surveillanceImg} alt="Carte indisponible - Vue de surveillance" className="w-full h-[calc(100vh-280px)] md:h-[600px] object-cover" />
-        ) : (
-          <div
-            ref={mapContainer}
-            className="w-full h-[calc(100vh-280px)] md:h-[600px]"
-          />
-        )}
+        <div
+          ref={mapContainer}
+          className="w-full h-[calc(100vh-280px)] md:h-[600px]"
+        />
       </Card>
     </div>
   );
