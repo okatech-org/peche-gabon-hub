@@ -9,6 +9,7 @@ import { DeploymentTools } from "@/components/superadmin/DeploymentTools";
 import { DatabaseManager } from "@/components/superadmin/DatabaseManager";
 import { BackupManager } from "@/components/superadmin/BackupManager";
 import { SecurityPanel } from "@/components/superadmin/SecurityPanel";
+import { DeveloppementPanel } from "@/components/admin/DeveloppementPanel";
 
 const SuperAdminDashboard = () => {
   const [activeTab, setActiveTab] = useState("monitoring");
@@ -64,6 +65,10 @@ const SuperAdminDashboard = () => {
               <Shield className="h-4 w-4" />
               Sécurité
             </TabsTrigger>
+            <TabsTrigger value="developpement" className="gap-2">
+              <Code className="h-4 w-4" />
+              Développement
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="monitoring" className="space-y-6">
@@ -92,6 +97,10 @@ const SuperAdminDashboard = () => {
 
           <TabsContent value="security" className="space-y-6">
             <SecurityPanel />
+          </TabsContent>
+
+          <TabsContent value="developpement" className="space-y-6">
+            <DeveloppementPanel />
           </TabsContent>
         </Tabs>
       </div>
