@@ -2192,6 +2192,7 @@ export type Database = {
           mode_paiement: string | null
           montant_total: number
           notes: string | null
+          numero_quittance: string | null
           reference_paiement: string | null
           updated_at: string | null
         }
@@ -2204,6 +2205,7 @@ export type Database = {
           mode_paiement?: string | null
           montant_total: number
           notes?: string | null
+          numero_quittance?: string | null
           reference_paiement?: string | null
           updated_at?: string | null
         }
@@ -2216,6 +2218,7 @@ export type Database = {
           mode_paiement?: string | null
           montant_total?: number
           notes?: string | null
+          numero_quittance?: string | null
           reference_paiement?: string | null
           updated_at?: string | null
         }
@@ -4296,6 +4299,7 @@ export type Database = {
         Args: { p_date_echeance: string }
         Returns: boolean
       }
+      generer_numero_quittance: { Args: { p_annee?: number }; Returns: string }
       get_user_roles: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"][]
