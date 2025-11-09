@@ -27,3 +27,6 @@ verify_jwt = false
 [functions.chat-with-iasted]
 verify_jwt = true
 
+[functions.transcribe-audio]
+verify_jwt = true
+

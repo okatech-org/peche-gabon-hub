@@ -18,7 +18,10 @@ export const IAstedChat = () => {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
   const [currentAudio, setCurrentAudio] = useState<HTMLAudioElement | null>(null);
+  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
+  const [audioChunks, setAudioChunks] = useState<Blob[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
@@ -103,6 +106,92 @@ export const IAstedChat = () => {
       currentAudio.currentTime = 0;
       setCurrentAudio(null);
       setIsPlaying(false);
+    }
+  };
+
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+      const chunks: Blob[] = [];
+
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) {
+          chunks.push(e.data);
+        }
+      };
+
+      recorder.onstop = async () => {
+        const audioBlob = new Blob(chunks, { type: 'audio/webm' });
+        await transcribeAudio(audioBlob);
+        stream.getTracks().forEach(track => track.stop());
+      };
+
+      recorder.start();
+      setMediaRecorder(recorder);
+      setAudioChunks(chunks);
+      setIsRecording(true);
+    } catch (error) {
+      console.error('Error starting recording:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible d'accéder au microphone. Vérifiez les permissions.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorder && isRecording) {
+      mediaRecorder.stop();
+      setIsRecording(false);
+      setMediaRecorder(null);
+    }
+  };
+
+  const transcribeAudio = async (audioBlob: Blob) => {
+    setIsLoading(true);
+    try {
+      // Convert blob to base64
+      const reader = new FileReader();
+      reader.readAsDataURL(audioBlob);
+      
+      reader.onloadend = async () => {
+        const base64Audio = (reader.result as string).split(',')[1];
+        
+        const { data, error } = await supabase.functions.invoke('transcribe-audio', {
+          body: { audio: base64Audio }
+        });
+
+        if (error) throw error;
+
+        if (data.success && data.text) {
+          setInput(data.text);
+          toast({
+            title: "Transcription réussie",
+            description: "Votre message a été transcrit. Vous pouvez l'envoyer.",
+          });
+        } else {
+          throw new Error(data.error || 'Transcription failed');
+        }
+      };
+    } catch (error) {
+      console.error('Error transcribing audio:', error);
+      toast({
+        title: "Erreur de transcription",
+        description: "Impossible de transcrire l'audio. Veuillez réessayer.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleMicClick = () => {
+    if (isRecording) {
+      stopRecording();
+    } else {
+      startRecording();
     }
   };
 
@@ -227,12 +316,13 @@ export const IAstedChat = () => {
               <Send className="h-4 w-4" />
             </Button>
             <Button
-              variant="outline"
+              variant={isRecording ? "destructive" : "outline"}
               size="icon"
               disabled={isLoading}
-              title="Fonction vocale à venir"
+              onClick={handleMicClick}
+              title={isRecording ? "Arrêter l'enregistrement" : "Enregistrer un message vocal"}
             >
-              <Mic className="h-4 w-4" />
+              <Mic className={`h-4 w-4 ${isRecording ? 'animate-pulse' : ''}`} />
             </Button>
           </div>
         </div>
