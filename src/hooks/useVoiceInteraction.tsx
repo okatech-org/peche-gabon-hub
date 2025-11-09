@@ -1,10 +1,16 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { toast as unifiedToast } from '@/lib/toast';
 
 export type VoiceState = 'idle' | 'listening' | 'thinking' | 'speaking';
+
+interface VoiceInteractionMessage {
+  role: 'user' | 'assistant';
+  content: string;
+  audio_base64?: string;
+}
 
 export const useVoiceInteraction = () => {
   const [voiceState, setVoiceState] = useState<VoiceState>('idle');
@@ -16,6 +22,9 @@ export const useVoiceInteraction = () => {
   const [silenceThreshold, setSilenceThreshold] = useState<number>(10);
   const [continuousMode, setContinuousMode] = useState<boolean>(false);
   const [continuousModePaused, setContinuousModePaused] = useState<boolean>(false);
+  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [messages, setMessages] = useState<VoiceInteractionMessage[]>([]);
+  const [selectedVoiceId, setSelectedVoiceId] = useState<string | null>(null);
   const continuousModeToastShownRef = useRef<boolean>(false);
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
@@ -43,6 +52,41 @@ export const useVoiceInteraction = () => {
     };
   }, [currentAudio]);
 
+  // Créer ou charger une session
+  useEffect(() => {
+    const initSession = async () => {
+      if (!user) return;
+
+      try {
+        // Créer une nouvelle session
+        const { data: sessionData, error: sessionError } = await supabase
+          .from('conversation_sessions')
+          .insert({
+            user_id: user.id,
+            settings: {
+              silenceDuration,
+              silenceThreshold,
+              continuousMode
+            }
+          })
+          .select()
+          .single();
+
+        if (sessionError) {
+          console.error('Error creating session:', sessionError);
+          return;
+        }
+
+        setSessionId(sessionData.id);
+        console.log('Session created:', sessionData.id);
+      } catch (error) {
+        console.error('Error initializing session:', error);
+      }
+    };
+
+    initSession();
+  }, [user]);
+
   // Charger les préférences vocales de l'utilisateur
   useEffect(() => {
     const loadVoicePreferences = async () => {
@@ -66,7 +110,6 @@ export const useVoiceInteraction = () => {
           const newContinuousMode = data.voice_continuous_mode || false;
           setContinuousMode(newContinuousMode);
           
-          // Réinitialiser le flag du toast si le mode continu change
           if (!newContinuousMode) {
             continuousModeToastShownRef.current = false;
           }
@@ -285,7 +328,15 @@ export const useVoiceInteraction = () => {
   };
 
   const processAudio = async (audioBlob: Blob) => {
+    if (!sessionId) {
+      console.error('No session ID available');
+      setVoiceState('idle');
+      return;
+    }
+
     try {
+      const startTime = Date.now();
+      
       // Convert to base64
       const reader = new FileReader();
       reader.readAsDataURL(audioBlob);
@@ -294,37 +345,70 @@ export const useVoiceInteraction = () => {
         const base64Audio = reader.result as string;
         const base64Data = base64Audio.split(',')[1];
 
-        // Transcribe audio
-        const { data: transcriptionData, error: transcriptionError } = await supabase.functions.invoke('transcribe-audio', {
-          body: { audio: base64Data }
-        });
-
-        if (transcriptionError || !transcriptionData.text) {
-          throw new Error('Transcription failed');
-        }
-
-        console.log('Transcription:', transcriptionData.text);
-
-        // Maintain thinking state for 3 seconds
-        await new Promise(resolve => setTimeout(resolve, 3000));
-
-        // Get AI response
+        // Call new chat-with-iasted endpoint
         const { data: chatData, error: chatError } = await supabase.functions.invoke('chat-with-iasted', {
           body: { 
-            messages: [{ role: 'user', content: transcriptionData.text }],
-            generateAudio: true 
+            sessionId,
+            audioBase64: base64Data,
+            voiceId: selectedVoiceId,
+            langHint: 'fr',
+            settings: {
+              silenceDuration,
+              silenceThreshold,
+              continuousMode
+            }
           }
         });
 
-        if (chatError || !chatData.message) {
+        if (chatError) {
+          console.error('Chat error:', chatError);
           throw new Error('Chat failed');
         }
 
-        console.log('AI Response:', chatData.message);
+        console.log('Chat response:', chatData);
 
-        // Play audio response if available
-        if (chatData.audioContent) {
-          await playAudioResponse(chatData.audioContent);
+        // Handle voice commands
+        if (chatData.route?.category === 'voice_command') {
+          handleVoiceCommand(chatData.route);
+          setVoiceState('idle');
+          return;
+        }
+
+        // Handle resume request
+        if (chatData.route?.category === 'ask_resume') {
+          await handleResumeRequest();
+          return;
+        }
+
+        // Update messages
+        const userMessage: VoiceInteractionMessage = {
+          role: 'user',
+          content: chatData.userText
+        };
+        
+        const assistantMessage: VoiceInteractionMessage = {
+          role: 'assistant',
+          content: chatData.answer,
+          audio_base64: chatData.audio_base64
+        };
+
+        setMessages(prev => [...prev, userMessage, assistantMessage]);
+
+        // Log analytics
+        await supabase.functions.invoke('log-analytics', {
+          body: {
+            sessionId,
+            event_type: 'turn_complete',
+            data: {
+              ...chatData.latencies,
+              totalDuration: Date.now() - startTime
+            }
+          }
+        });
+
+        // Play audio response
+        if (chatData.audio_base64) {
+          await playAudioResponse(chatData.audio_base64);
         } else {
           setVoiceState('idle');
         }
@@ -342,6 +426,59 @@ export const useVoiceInteraction = () => {
         description: "Impossible de traiter l'audio.",
         variant: "destructive"
       });
+      setVoiceState('idle');
+    }
+  };
+
+  const handleVoiceCommand = (route: any) => {
+    const command = route.command;
+    
+    switch (command) {
+      case 'stop':
+      case 'pause':
+        cancelInteraction();
+        break;
+      case 'continue':
+        if (continuousModePaused) {
+          toggleContinuousPause();
+        }
+        break;
+      case 'new_question':
+        newQuestion();
+        break;
+      default:
+        console.log('Unknown voice command:', command);
+    }
+  };
+
+  const handleResumeRequest = async () => {
+    if (!sessionId) return;
+
+    try {
+      setVoiceState('thinking');
+      
+      const { data: debriefData, error: debriefError } = await supabase.functions.invoke('debrief-session', {
+        body: { sessionId }
+      });
+
+      if (debriefError) {
+        throw new Error('Debrief failed');
+      }
+
+      console.log('Debrief:', debriefData.debrief);
+
+      // Generate audio for debrief
+      const { data: greetingData, error: greetingError } = await supabase.functions.invoke('generate-greeting-audio', {
+        body: { text: debriefData.debrief }
+      });
+
+      if (!greetingError && greetingData.audioContent) {
+        await playAudioResponse(greetingData.audioContent);
+      } else {
+        setVoiceState('idle');
+      }
+    } catch (error) {
+      console.error('Error generating debrief:', error);
       setVoiceState('idle');
     }
   };
@@ -438,6 +575,31 @@ export const useVoiceInteraction = () => {
     });
   };
 
+  const newQuestion = useCallback(async () => {
+    // Stop any ongoing audio immediately
+    if (currentAudio) {
+      currentAudio.pause();
+      currentAudio.src = '';
+      setCurrentAudio(null);
+    }
+    
+    // Stop recording if in progress
+    if (mediaRecorder && mediaRecorder.state === 'recording') {
+      mediaRecorder.stop();
+    }
+    
+    // Reset state and restart listening immediately
+    setVoiceState('idle');
+    
+    // Small delay to allow cleanup
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
+    // Restart listening without greeting
+    startListening();
+    
+    unifiedToast.info("Nouvelle question", "Je vous écoute...");
+  }, [currentAudio, mediaRecorder, startListening]);
+
   const cancelInteraction = () => {
     if (currentAudio) {
       currentAudio.pause();
@@ -462,5 +624,10 @@ export const useVoiceInteraction = () => {
     toggleContinuousPause,
     stopListening,
     cancelInteraction,
+    newQuestion,
+    sessionId,
+    messages,
+    selectedVoiceId,
+    setSelectedVoiceId,
   };
 };
