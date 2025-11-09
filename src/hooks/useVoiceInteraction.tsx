@@ -35,6 +35,89 @@ export const useVoiceInteraction = () => {
     };
   }, [currentAudio]);
 
+  const getGreetingMessage = () => {
+    const now = new Date();
+    const hours = now.getHours();
+    const minutes = now.getMinutes();
+    const currentTime = hours * 60 + minutes; // Convert to minutes since midnight
+    
+    // Morning: 00:00 to 12:01 (0 to 721 minutes)
+    // Evening: 12:01 to 23:59 (721 to 1439 minutes)
+    const isMorning = currentTime <= 721;
+    const period = isMorning ? 'morning' : 'evening';
+    
+    // Check if already greeted in this period today
+    const today = now.toDateString();
+    const lastGreeting = localStorage.getItem('iasted_last_greeting');
+    const lastGreetingData = lastGreeting ? JSON.parse(lastGreeting) : null;
+    
+    const alreadyGreeted = lastGreetingData && 
+                          lastGreetingData.date === today && 
+                          lastGreetingData.period === period;
+    
+    // Update greeting status
+    localStorage.setItem('iasted_last_greeting', JSON.stringify({
+      date: today,
+      period: period
+    }));
+    
+    if (alreadyGreeted) {
+      return isMorning 
+        ? "Que puis-je faire pour vous Excellence?" 
+        : "Excellence, puis-je vous aider?";
+    } else {
+      return isMorning ? "Bonjour Excellence" : "Bonsoir Excellence";
+    }
+  };
+
+  const playGreeting = async () => {
+    try {
+      const greetingMessage = getGreetingMessage();
+      
+      setVoiceState('speaking');
+      
+      // Generate audio for greeting
+      const { data: greetingData, error: greetingError } = await supabase.functions.invoke('chat-with-iasted', {
+        body: { 
+          message: greetingMessage,
+          generateAudio: true 
+        }
+      });
+
+      if (greetingError || !greetingData.audioContent) {
+        throw new Error('Failed to generate greeting audio');
+      }
+
+      // Play greeting audio
+      await new Promise<void>((resolve, reject) => {
+        const binaryString = atob(greetingData.audioContent);
+        const bytes = new Uint8Array(binaryString.length);
+        for (let i = 0; i < binaryString.length; i++) {
+          bytes[i] = binaryString.charCodeAt(i);
+        }
+        const audioBlob = new Blob([bytes], { type: 'audio/mpeg' });
+        const audioUrl = URL.createObjectURL(audioBlob);
+
+        const audio = new Audio(audioUrl);
+        audio.onended = () => {
+          URL.revokeObjectURL(audioUrl);
+          resolve();
+        };
+        audio.onerror = () => {
+          URL.revokeObjectURL(audioUrl);
+          reject(new Error('Error playing greeting'));
+        };
+
+        setCurrentAudio(audio);
+        audio.play();
+      });
+
+      setCurrentAudio(null);
+    } catch (error) {
+      console.error('Error playing greeting:', error);
+    }
+  };
+
   const analyzeAudioLevel = () => {
     if (!analyserRef.current) return;
 
@@ -257,8 +340,10 @@ export const useVoiceInteraction = () => {
     }
   };
 
-  const handleInteraction = () => {
+  const handleInteraction = async () => {
     if (voiceState === 'idle') {
+      // Play greeting first, then start listening
+      await playGreeting();
       startListening();
     } else if (voiceState === 'listening') {
       stopListening();
