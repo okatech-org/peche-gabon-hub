@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { Card, CardContent } from "@/components/ui/card";
@@ -120,12 +120,15 @@ export default function Carte() {
   const [filterStatut, setFilterStatut] = useState<string>("tous");
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
 
-  // Token Mapbox depuis les variables d'environnement
-  const mapboxToken = import.meta.env.VITE_MAPBOX_TOKEN || "pk.eyJ1IjoibG92YWJsZS1kZXYiLCJhIjoiY2x4anExeWN6MDdmYzJrcXptbXN4dDZ0ZSJ9.5K6P4BTFQS2bJTjG8KWz0g";
+  // Token Mapbox - mémorisé pour éviter les re-renders
+  const mapboxToken = useMemo(
+    () => import.meta.env.VITE_MAPBOX_TOKEN || "pk.eyJ1IjoibG92YWJsZS1kZXYiLCJhIjoiY2x4anExeWN6MDdmYzJrcXptbXN4dDZ0ZSJ9.5K6P4BTFQS2bJTjG8KWz0g",
+    []
+  );
 
-  // Initialiser la carte
+  // Initialiser la carte une seule fois
   useEffect(() => {
-    if (!mapContainer.current || map.current) return;
+    if (!mapContainer.current || map.current || !mapboxToken) return;
 
     console.log("Initialisation de la carte Mapbox...");
     console.log("Token présent:", mapboxToken ? "Oui" : "Non");
@@ -172,9 +175,12 @@ export default function Carte() {
     }
 
     return () => {
-      map.current?.remove();
+      if (map.current) {
+        map.current.remove();
+        map.current = null;
+      }
     };
-  }, [mapboxToken]);
+  }, []); // Pas de dépendances - s'exécute une seule fois
 
   // Ajouter les marqueurs
   useEffect(() => {
