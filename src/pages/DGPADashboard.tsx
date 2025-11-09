@@ -1,3 +1,4 @@
+import { DashboardLayout } from "@/components/layouts/DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FileText, TrendingUp, AlertCircle, CheckCircle, Clock, Network } from "lucide-react";
@@ -55,19 +56,14 @@ export default function DGPADashboard() {
   ];
 
   return (
-    <div className="min-h-screen bg-background p-6">
-      <div className="max-w-7xl mx-auto space-y-6">
+    <DashboardLayout>
+      <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-center gap-4">
-          <div className="p-3 rounded-lg bg-blue-500/10">
-            <FileText className="h-8 w-8 text-blue-600" />
-          </div>
-          <div>
-            <h1 className="text-3xl font-bold">DGPA Dashboard</h1>
-            <p className="text-muted-foreground">
-              Direction générale des Pêches et de l'Aquaculture
-            </p>
-          </div>
+        <div>
+          <h1 className="text-3xl font-bold">DGPA Dashboard</h1>
+          <p className="text-muted-foreground">
+            Direction générale des Pêches et de l'Aquaculture
+          </p>
         </div>
 
         {/* KPIs */}
@@ -268,6 +264,6 @@ export default function DGPADashboard() {
           </TabsContent>
         </Tabs>
       </div>
-    </div>
+    </DashboardLayout>
   );
 }

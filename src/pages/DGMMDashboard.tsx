@@ -1,3 +1,4 @@
+import { DashboardLayout } from "@/components/layouts/DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Ship, Shield, Anchor, AlertTriangle } from "lucide-react";
@@ -13,18 +14,13 @@ export default function DGMMDashboard() {
   });
 
   return (
-    <div className="min-h-screen bg-background p-6">
-      <div className="max-w-7xl mx-auto space-y-6">
-        <div className="flex items-center gap-4">
-          <div className="p-3 rounded-lg bg-blue-600/10">
-            <Ship className="h-8 w-8 text-blue-600" />
-          </div>
-          <div>
-            <h1 className="text-3xl font-bold">DGMM Dashboard</h1>
-            <p className="text-muted-foreground">
-              Direction générale de la Marine marchande
-            </p>
-          </div>
+    <DashboardLayout>
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold">DGMM Dashboard</h1>
+          <p className="text-muted-foreground">
+            Direction Générale de la Marine Marchande
+          </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -146,6 +142,6 @@ export default function DGMMDashboard() {
           </TabsContent>
         </Tabs>
       </div>
-    </div>
+    </DashboardLayout>
   );
 }

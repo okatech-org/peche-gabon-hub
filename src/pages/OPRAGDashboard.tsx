@@ -1,3 +1,4 @@
+import { DashboardLayout } from "@/components/layouts/DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Anchor, Ship, Package, TrendingUp } from "lucide-react";
@@ -13,18 +14,13 @@ export default function OPRAGDashboard() {
   });
 
   return (
-    <div className="min-h-screen bg-background p-6">
-      <div className="max-w-7xl mx-auto space-y-6">
-        <div className="flex items-center gap-4">
-          <div className="p-3 rounded-lg bg-teal-500/10">
-            <Anchor className="h-8 w-8 text-teal-600" />
-          </div>
-          <div>
-            <h1 className="text-3xl font-bold">OPRAG Dashboard</h1>
-            <p className="text-muted-foreground">
-              Office des Ports et Rades du Gabon
-            </p>
-          </div>
+    <DashboardLayout>
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold">OPRAG Dashboard</h1>
+          <p className="text-muted-foreground">
+            Office des Ports et Rades du Gabon
+          </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -146,6 +142,6 @@ export default function OPRAGDashboard() {
           </TabsContent>
         </Tabs>
       </div>
-    </div>
+    </DashboardLayout>
   );
 }

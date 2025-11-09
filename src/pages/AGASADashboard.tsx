@@ -1,3 +1,4 @@
+import { DashboardLayout } from "@/components/layouts/DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Shield, CheckCircle, AlertTriangle, XCircle, Activity, Network } from "lucide-react";
@@ -15,19 +16,13 @@ export default function AGASADashboard() {
   const [workflowRefresh, setWorkflowRefresh] = useState(0);
 
   return (
-    <div className="min-h-screen bg-background p-6">
-      <div className="max-w-7xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="flex items-center gap-4">
-          <div className="p-3 rounded-lg bg-green-500/10">
-            <Shield className="h-8 w-8 text-green-600" />
-          </div>
-          <div>
-            <h1 className="text-3xl font-bold">AGASA Dashboard</h1>
-            <p className="text-muted-foreground">
-              Agence gabonaise de sécurité alimentaire
-            </p>
-          </div>
+    <DashboardLayout>
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold">AGASA Dashboard</h1>
+          <p className="text-muted-foreground">
+            Agence Gabonaise de Sécurité Alimentaire
+          </p>
         </div>
 
         {/* KPIs */}
@@ -218,6 +213,6 @@ export default function AGASADashboard() {
           </TabsContent>
         </Tabs>
       </div>
-    </div>
+    </DashboardLayout>
   );
 }

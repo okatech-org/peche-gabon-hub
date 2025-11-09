@@ -1,3 +1,4 @@
+import { DashboardLayout } from "@/components/layouts/DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Shield, DollarSign, FileCheck, TrendingUp } from "lucide-react";
@@ -13,18 +14,13 @@ export default function DGDDIDashboard() {
   });
 
   return (
-    <div className="min-h-screen bg-background p-6">
-      <div className="max-w-7xl mx-auto space-y-6">
-        <div className="flex items-center gap-4">
-          <div className="p-3 rounded-lg bg-amber-500/10">
-            <Shield className="h-8 w-8 text-amber-600" />
-          </div>
-          <div>
-            <h1 className="text-3xl font-bold">DGDDI Dashboard</h1>
-            <p className="text-muted-foreground">
-              Direction générale des Douanes et Droits indirects
-            </p>
-          </div>
+    <DashboardLayout>
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold">DGDDI Dashboard</h1>
+          <p className="text-muted-foreground">
+            Direction Générale des Douanes et Droits Indirects
+          </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -192,6 +188,6 @@ export default function DGDDIDashboard() {
           </TabsContent>
         </Tabs>
       </div>
-    </div>
+    </DashboardLayout>
   );
 }
