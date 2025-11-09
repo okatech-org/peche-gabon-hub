@@ -35,6 +35,8 @@ export const useVoiceInteraction = () => {
   const silenceTimerRef = useRef<NodeJS.Timeout | null>(null);
   const silenceCountdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const lastSoundTimeRef = useRef<number>(Date.now());
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -298,6 +300,8 @@ export const useVoiceInteraction = () => {
   const startListening = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      // Keep a stable reference for stopping/cleanup
+      streamRef.current = stream;
       
       // Set up audio analysis
       const audioContext = new AudioContext();
@@ -309,6 +313,7 @@ export const useVoiceInteraction = () => {
       source.connect(analyser);
       
       const recorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = recorder;
       const chunks: Blob[] = [];
 
       recorder.ondataavailable = (e) => {
@@ -330,12 +335,14 @@ export const useVoiceInteraction = () => {
             description: "Aucun audio enregistré. Veuillez réessayer.",
             variant: "destructive"
           });
-          stream.getTracks().forEach(track => track.stop());
+          const s = streamRef.current || stream;
+          s?.getTracks().forEach(track => track.stop());
           return;
         }
         
         await processAudio(audioBlob);
-        stream.getTracks().forEach(track => track.stop());
+         const s2 = streamRef.current || stream;
+         s2?.getTracks().forEach(track => track.stop());
         
         // Clean up audio analysis
         if (animationFrameRef.current) {
@@ -386,8 +393,10 @@ export const useVoiceInteraction = () => {
   };
 
   const stopListening = () => {
-    console.log('🛑 Stopping listening... State:', mediaRecorder?.state);
-    if (mediaRecorder && mediaRecorder.state === 'recording') {
+    const mr = mediaRecorderRef.current || mediaRecorder;
+    const state = mr?.state;
+    console.log('🛑 Stopping listening... State:', state);
+    if (mr && state === 'recording') {
       // Clear silence timer and countdown
       if (silenceTimerRef.current) {
         clearTimeout(silenceTimerRef.current);
@@ -402,10 +411,14 @@ export const useVoiceInteraction = () => {
       setSilenceTimeRemaining(0);
       setVoiceState('thinking');
       console.log('🔄 State changed to thinking, stopping recorder...');
-      mediaRecorder.stop();
-      console.log('✅ Recorder.stop() called');
+      try {
+        mr.stop();
+        console.log('✅ Recorder.stop() called');
+      } catch (e) {
+        console.warn('⚠️ Recorder.stop() threw, proceeding to process if possible', e);
+      }
     } else {
-      console.warn('⚠️ Cannot stop - recorder state:', mediaRecorder?.state);
+      console.warn('⚠️ Cannot stop - recorder state:', state);
     }
   };
 
@@ -729,8 +742,9 @@ export const useVoiceInteraction = () => {
     }
     
     // Stop recording if in progress
-    if (mediaRecorder && mediaRecorder.state === 'recording') {
-      mediaRecorder.stop();
+    const mr = mediaRecorderRef.current || mediaRecorder;
+    if (mr && mr.state === 'recording') {
+      try { mr.stop(); } catch {}
     }
     
     // Reset state and restart listening immediately
@@ -750,8 +764,9 @@ export const useVoiceInteraction = () => {
       currentAudio.pause();
       currentAudio.src = '';
     }
-    if (mediaRecorder && mediaRecorder.state === 'recording') {
-      mediaRecorder.stop();
+    const mr = mediaRecorderRef.current || mediaRecorder;
+    if (mr && mr.state === 'recording') {
+      try { mr.stop(); } catch {}
     }
     setVoiceState('idle');
     unifiedToast.info("Interaction annulée", "La conversation a été interrompue");
