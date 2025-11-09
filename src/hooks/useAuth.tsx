@@ -89,41 +89,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       if (error) throw error;
       
-      toast.success("Connexion réussie");
-      
-      // Redirection intelligente selon le rôle
-      setTimeout(async () => {
-        const { data } = await supabase.rpc('get_user_roles', {
-          _user_id: (await supabase.auth.getUser()).data.user?.id
-        });
-        
-        const userRoles = data || [];
-        if (userRoles.includes('super_admin')) {
-          navigate("/superadmin-dashboard");
-        } else if (userRoles.includes('ministre')) {
-          navigate("/minister-dashboard");
-        } else if (userRoles.includes('dgpa')) {
-          navigate("/dgpa-dashboard");
-        } else if (userRoles.includes('anpa')) {
-          navigate("/anpa-dashboard");
-        } else if (userRoles.includes('agasa')) {
-          navigate("/agasa-dashboard");
-        } else if (userRoles.includes('dgmm')) {
-          navigate("/dgmm-dashboard");
-        } else if (userRoles.includes('oprag')) {
-          navigate("/oprag-dashboard");
-        } else if (userRoles.includes('anpn')) {
-          navigate("/anpn-dashboard");
-        } else if (userRoles.includes('armateur_pi')) {
-          navigate("/armeur-dashboard");
-        } else if (userRoles.includes('gestionnaire_coop')) {
-          navigate("/cooperative-dashboard");
-        } else if (userRoles.includes('admin')) {
-          navigate("/admin");
-        } else {
-          navigate("/dashboard");
-        }
-      }, 100);
+      // Les roles seront chargés par le useEffect qui écoute les changements de session
+      // La navigation sera gérée par le composant via un useEffect
     } catch (error: any) {
       toast.error(error.message || "Erreur de connexion");
       throw error;
@@ -148,8 +115,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       if (error) throw error;
       
-      toast.success("Compte créé avec succès");
-      navigate("/dashboard");
+      // La navigation sera gérée par le composant via un useEffect
     } catch (error: any) {
       toast.error(error.message || "Erreur lors de la création du compte");
       throw error;
@@ -162,7 +128,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (error) throw error;
       
       toast.success("Déconnexion réussie");
-      navigate("/auth");
+      // La navigation vers /auth sera gérée par les composants
     } catch (error: any) {
       toast.error(error.message || "Erreur lors de la déconnexion");
       throw error;
