@@ -19,7 +19,6 @@ import {
   SidebarMenuItem,
   SidebarHeader,
   SidebarFooter,
-  useSidebar,
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
@@ -60,12 +59,10 @@ const navigationItems = [
 ];
 
 export function PecheurSidebar() {
-  const { state } = useSidebar();
   const location = useLocation();
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
   const currentPath = location.pathname;
-  const collapsed = state === "collapsed";
   
   const handleSignOut = async () => {
     await signOut();
@@ -87,12 +84,10 @@ export function PecheurSidebar() {
       <SidebarHeader className="border-b border-border p-4">
         <div className="flex items-center gap-3">
           <Logo size="sm" />
-          {!collapsed && (
-            <div className="flex-1 min-w-0">
-              <h2 className="font-bold text-sm truncate">PÊCHE GABON</h2>
-              <p className="text-xs text-muted-foreground truncate">Espace Pêcheur</p>
-            </div>
-          )}
+          <div className="flex-1 min-w-0 group-data-[collapsible=icon]:hidden">
+            <h2 className="font-bold text-sm truncate">PÊCHE GABON</h2>
+            <p className="text-xs text-muted-foreground truncate">Espace Pêcheur</p>
+          </div>
         </div>
       </SidebarHeader>
 
@@ -111,7 +106,7 @@ export function PecheurSidebar() {
                       title={item.title}
                     >
                       <item.icon className="h-5 w-5 flex-shrink-0 group-hover:scale-110 transition-transform" />
-                      <span className={`text-sm transition-opacity duration-200 ${collapsed ? 'opacity-0 w-0' : 'opacity-100'}`}>
+                      <span className="text-sm group-data-[collapsible=icon]:hidden">
                         {item.title}
                       </span>
                     </NavLink>
@@ -131,25 +126,23 @@ export function PecheurSidebar() {
                 {getInitials()}
               </AvatarFallback>
             </Avatar>
-            {!collapsed && (
-              <div className="flex-1 min-w-0">
-                <p className="text-xs font-medium truncate">{user?.email}</p>
-                <div className="flex items-center gap-1.5">
-                  <div className="h-1.5 w-1.5 rounded-full bg-green-500" />
-                  <span className="text-[10px] text-muted-foreground">En ligne</span>
-                </div>
+            <div className="flex-1 min-w-0 group-data-[collapsible=icon]:hidden">
+              <p className="text-xs font-medium truncate">{user?.email}</p>
+              <div className="flex items-center gap-1.5">
+                <div className="h-1.5 w-1.5 rounded-full bg-green-500" />
+                <span className="text-[10px] text-muted-foreground">En ligne</span>
               </div>
-            )}
+            </div>
           </div>
           <Button
             variant="ghost"
             size="sm"
             onClick={handleSignOut}
-            className={`w-full gap-2 h-9 text-xs hover:bg-destructive/10 hover:text-destructive transition-all ${collapsed ? 'justify-center px-2' : 'justify-start'}`}
+            className={`w-full gap-2 h-9 text-xs hover:bg-destructive/10 hover:text-destructive transition-all justify-start group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-2`}
             title="Déconnexion"
           >
             <LogOut className="h-4 w-4" />
-            {!collapsed && <span>Déconnexion</span>}
+            <span className="group-data-[collapsible=icon]:hidden">Déconnexion</span>
           </Button>
         </div>
       </SidebarFooter>
