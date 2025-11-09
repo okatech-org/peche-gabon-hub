@@ -3,9 +3,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Loader2, Plus } from "lucide-react";
+import { Loader2, Plus, FileText } from "lucide-react";
 import { toast } from "sonner";
 import { DeclarerMareeDialog } from "./DeclarerMareeDialog";
+import { CapturesDetailDialog } from "./CapturesDetailDialog";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 
@@ -29,6 +30,8 @@ export function MareesArmeur() {
   const [loading, setLoading] = useState(true);
   const [marees, setMarees] = useState<Maree[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [capturesDialogOpen, setCapturesDialogOpen] = useState(false);
+  const [selectedMaree, setSelectedMaree] = useState<Maree | null>(null);
 
   useEffect(() => {
     loadMarees();
@@ -131,6 +134,7 @@ export function MareesArmeur() {
                     <TableHead>Zone</TableHead>
                     <TableHead className="text-right">Captures (kg)</TableHead>
                     <TableHead className="text-right">CPUE (kg/j)</TableHead>
+                    <TableHead className="text-center">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -168,6 +172,19 @@ export function MareesArmeur() {
                           ? maree.cpue_moyenne.toFixed(2)
                           : "-"}
                       </TableCell>
+                      <TableCell className="text-center">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setSelectedMaree(maree);
+                            setCapturesDialogOpen(true);
+                          }}
+                        >
+                          <FileText className="h-4 w-4 mr-2" />
+                          Détail
+                        </Button>
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -182,6 +199,15 @@ export function MareesArmeur() {
         onOpenChange={setDialogOpen}
         onSuccess={loadMarees}
       />
+
+      {selectedMaree && (
+        <CapturesDetailDialog
+          open={capturesDialogOpen}
+          onOpenChange={setCapturesDialogOpen}
+          mareeId={selectedMaree.id}
+          navireNom={selectedMaree.navire?.nom || ""}
+        />
+      )}
     </div>
   );
 }
