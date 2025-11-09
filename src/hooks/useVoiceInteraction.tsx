@@ -9,7 +9,10 @@ export const useVoiceInteraction = () => {
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
   const [audioChunks, setAudioChunks] = useState<Blob[]>([]);
   const [currentAudio, setCurrentAudio] = useState<HTMLAudioElement | null>(null);
+  const [audioLevel, setAudioLevel] = useState<number>(0);
   const audioContextRef = useRef<AudioContext | null>(null);
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const animationFrameRef = useRef<number | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -21,12 +24,42 @@ export const useVoiceInteraction = () => {
       if (audioContextRef.current) {
         audioContextRef.current.close();
       }
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
     };
   }, [currentAudio]);
+
+  const analyzeAudioLevel = () => {
+    if (!analyserRef.current) return;
+
+    const dataArray = new Uint8Array(analyserRef.current.frequencyBinCount);
+    analyserRef.current.getByteFrequencyData(dataArray);
+
+    // Calculate average level
+    const average = dataArray.reduce((a, b) => a + b) / dataArray.length;
+    const normalizedLevel = Math.min(100, (average / 255) * 100);
+    
+    setAudioLevel(normalizedLevel);
+
+    if (voiceState === 'listening') {
+      animationFrameRef.current = requestAnimationFrame(analyzeAudioLevel);
+    }
+  };
 
   const startListening = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      
+      // Set up audio analysis
+      const audioContext = new AudioContext();
+      audioContextRef.current = audioContext;
+      const source = audioContext.createMediaStreamSource(stream);
+      const analyser = audioContext.createAnalyser();
+      analyser.fftSize = 256;
+      analyserRef.current = analyser;
+      source.connect(analyser);
+      
       const recorder = new MediaRecorder(stream);
       const chunks: Blob[] = [];
 
@@ -40,12 +73,24 @@ export const useVoiceInteraction = () => {
         const audioBlob = new Blob(chunks, { type: 'audio/webm' });
         await processAudio(audioBlob);
         stream.getTracks().forEach(track => track.stop());
+        
+        // Clean up audio analysis
+        if (animationFrameRef.current) {
+          cancelAnimationFrame(animationFrameRef.current);
+        }
+        if (audioContextRef.current) {
+          audioContextRef.current.close();
+        }
+        setAudioLevel(0);
       };
 
       recorder.start();
       setMediaRecorder(recorder);
       setAudioChunks(chunks);
       setVoiceState('listening');
+      
+      // Start analyzing audio level
+      analyzeAudioLevel();
 
       // Auto stop after 10 seconds
       setTimeout(() => {
@@ -192,5 +237,6 @@ export const useVoiceInteraction = () => {
     isListening: voiceState === 'listening',
     isThinking: voiceState === 'thinking',
     isSpeaking: voiceState === 'speaking',
+    audioLevel,
   };
 };

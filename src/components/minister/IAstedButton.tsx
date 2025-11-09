@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Mic, MessageCircle, Brain } from 'lucide-react';
+import { AudioLevelIndicator } from './AudioLevelIndicator';
 
 interface IAstedButtonProps {
   onClick?: () => void;
@@ -9,6 +10,7 @@ interface IAstedButtonProps {
   voiceSpeaking?: boolean;
   voiceProcessing?: boolean;
   isInterfaceOpen?: boolean;
+  audioLevel?: number;
 }
 
 interface Shockwave {
@@ -1007,7 +1009,16 @@ const styles = `
 }
 `;
 
-export const IAstedButton: React.FC<IAstedButtonProps> = ({ onClick, className = '', size = 'md', voiceListening = false, voiceSpeaking = false, voiceProcessing = false, isInterfaceOpen = false }) => {
+export const IAstedButton: React.FC<IAstedButtonProps> = ({ 
+  onClick, 
+  className = '', 
+  size = 'md', 
+  voiceListening = false, 
+  voiceSpeaking = false, 
+  voiceProcessing = false, 
+  isInterfaceOpen = false,
+  audioLevel = 0 
+}) => {
   const [shockwaves, setShockwaves] = useState<Shockwave[]>([]);
   const [isClicked, setIsClicked] = useState(false);
   const [isActive, setIsActive] = useState(false);
@@ -1153,6 +1164,14 @@ export const IAstedButton: React.FC<IAstedButtonProps> = ({ onClick, className =
         className={`perspective-container ${isDragging ? 'grabbing' : ''}`}
         onMouseMove={handleMouseMove}
       >
+        {/* Audio Level Indicator */}
+        {voiceListening && audioLevel > 0 && (
+          <AudioLevelIndicator 
+            level={audioLevel} 
+            size={size === 'sm' ? 56 : size === 'lg' ? 100 : 80} 
+          />
+        )}
+        
         <div className="perspective">
           <button
             onClick={handleClick}
