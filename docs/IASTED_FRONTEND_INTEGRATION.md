@@ -1,5 +1,58 @@
 # iAsted - Guide d'intégration Frontend
 
+## ✅ Intégration complète réalisée
+
+L'assistant vocal iAsted est maintenant **complètement intégré** avec affichage des transcriptions en temps réel via ChatDock.
+
+### Ce qui a été implémenté
+
+✅ **useVoiceInteraction** - Hook avec sessionId, newQuestion(), appels aux nouvelles edge functions  
+✅ **IAstedChat** - Intégré avec useVoiceInteraction, props onMessage et voiceSettings  
+✅ **ChatDock** - Affichage temps réel des transcriptions vocales  
+✅ **VoiceSettings** - Interface complète de personnalisation (voix, silence, mode continu)  
+✅ **IAsted.tsx** - Page avec flux de données complet Chat → ChatDock  
+
+### Architecture actuelle
+
+```
+IAsted.tsx
+├── voiceSettings (state)
+├── messages (state)
+│
+├── IAstedChat (props: onMessage, voiceSettings)
+│   ├── useVoiceInteraction()
+│   │   ├── sessionId
+│   │   ├── messages
+│   │   ├── newQuestion()
+│   │   └── setSelectedVoiceId()
+│   └── Callbacks → onMessage(role, text)
+│
+└── ChatDock (props: messages)
+    └── Affichage temps réel
+```
+
+### Flux de données en production
+
+1. **Configuration vocale**: VoiceSettings → IAsted.tsx → IAstedChat → useVoiceInteraction
+2. **Interaction vocale**: useVoiceInteraction → chat-with-iasted (edge function)
+3. **Messages**: useVoiceInteraction.messages → IAstedChat → onMessage → IAsted.tsx → ChatDock
+4. **Affichage temps réel**: Chaque nouveau message apparaît immédiatement dans ChatDock
+
+### Fonctionnalités disponibles
+
+- ✅ Activation vocale (clic/long-press)
+- ✅ Transcription temps réel dans ChatDock
+- ✅ Réponses audio avec TTS ElevenLabs
+- ✅ Personnalisation de voix avec aperçu
+- ✅ Ajustement durée de silence (500-3000ms)
+- ✅ Sensibilité micro configurable (10-100%)
+- ✅ Mode continu avec pause/reprise
+- ✅ Fonction "Nouvelle question" (relance immédiate)
+- ✅ Persistance en base (sessions + messages)
+- ✅ Analytics (latences, métriques UX)
+
+---
+
 ## Architecture recommandée
 
 ```

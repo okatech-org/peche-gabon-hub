@@ -6,6 +6,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
 import { Mic, Send, Volume2, VolumeX, Bot, User, History, Plus, X, Check, BookOpen } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useVoiceInteraction } from "@/hooks/useVoiceInteraction";
 import { AudioWaveform } from "./AudioWaveform";
 import { IAstedHistory } from "./IAstedHistory";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -26,9 +27,16 @@ interface Conversation {
 
 interface IAstedChatProps {
   conversationIdToLoad?: string | null;
+  onMessage?: (role: 'user' | 'assistant', text: string) => void;
+  voiceSettings?: {
+    voiceId?: string;
+    silenceDuration?: number;
+    threshold?: number;
+    continuousMode?: boolean;
+  };
 }
 
-export const IAstedChat = ({ conversationIdToLoad }: IAstedChatProps) => {
+export const IAstedChat = ({ conversationIdToLoad, onMessage, voiceSettings }: IAstedChatProps) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -51,10 +59,28 @@ export const IAstedChat = ({ conversationIdToLoad }: IAstedChatProps) => {
   const [showHistory, setShowHistory] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+  
+  // Voice interaction hook
+  const voiceInteraction = useVoiceInteraction();
+  
+  // Update voice settings when they change
+  useEffect(() => {
+    if (voiceSettings?.voiceId) {
+      voiceInteraction.setSelectedVoiceId(voiceSettings.voiceId);
+    }
+  }, [voiceSettings]);
 
   useEffect(() => {
     scrollRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+  
+  // Sync voice interaction messages with parent
+  useEffect(() => {
+    if (voiceInteraction.messages.length > 0 && onMessage) {
+      const lastMessage = voiceInteraction.messages[voiceInteraction.messages.length - 1];
+      onMessage(lastMessage.role, lastMessage.content);
+    }
+  }, [voiceInteraction.messages, onMessage]);
 
   useEffect(() => {
     loadConversations();
