@@ -13,6 +13,7 @@ export const useVoiceInteraction = () => {
   const [audioLevel, setAudioLevel] = useState<number>(0);
   const [silenceDuration, setSilenceDuration] = useState<number>(2000);
   const [silenceThreshold, setSilenceThreshold] = useState<number>(10);
+  const [continuousMode, setContinuousMode] = useState<boolean>(false);
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const animationFrameRef = useRef<number | null>(null);
@@ -47,7 +48,7 @@ export const useVoiceInteraction = () => {
       try {
         const { data, error } = await supabase
           .from('user_preferences')
-          .select('voice_silence_duration, voice_silence_threshold')
+          .select('voice_silence_duration, voice_silence_threshold, voice_continuous_mode')
           .eq('user_id', user.id)
           .single();
 
@@ -59,6 +60,7 @@ export const useVoiceInteraction = () => {
         if (data) {
           setSilenceDuration(data.voice_silence_duration || 2000);
           setSilenceThreshold(data.voice_silence_threshold || 10);
+          setContinuousMode(data.voice_continuous_mode || false);
         }
       } catch (error) {
         console.error('Error loading voice preferences:', error);
@@ -352,6 +354,14 @@ export const useVoiceInteraction = () => {
         URL.revokeObjectURL(audioUrl);
         setVoiceState('idle');
         setCurrentAudio(null);
+        
+        // Si le mode continu est activé, redémarrer l'écoute automatiquement
+        if (continuousMode) {
+          console.log('Mode continu activé, redémarrage de l\'écoute...');
+          setTimeout(() => {
+            startListening();
+          }, 500); // Petit délai avant de recommencer l'écoute
+        }
       };
 
       audio.onerror = () => {

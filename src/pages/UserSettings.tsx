@@ -20,6 +20,7 @@ interface UserPreferences {
   push_notifications: boolean;
   voice_silence_duration: number;
   voice_silence_threshold: number;
+  voice_continuous_mode: boolean;
 }
 
 const UserSettings = () => {
@@ -36,6 +37,7 @@ const UserSettings = () => {
     push_notifications: false,
     voice_silence_duration: 2000,
     voice_silence_threshold: 10,
+    voice_continuous_mode: false,
   });
 
   useEffect(() => {
@@ -64,6 +66,7 @@ const UserSettings = () => {
           push_notifications: data.push_notifications,
           voice_silence_duration: data.voice_silence_duration || 2000,
           voice_silence_threshold: data.voice_silence_threshold || 10,
+          voice_continuous_mode: data.voice_continuous_mode || false,
         };
         setPreferences(prefs);
         
@@ -93,6 +96,7 @@ const UserSettings = () => {
           push_notifications: preferences.push_notifications,
           voice_silence_duration: preferences.voice_silence_duration,
           voice_silence_threshold: preferences.voice_silence_threshold,
+          voice_continuous_mode: preferences.voice_continuous_mode,
         }, {
           onConflict: "user_id",
         });
@@ -275,6 +279,24 @@ const UserSettings = () => {
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="voice-continuous-mode">
+                      Mode conversation continue
+                    </Label>
+                    <p className="text-sm text-muted-foreground">
+                      iAsted écoute automatiquement après chaque réponse
+                    </p>
+                  </div>
+                  <Switch
+                    id="voice-continuous-mode"
+                    checked={preferences.voice_continuous_mode}
+                    onCheckedChange={(checked) =>
+                      setPreferences(prev => ({ ...prev, voice_continuous_mode: checked }))
+                    }
+                  />
+                </div>
+
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <Label htmlFor="voice-silence-duration">
