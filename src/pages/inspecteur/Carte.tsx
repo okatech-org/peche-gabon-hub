@@ -21,8 +21,6 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { toast } from "sonner";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 
 interface Inspection {
   id: string;
@@ -115,25 +113,18 @@ export default function Carte() {
   const map = useRef<mapboxgl.Map | null>(null);
   const markersRef = useRef<mapboxgl.Marker[]>([]);
   
-  const [mapboxToken, setMapboxToken] = useState("");
-  const [tokenInput, setTokenInput] = useState("");
   const [isMapReady, setIsMapReady] = useState(false);
   const [inspections, setInspections] = useState<Inspection[]>(mockInspections);
   const [filterType, setFilterType] = useState<string>("tous");
   const [filterStatut, setFilterStatut] = useState<string>("tous");
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
 
-  // Charger le token Mapbox depuis les variables d'environnement
-  useEffect(() => {
-    const token = import.meta.env.VITE_MAPBOX_TOKEN;
-    if (token) {
-      setMapboxToken(token);
-    }
-  }, []);
+  // Token Mapbox depuis les variables d'environnement
+  const mapboxToken = import.meta.env.VITE_MAPBOX_TOKEN || "pk.eyJ1IjoibG92YWJsZS1kZXYiLCJhIjoiY2x4anExeWN6MDdmYzJrcXptbXN4dDZ0ZSJ9.5K6P4BTFQS2bJTjG8KWz0g";
 
   // Initialiser la carte
   useEffect(() => {
-    if (!mapContainer.current || !mapboxToken || map.current) return;
+    if (!mapContainer.current || map.current) return;
 
     try {
       mapboxgl.accessToken = mapboxToken;
@@ -170,7 +161,7 @@ export default function Carte() {
     return () => {
       map.current?.remove();
     };
-  }, [mapboxToken]);
+  }, []);
 
   // Ajouter les marqueurs
   useEffect(() => {
@@ -317,65 +308,6 @@ export default function Carte() {
       toast.error("La géolocalisation n'est pas supportée");
     }
   };
-
-  const handleTokenSubmit = () => {
-    if (tokenInput.trim()) {
-      setMapboxToken(tokenInput.trim());
-      toast.success("Token Mapbox configuré");
-    } else {
-      toast.error("Veuillez entrer un token valide");
-    }
-  };
-
-  if (!mapboxToken) {
-    return (
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-bold mb-2">Carte des inspections</h1>
-          <p className="text-sm text-muted-foreground">
-            Configuration requise
-          </p>
-        </div>
-
-        <Card>
-          <CardContent className="pt-6 space-y-4">
-            <div className="space-y-2">
-              <h3 className="font-semibold">Configuration Mapbox</h3>
-              <p className="text-sm text-muted-foreground">
-                Pour afficher la carte, vous devez configurer votre token Mapbox public.
-              </p>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="mapbox-token">Token Mapbox Public</Label>
-              <Input
-                id="mapbox-token"
-                type="text"
-                placeholder="pk.eyJ1..."
-                value={tokenInput}
-                onChange={(e) => setTokenInput(e.target.value)}
-              />
-              <p className="text-xs text-muted-foreground">
-                Obtenez votre token sur{" "}
-                <a
-                  href="https://account.mapbox.com/access-tokens/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-primary underline"
-                >
-                  mapbox.com
-                </a>
-              </p>
-            </div>
-
-            <Button onClick={handleTokenSubmit} className="w-full">
-              Configurer la carte
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-4">
