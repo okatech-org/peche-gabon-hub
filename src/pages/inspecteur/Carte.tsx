@@ -114,6 +114,7 @@ export default function Carte() {
   const markersRef = useRef<mapboxgl.Marker[]>([]);
   
   const [isMapReady, setIsMapReady] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [inspections, setInspections] = useState<Inspection[]>(mockInspections);
   const [filterType, setFilterType] = useState<string>("tous");
   const [filterStatut, setFilterStatut] = useState<string>("tous");
@@ -125,6 +126,9 @@ export default function Carte() {
   // Initialiser la carte
   useEffect(() => {
     if (!mapContainer.current || map.current) return;
+
+    console.log("Initialisation de la carte Mapbox...");
+    console.log("Token présent:", mapboxToken ? "Oui" : "Non");
 
     try {
       mapboxgl.accessToken = mapboxToken;
@@ -149,19 +153,28 @@ export default function Carte() {
       );
 
       map.current.on("load", () => {
+        console.log("Carte Mapbox chargée avec succès");
         setIsMapReady(true);
+        setIsLoading(false);
         toast.success("Carte chargée avec succès");
+      });
+
+      map.current.on("error", (e) => {
+        console.error("Erreur Mapbox:", e);
+        setIsLoading(false);
+        toast.error("Erreur lors du chargement de la carte");
       });
 
     } catch (error) {
       console.error("Erreur d'initialisation de la carte:", error);
+      setIsLoading(false);
       toast.error("Erreur lors du chargement de la carte");
     }
 
     return () => {
       map.current?.remove();
     };
-  }, []);
+  }, [mapboxToken]);
 
   // Ajouter les marqueurs
   useEffect(() => {
@@ -380,7 +393,15 @@ export default function Carte() {
       </Card>
 
       {/* Carte */}
-      <Card className="overflow-hidden">
+      <Card className="overflow-hidden relative">
+        {isLoading && (
+          <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+            <div className="text-center space-y-2">
+              <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
+              <p className="text-sm text-muted-foreground">Chargement de la carte...</p>
+            </div>
+          </div>
+        )}
         <div
           ref={mapContainer}
           className="w-full h-[calc(100vh-280px)] md:h-[600px]"
