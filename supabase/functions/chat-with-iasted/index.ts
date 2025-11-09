@@ -17,31 +17,42 @@ const corsHeaders = {
 const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 let knowledgeBaseCache: { data: any; timestamp: number } | null = null;
 
-const SYSTEM_PROMPT = `Vous êtes iAsted, l'assistant vocal officiel du Ministre de la Pêche et de l'Économie Maritime du Gabon.
+const SYSTEM_PROMPT = `Vous êtes iAsted, l'assistant vocal intelligent du Ministre de la Pêche du Gabon.
 
-## CONTEXTE DU SYSTÈME
-Le système comprend plusieurs sections : Vue d'ensemble, Pêche Artisanale, Pêche Industrielle, Surveillance, Économie, Finances, Alertes, Remontées Terrain, Actions Ministérielles, Formations.
+## STYLE DE CONVERSATION (CRITIQUE)
+🎙️ Vous parlez à voix haute comme un assistant vocal naturel :
+- Réponses COURTES (1-3 phrases max, 30-50 mots)
+- Ton conversationnel, chaleureux mais professionnel
+- Phrases simples et directes (pas de jargon inutile)
+- PAS de formatage JSON, markdown ou listes à puces dans vos réponses
+- Répondez comme si vous parliez à quelqu'un en personne
 
-## VOTRE RÔLE
-- **Contextualiser** : Situer les informations dans le cadre global du secteur
-- **Analyser** : Par type de pêche, priorité, zone, impact économique et social
-- **Comparer** : Identifier tendances et corrélations
-- **Recommander** : Proposer des actions concrètes et mesures stratégiques
+## EXEMPLES DE BONNES RÉPONSES
+❌ MAUVAIS: "Il existe selon les données json un total de 5 types..."
+✅ BON: "Excellence, on compte 5 types d'engins principaux : filets maillants, palangres, sennes, nasses et lignes. Les filets maillants dominent avec 65% des captures."
 
-## STYLE
-- Professionnel, factuel, stratégique
-- Concis et actionnable (2-6 phrases)
-- Hiérarchisé : contexte → analyse → recommandations
-- Langue : répondez dans la langue du dernier message utilisateur (par défaut FR)
+❌ MAUVAIS: "Selon les données de la base..."
+✅ BON: "D'après nos derniers chiffres, la pêche artisanale représente 8 500 tonnes ce mois."
 
-## RÈGLES IMPORTANTES
-- Si l'utilisateur donne un ordre de contrôle (arrêter, pause, nouvelle question, historique, changer voix), NE RÉPONDEZ PAS en langage naturel
-- Retournez UNIQUEMENT un objet JSON d'intention
-- En cas d'incertitude, réponse prudente + 1 question de clarification max
-- Pas de données privées, pas de spéculation, pas de contenu politique hors périmètre
+
+## VOTRE EXPERTISE
+Vous avez accès en temps réel aux données du secteur de la pêche gabonaise :
+- Statistiques pêche artisanale et industrielle
+- Finances et recettes fiscales  
+- Alertes et surveillance
+- Formations et actions ministérielles
+- Remontées terrain
+
+## RÈGLES DE RÉPONSE
+1. Donnez la réponse directement, sans préambule
+2. Citez des chiffres concrets quand disponibles
+3. Si données manquantes : "Je n'ai pas cette info actuellement, Excellence."
+4. Une seule question de clarification si vraiment nécessaire
+5. Commandes vocales (arrête, pause, etc.) → retournez UNIQUEMENT le JSON d'intention
 
 ## MÉMOIRE
-Utilisez le résumé de mémoire fourni (si présent) et les derniers messages pour maintenir le contexte.`;
+Utilisez le contexte fourni pour personnaliser vos réponses.`;
+
 
 const ROUTER_PROMPT = `Vous êtes un routeur d'intentions pour classifier les entrées utilisateur.
 
@@ -125,7 +136,7 @@ async function classifyIntent(userText: string): Promise<any> {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'google/gemini-2.5-flash',
+      model: 'google/gemini-2.5-flash-lite',
       messages: [
         { role: 'system', content: ROUTER_PROMPT },
         { role: 'user', content: `Texte utilisateur: """${userText}"""` }
@@ -259,7 +270,15 @@ async function generateResponse(params: {
   }
 
   const json = await res.json();
-  const answer = json.choices?.[0]?.message?.content ?? '';
+  let answer = json.choices?.[0]?.message?.content ?? '';
+  
+  // Post-process: remove JSON blocks, markdown, and code formatting
+  answer = answer
+    .replace(/```json[\s\S]*?```/g, '') // Remove JSON code blocks
+    .replace(/```[\s\S]*?```/g, '')     // Remove any code blocks
+    .replace(/^\s*\{[\s\S]*?\}\s*$/gm, '') // Remove standalone JSON objects
+    .trim();
+  
   console.log('Response generated:', answer.substring(0, 100));
   return answer;
 }
@@ -304,11 +323,11 @@ async function generateAudio(text: string, voiceId?: string): Promise<string> {
     },
     body: JSON.stringify({
       text,
-      model_id: 'eleven_multilingual_v2',
+      model_id: 'eleven_turbo_v2_5',
       voice_settings: {
-        stability: 0.5,
-        similarity_boost: 0.75,
-        style: 0.0,
+        stability: 0.65,
+        similarity_boost: 0.8,
+        style: 0.25,
         use_speaker_boost: true
       }
     })
@@ -479,7 +498,7 @@ serve(async (req) => {
 
     // Step 6: Fetch memory & history
     const memory = await fetchMemorySummary(supabase, sessionId);
-    const history = await fetchRecentMessages(supabase, sessionId, 6);
+    const history = await fetchRecentMessages(supabase, sessionId, 4); // Reduced from 6 to 4 for speed
 
     // Optionally refresh memory if old (every 5+ messages)
     if (history.length >= 5 && (!memory || memory.length < 50)) {
