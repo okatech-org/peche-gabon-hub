@@ -4,9 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { LanguageSelector } from "@/components/LanguageSelector";
-import { Fish, LogOut, Settings as SettingsIcon } from "lucide-react";
+import { LogOut, Settings as SettingsIcon } from "lucide-react";
 import { RoleConfig } from "@/lib/roleConfig";
 import { SidebarTrigger } from "@/components/ui/sidebar";
+import { Logo } from "@/components/Logo";
 
 interface DashboardHeaderProps {
   roleConfig: RoleConfig;
@@ -30,7 +31,7 @@ export const DashboardHeader = ({ roleConfig }: DashboardHeaderProps) => {
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <Fish className="h-5 w-5 text-primary" />
+              <Logo size="sm" />
               <h1 className="text-lg font-bold">PÊCHE GABON</h1>
             </div>
             <Badge variant="secondary" className="text-xs mt-0.5">

@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
 import { Fish, User, LayoutDashboard, LogOut, MessageSquare, Receipt, Settings } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { Logo } from "@/components/Logo";
 
 export const PecheurNav = () => {
   const navigate = useNavigate();
@@ -24,7 +25,7 @@ export const PecheurNav = () => {
       <div className="container mx-auto px-4 py-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Fish className="h-8 w-8 text-primary" />
+            <Logo size="md" />
             <div>
               <h1 className="text-xl font-bold">PÊCHE GABON</h1>
               <p className="text-sm text-muted-foreground">{user?.email}</p>

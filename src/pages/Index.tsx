@@ -3,6 +3,7 @@ import { Fish, Waves, Shield, BarChart3, Users, ArrowRight, FileText, TrendingUp
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "@/hooks/useLanguage";
 import { LanguageSelector } from "@/components/LanguageSelector";
+import { Logo } from "@/components/Logo";
 import heroImage from "@/assets/hero-fisherman.jpg";
 import artisanalImage from "@/assets/artisanal-fishing.jpg";
 import industrialImage from "@/assets/industrial-fishing.jpg";
@@ -33,7 +34,7 @@ const Index = () => {
         <div className="relative container mx-auto max-w-6xl py-24 px-4">
           <div className="max-w-2xl">
             <div className="flex items-center gap-3 mb-6">
-              <Fish className="h-16 w-16 text-primary" />
+              <Logo size="xl" className="drop-shadow-lg" />
               <h1 className="text-5xl lg:text-7xl font-bold text-white">{t("hero.title")}</h1>
             </div>
             <p className="text-2xl lg:text-3xl mb-6 text-primary font-semibold">
@@ -228,7 +229,7 @@ const Index = () => {
           <div className="grid md:grid-cols-3 gap-8">
             <div className="text-center">
               <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Fish className="h-8 w-8 text-primary" />
+                <Logo size="md" />
               </div>
               <h3 className="text-xl font-semibold mb-2">Gestion des Captures</h3>
               <p className="text-muted-foreground">

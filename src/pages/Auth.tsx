@@ -11,6 +11,7 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { SuccessAnimation } from "@/components/auth/SuccessAnimation";
+import { Logo } from "@/components/Logo";
 import { z } from "zod";
 
 // Schemas de validation
@@ -213,7 +214,7 @@ const Auth = () => {
       <div className="lg:w-1/2 bg-gradient-ocean p-8 lg:p-12 flex flex-col justify-center text-white">
         <div className="max-w-md mx-auto">
           <div className="flex items-center gap-3 mb-6">
-            <Fish className="h-12 w-12" />
+            <Logo size="lg" />
             <h1 className="text-4xl font-bold">PÊCHE GABON</h1>
           </div>
           <p className="text-xl mb-8 text-white/90">
