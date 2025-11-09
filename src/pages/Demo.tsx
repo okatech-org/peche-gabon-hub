@@ -10,7 +10,7 @@ import { useEffect, useState } from "react";
 import { 
   Crown, Anchor, Shield, Award, Ship, FlaskConical, Trees, TrendingUp, 
   Fish, Users, Eye, Settings, Loader2, ArrowLeft, Building2, Clipboard, 
-  BarChart3, Package, Globe, Handshake
+  BarChart3, Package, Globe, Handshake, Server
 } from "lucide-react";
 import { DemoFeedbackDialog } from "@/components/demo/DemoFeedbackDialog";
 
@@ -342,6 +342,24 @@ const Demo = () => {
       color: "from-pink-500 to-rose-500",
       category: "Personnel terrain",
       active: false
+    },
+    {
+      role: "super_admin",
+      name: "Super Admin",
+      description: "Gestion technique complète - Architecture, backend, frontend, sécurité, réseau et développement",
+      detailedDescription: "Super administrateur avec accès complet au système. Gère l'architecture technique globale, le backend et le frontend, la sécurité et le réseau, l'infrastructure cloud, les bases de données, et pilote les projets de développement. Supervise l'implémentation de nouvelles fonctionnalités et l'évolution de la plateforme.",
+      missions: [
+        "Architecture système et infrastructure cloud",
+        "Gestion backend (APIs, edge functions, bases de données)",
+        "Supervision frontend et optimisation UI/UX",
+        "Sécurité, réseau et protection des données",
+        "Pilotage des projets et développement produit"
+      ],
+      email: "superadmin@demo.ga",
+      icon: Server,
+      color: "from-slate-900 to-zinc-900",
+      category: "Système",
+      active: true
     },
     {
       role: "admin",
