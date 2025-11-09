@@ -4446,6 +4446,7 @@ export type Database = {
         | "anpn"
         | "corep"
         | "partenaire_international"
+        | "super_admin"
       espece_categorie: "pelagique" | "demersal" | "crustace" | "autre"
       pirogue_type:
         | "artisanale_motorisee"
@@ -4619,6 +4620,7 @@ export const Constants = {
         "anpn",
         "corep",
         "partenaire_international",
+        "super_admin",
       ],
       espece_categorie: ["pelagique", "demersal", "crustace", "autre"],
       pirogue_type: [
