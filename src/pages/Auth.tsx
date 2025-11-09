@@ -329,7 +329,7 @@ const Auth = () => {
                       className={`transition-colors ${fieldErrors['signin-password'] ? 'field-error' : ''}`}
                     />
                   </div>
-                  <Button type="submit" className="w-full shadow-glow" disabled={isLoading}>
+                  <Button type="submit" className="w-full shadow-glow button-hover-lift button-glow" disabled={isLoading}>
                     {isLoading ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -414,7 +414,7 @@ const Auth = () => {
                       Le mot de passe doit contenir au moins 6 caractères
                     </p>
                   </div>
-                  <Button type="submit" className="w-full shadow-glow" disabled={isLoading}>
+                  <Button type="submit" className="w-full shadow-glow button-hover-lift button-glow" disabled={isLoading}>
                     {isLoading ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -439,7 +439,7 @@ const Auth = () => {
               </p>
               <Button 
                 variant="outline" 
-                className="w-full" 
+                className="w-full button-hover-lift button-pulse" 
                 onClick={() => navigate("/demo")}
               >
                 <Users className="mr-2 h-4 w-4" />

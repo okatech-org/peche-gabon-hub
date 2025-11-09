@@ -41,7 +41,7 @@ const Index = () => {
               <Button
                 size="lg"
                 onClick={() => navigate("/donnees-publiques")}
-                className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-glow"
+                className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-glow button-hover-lift button-glow"
               >
                 <TrendingUp className="mr-2 h-5 w-5" />
                 Données & Investissements
@@ -50,7 +50,7 @@ const Index = () => {
                 size="lg"
                 variant="outline"
                 onClick={() => navigate("/auth")}
-                className="border-primary text-white bg-background/20 backdrop-blur-sm hover:bg-primary/20"
+                className="border-primary text-white bg-background/20 backdrop-blur-sm hover:bg-primary/20 button-hover-lift"
               >
                 Espace Professionnel
                 <ArrowRight className="ml-2 h-5 w-5" />
@@ -64,19 +64,19 @@ const Index = () => {
       <section className="bg-card border-b py-8">
         <div className="container mx-auto max-w-6xl px-4">
           <div className="flex flex-wrap justify-center gap-4">
-            <Button variant="ghost" onClick={() => navigate("/donnees-publiques")}>
+            <Button variant="ghost" className="button-hover-lift" onClick={() => navigate("/donnees-publiques")}>
               <TrendingUp className="mr-2 h-4 w-4" />
               Données Publiques
             </Button>
-            <Button variant="ghost" onClick={() => navigate("/actualites")}>
+            <Button variant="ghost" className="button-hover-lift" onClick={() => navigate("/actualites")}>
               <Newspaper className="mr-2 h-4 w-4" />
               Actualités
             </Button>
-            <Button variant="ghost" onClick={() => navigate("/sensibilisation")}>
+            <Button variant="ghost" className="button-hover-lift" onClick={() => navigate("/sensibilisation")}>
               <Heart className="mr-2 h-4 w-4" />
               Sensibilisation
             </Button>
-            <Button variant="ghost" onClick={() => navigate("/registre-documents")}>
+            <Button variant="ghost" className="button-hover-lift" onClick={() => navigate("/registre-documents")}>
               <FileText className="mr-2 h-4 w-4" />
               Registre Public
             </Button>
@@ -107,7 +107,7 @@ const Index = () => {
                   <p className="text-white/90 mb-4">
                     Soutien aux communautés locales avec des pratiques durables et un suivi CPUE en temps réel
                   </p>
-                  <Button variant="secondary" size="sm" onClick={() => navigate("/donnees-publiques")}>
+                  <Button variant="secondary" size="sm" className="button-hover-lift button-glow" onClick={() => navigate("/donnees-publiques")}>
                     En savoir plus
                   </Button>
                 </div>
@@ -126,7 +126,7 @@ const Index = () => {
                   <p className="text-white/90 mb-4">
                     Infrastructure moderne et réglementations conformes aux standards internationaux
                   </p>
-                  <Button variant="secondary" size="sm" onClick={() => navigate("/donnees-publiques")}>
+                  <Button variant="secondary" size="sm" className="button-hover-lift button-glow" onClick={() => navigate("/donnees-publiques")}>
                     En savoir plus
                   </Button>
                 </div>
@@ -266,7 +266,7 @@ const Index = () => {
           <Button
             size="lg"
             onClick={() => navigate("/auth")}
-            className="bg-white text-primary hover:bg-white/90"
+            className="bg-white text-primary hover:bg-white/90 button-hover-lift button-glow"
           >
             Commencer Maintenant
             <ArrowRight className="ml-2 h-5 w-5" />

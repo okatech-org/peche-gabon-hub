@@ -211,6 +211,64 @@ All colors MUST be HSL.
     border-color: hsl(var(--destructive));
   }
 
+  /* Animations hover pour boutons */
+  .button-hover-lift {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .button-hover-lift:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px -4px hsl(var(--primary) / 0.4);
+  }
+
+  .button-hover-lift:active:not(:disabled) {
+    transform: translateY(0);
+    box-shadow: 0 4px 12px -2px hsl(var(--primary) / 0.3);
+  }
+
+  /* Glow effect intensifié */
+  .button-glow {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .button-glow::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, transparent, hsl(var(--primary) / 0.3), transparent);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .button-glow:hover:not(:disabled)::before {
+    opacity: 1;
+    animation: shimmer 1.5s infinite;
+  }
+
+  @keyframes shimmer {
+    0% {
+      transform: translateX(-100%) translateY(-100%) rotate(45deg);
+    }
+    100% {
+      transform: translateX(100%) translateY(100%) rotate(45deg);
+    }
+  }
+
+  /* Pulse effect pour boutons secondaires */
+  .button-pulse:hover:not(:disabled) {
+    animation: pulse-subtle 1s ease-in-out infinite;
+  }
+
+  @keyframes pulse-subtle {
+    0%, 100% {
+      box-shadow: 0 0 0 0 hsl(var(--primary) / 0.4);
+    }
+    50% {
+      box-shadow: 0 0 0 8px hsl(var(--primary) / 0);
+    }
+  }
+
   /* Webkit scrollbar (Chrome, Safari, Edge) */
   .scrollbar-thin::-webkit-scrollbar {
     height: 6px;
