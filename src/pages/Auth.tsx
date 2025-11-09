@@ -217,12 +217,22 @@ const Auth = () => {
             )}
             
             <Tabs defaultValue="signin" className="w-full" onValueChange={() => setError(null)}>
-              <TabsList className="grid w-full grid-cols-2 mb-4">
-                <TabsTrigger value="signin">Connexion</TabsTrigger>
-                <TabsTrigger value="signup">Inscription</TabsTrigger>
+              <TabsList className="grid w-full grid-cols-2 mb-4 p-1 bg-muted/50">
+                <TabsTrigger 
+                  value="signin" 
+                  className="transition-all duration-300 data-[state=active]:shadow-glow data-[state=active]:scale-[1.02]"
+                >
+                  Connexion
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="signup" 
+                  className="transition-all duration-300 data-[state=active]:shadow-glow data-[state=active]:scale-[1.02]"
+                >
+                  Inscription
+                </TabsTrigger>
               </TabsList>
               
-              <TabsContent value="signin">
+              <TabsContent value="signin" className="tab-content-enter">
                 <form onSubmit={handleSignIn} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="signin-email">Email professionnel</Label>
@@ -280,7 +290,7 @@ const Auth = () => {
                 </form>
               </TabsContent>
               
-              <TabsContent value="signup">
+              <TabsContent value="signup" className="tab-content-enter">
                 <form onSubmit={handleSignUp} className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
