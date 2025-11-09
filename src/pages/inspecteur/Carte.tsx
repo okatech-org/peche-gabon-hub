@@ -23,6 +23,7 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { toast } from "sonner";
+import { logger } from "@/lib/logger";
 
 interface Inspection {
   id: string;
@@ -135,14 +136,14 @@ export default function Carte() {
         const { data, error } = await (await import("@/integrations/supabase/client")).supabase
           .functions.invoke("get-mapbox-token");
         if (error || !data?.token) {
-          console.error("Token Mapbox manquant", error);
+          logger.error("Token Mapbox manquant", error);
           setErrorMsg("Clé Mapbox introuvable. Mettez à jour le secret et rafraîchissez.");
           setIsLoading(false);
           return;
         }
         if (mounted) setMapboxToken(data.token);
       } catch (e) {
-        console.error("Erreur récupération token Mapbox:", e);
+        logger.error("Erreur récupération token Mapbox:", e);
         setErrorMsg("Impossible de récupérer la clé Mapbox.");
         setIsLoading(false);
       }
@@ -154,8 +155,8 @@ export default function Carte() {
   useEffect(() => {
     if (!mapContainer.current || map.current || !mapboxToken) return;
 
-    console.log("🗺️ Initialisation de la carte Mapbox...");
-    console.log("Token présent:", mapboxToken ? "✅ Oui" : "❌ Non");
+    logger.info("🗺️ Initialisation de la carte Mapbox...");
+    logger.info("Token présent:", mapboxToken ? "✅ Oui" : "❌ Non");
 
     // Petit délai pour s'assurer que le container est bien monté
     const timer = setTimeout(() => {
@@ -173,22 +174,21 @@ export default function Carte() {
         map.current.addControl(new mapboxgl.FullscreenControl(), "top-right");
 
         map.current.on("load", () => {
-          console.log("✅ Carte Mapbox chargée avec succès");
+          logger.info("✅ Carte Mapbox chargée avec succès");
           setErrorMsg(null);
           setIsMapReady(true);
           setIsLoading(false);
-          toast.success("Carte chargée");
         });
 
         map.current.on("error", (e) => {
-          console.error("❌ Erreur Mapbox:", e);
+          logger.error("❌ Erreur Mapbox:", e);
           setErrorMsg("Erreur lors du chargement de la carte. Vérifiez la clé API Mapbox.");
           setIsLoading(false);
           toast.error("Erreur de chargement de la carte");
         });
 
       } catch (error) {
-        console.error("❌ Erreur d'initialisation:", error);
+        logger.error("❌ Erreur d'initialisation:", error);
         setErrorMsg("Impossible d'initialiser la carte Mapbox.");
         setIsLoading(false);
         toast.error("Erreur d'initialisation");
@@ -208,7 +208,7 @@ export default function Carte() {
   useEffect(() => {
     if (!map.current || !isMapReady) return;
 
-    console.log("🎯 Configuration des marqueurs avec clusters et heatmap...");
+    logger.info("🎯 Configuration des marqueurs avec clusters et heatmap...");
 
     // Supprimer les anciennes sources et layers si elles existent
     if (map.current.getLayer('heatmap-layer')) map.current.removeLayer('heatmap-layer');
@@ -504,7 +504,7 @@ export default function Carte() {
       map.current.getCanvas().style.cursor = '';
     });
 
-    console.log(`✅ ${filtered.length} inspections affichées avec clustering et heatmap`);
+    logger.info(`✅ ${filtered.length} inspections affichées avec clustering et heatmap`);
 
   }, [inspections, isMapReady, filterType, filterStatut, showHeatmap, heatmapFilter]);
 
@@ -527,7 +527,6 @@ export default function Carte() {
     if (!map.current) return;
 
     if (navigator.geolocation) {
-      toast.loading("Localisation en cours...");
       navigator.geolocation.getCurrentPosition(
         (position) => {
           const { latitude, longitude } = position.coords;
@@ -545,11 +544,9 @@ export default function Carte() {
               new mapboxgl.Popup().setHTML("<div style='padding: 4px;'>Votre position</div>")
             )
             .addTo(map.current!);
-
-          toast.success("Position trouvée");
         },
         (error) => {
-          console.error("Erreur de géolocalisation:", error);
+          logger.error("Erreur de géolocalisation:", error);
           toast.error("Impossible de vous localiser");
         }
       );
