@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Building2, DollarSign, TrendingUp, Download, PieChart, BarChart3, LineChart as LineChartIcon, Calendar } from "lucide-react";
+import { Loader2, Building2, DollarSign, TrendingUp, Download, PieChart, BarChart3, LineChart as LineChartIcon, Calendar, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Cell, Pie, PieChart as RechartsPieChart, ResponsiveContainer, Tooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid, LineChart, Line, Area, AreaChart } from "recharts";
@@ -54,7 +54,7 @@ interface TendanceInstitution {
   }>;
 }
 
-interface PrevisionMensuelle {
+interface PrevisionMensuelleRemontees {
   mois: number;
   montant_prevu: number;
   montant_min: number;
@@ -66,9 +66,9 @@ interface PrevisionMensuelle {
   }>;
 }
 
-interface Previsions {
+interface PrevisionsRemontees {
   annee_prevue: number;
-  previsions_mensuelles: PrevisionMensuelle[];
+  previsions_mensuelles: PrevisionMensuelleRemontees[];
   analyse: {
     tendance_generale: string;
     croissance_prevue_pct: number;
@@ -77,10 +77,33 @@ interface Previsions {
   };
 }
 
+interface PrevisionMensuelle {
+  mois: string;
+  montant_prevu: number;
+  montant_min: number;
+  montant_max: number;
+  confiance: number;
+}
+
 interface RecetteTresorAnnuelle {
   annee: number;
   montant: number;
   quittances: number;
+}
+
+interface PrevisionMensuelle {
+  mois: string;
+  montant_prevu: number;
+  montant_min: number;
+  montant_max: number;
+  confiance: number;
+}
+
+interface PrevisionsResult {
+  previsions: PrevisionMensuelle[];
+  total_annuel_prevu: number;
+  croissance_estimee: number;
+  analyse: string;
 }
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
@@ -97,9 +120,11 @@ export function RemonteesInstitutionnellesDashboard() {
   const [totalRemontees, setTotalRemontees] = useState(0);
   const [exporting, setExporting] = useState(false);
   const [yearsRange, setYearsRange] = useState<number[]>([]);
-  const [previsions, setPrevisions] = useState<Previsions | null>(null);
-  const [loadingPrevisions, setLoadingPrevisions] = useState(false);
+  const [previsionsRemontees, setPrevisionsRemontees] = useState<PrevisionsRemontees | null>(null);
+  const [loadingPrevisionsRemontees, setLoadingPrevisionsRemontees] = useState(false);
   const [recettesTresor, setRecettesTresor] = useState<RecetteTresorAnnuelle[]>([]);
+  const [previsionsTresor, setPrevisionsTresor] = useState<PrevisionsResult | null>(null);
+  const [loadingPrevisionsTresor, setLoadingPrevisionsTresor] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -110,6 +135,31 @@ export function RemonteesInstitutionnellesDashboard() {
     loadTendancesInstitutions();
     loadRecettesTresor();
   }, []);
+
+  const genererPrevisionsTresor = async () => {
+    setLoadingPrevisionsTresor(true);
+    try {
+      // Préparer les données historiques pour l'IA
+      const donneesHistoriques = recettesTresor.map(r => ({
+        annee: r.annee,
+        montant: r.montant
+      }));
+
+      const { data, error } = await supabase.functions.invoke('prevoir-recettes-tresor', {
+        body: { donneesHistoriques }
+      });
+
+      if (error) throw error;
+
+      setPrevisionsTresor(data);
+      toast.success("Prévisions générées avec succès");
+    } catch (error) {
+      console.error("Erreur lors de la génération des prévisions:", error);
+      toast.error("Erreur lors de la génération des prévisions");
+    } finally {
+      setLoadingPrevisionsTresor(false);
+    }
+  };
 
   const loadData = async () => {
     try {
@@ -336,9 +386,9 @@ export function RemonteesInstitutionnellesDashboard() {
     }
   };
 
-  const genererPrevisions = async () => {
+  const genererPrevisionsRemontees = async () => {
     try {
-      setLoadingPrevisions(true);
+      setLoadingPrevisionsRemontees(true);
 
       // Charger la répartition institutionnelle
       const { data: institutions, error: instError } = await supabase
@@ -369,12 +419,12 @@ export function RemonteesInstitutionnellesDashboard() {
         throw error;
       }
 
-      setPrevisions(data);
+      setPrevisionsRemontees(data);
       toast.success("Prévisions générées avec succès");
     } catch (error) {
       console.error("Erreur prévisions:", error);
     } finally {
-      setLoadingPrevisions(false);
+      setLoadingPrevisionsRemontees(false);
     }
   };
 
@@ -590,7 +640,7 @@ export function RemonteesInstitutionnellesDashboard() {
       <Card>
         <CardContent className="pt-6">
           <Tabs defaultValue="repartition" className="w-full">
-            <TabsList className="grid w-full grid-cols-7">
+            <TabsList className="grid w-full grid-cols-8">
               <TabsTrigger value="repartition">
                 <PieChart className="h-4 w-4 mr-2" />
                 Répartition
@@ -602,6 +652,10 @@ export function RemonteesInstitutionnellesDashboard() {
               <TabsTrigger value="tresor">
                 <DollarSign className="h-4 w-4 mr-2" />
                 Trésor Public
+              </TabsTrigger>
+              <TabsTrigger value="previsions-tresor">
+                <Sparkles className="h-4 w-4 mr-2" />
+                Prévisions IA
               </TabsTrigger>
               <TabsTrigger value="comparaison">
                 <Calendar className="h-4 w-4 mr-2" />
@@ -896,6 +950,194 @@ export function RemonteesInstitutionnellesDashboard() {
               </div>
             </TabsContent>
 
+            <TabsContent value="previsions-tresor" className="space-y-6">
+              {!previsionsTresor ? (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Sparkles className="h-5 w-5" />
+                      Prévisions IA - Trésor Public
+                    </CardTitle>
+                    <CardDescription>
+                      Estimation basée sur l'historique et les tendances actuelles
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-center py-12">
+                      <Sparkles className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                      <p className="text-muted-foreground mb-4">
+                        Générez des prévisions pour l'année prochaine basées sur l'historique
+                      </p>
+                      <Button 
+                        onClick={genererPrevisionsTresor} 
+                        disabled={loadingPrevisionsTresor || recettesTresor.length === 0}
+                      >
+                        {loadingPrevisionsTresor ? (
+                          <>
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            Génération en cours...
+                          </>
+                        ) : (
+                          <>
+                            <Sparkles className="h-4 w-4 mr-2" />
+                            Générer les Prévisions IA
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="space-y-6">
+                  <div className="grid gap-4 md:grid-cols-3">
+                    <Card>
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm font-medium text-muted-foreground">
+                          Total Prévu
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-2xl font-bold">
+                          {previsionsTresor.total_annuel_prevu.toLocaleString('fr-FR')} FCFA
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    <Card>
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm font-medium text-muted-foreground">
+                          Croissance Estimée
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-2xl font-bold text-green-600">
+                          +{previsionsTresor.croissance_estimee.toFixed(1)}%
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    <Card>
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm font-medium text-muted-foreground">
+                          Confiance Moyenne
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-2xl font-bold">
+                          {(previsionsTresor.previsions.reduce((sum, p) => sum + p.confiance, 0) / previsionsTresor.previsions.length).toFixed(0)}%
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Analyse</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-muted-foreground">{previsionsTresor.analyse}</p>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Prévisions Mensuelles</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <ResponsiveContainer width="100%" height={300}>
+                        <AreaChart data={previsionsTresor.previsions}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="mois" />
+                          <YAxis />
+                          <Tooltip 
+                            formatter={(value: number) => `${value.toLocaleString('fr-FR')} FCFA`}
+                          />
+                          <Legend />
+                          <Area 
+                            type="monotone" 
+                            dataKey="montant_max" 
+                            stackId="1"
+                            stroke="hsl(var(--chart-2))" 
+                            fill="hsl(var(--chart-2))"
+                            fillOpacity={0.2}
+                            name="Max"
+                          />
+                          <Area 
+                            type="monotone" 
+                            dataKey="montant_prevu" 
+                            stackId="2"
+                            stroke="hsl(var(--chart-1))" 
+                            fill="hsl(var(--chart-1))"
+                            name="Prévu"
+                          />
+                          <Area 
+                            type="monotone" 
+                            dataKey="montant_min" 
+                            stackId="3"
+                            stroke="hsl(var(--chart-3))" 
+                            fill="hsl(var(--chart-3))"
+                            fillOpacity={0.2}
+                            name="Min"
+                          />
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Détail par Mois</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Mois</TableHead>
+                            <TableHead className="text-right">Minimum</TableHead>
+                            <TableHead className="text-right">Prévu</TableHead>
+                            <TableHead className="text-right">Maximum</TableHead>
+                            <TableHead className="text-right">Confiance</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {previsionsTresor.previsions.map((prev) => (
+                            <TableRow key={prev.mois}>
+                              <TableCell className="font-medium capitalize">{prev.mois}</TableCell>
+                              <TableCell className="text-right text-muted-foreground">
+                                {prev.montant_min.toLocaleString('fr-FR')} FCFA
+                              </TableCell>
+                              <TableCell className="text-right font-bold">
+                                {prev.montant_prevu.toLocaleString('fr-FR')} FCFA
+                              </TableCell>
+                              <TableCell className="text-right text-muted-foreground">
+                                {prev.montant_max.toLocaleString('fr-FR')} FCFA
+                              </TableCell>
+                              <TableCell className="text-right">
+                                <Badge variant={prev.confiance >= 80 ? "default" : prev.confiance >= 60 ? "secondary" : "outline"}>
+                                  {prev.confiance}%
+                                </Badge>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </CardContent>
+                  </Card>
+
+                  <div className="flex justify-center">
+                    <Button 
+                      variant="outline"
+                      onClick={genererPrevisionsTresor} 
+                      disabled={loadingPrevisionsTresor}
+                    >
+                      <Sparkles className="h-4 w-4 mr-2" />
+                      Régénérer les Prévisions
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </TabsContent>
+
             <TabsContent value="comparaison" className="space-y-4">
               <div className="space-y-6">
                 <div className="h-96">
@@ -1082,7 +1324,7 @@ export function RemonteesInstitutionnellesDashboard() {
 
             <TabsContent value="previsions" className="space-y-4">
               <div className="space-y-6">
-                {!previsions ? (
+                {!previsionsRemontees ? (
                   <Card>
                     <CardContent className="flex flex-col items-center justify-center p-12 space-y-4">
                       <TrendingUp className="h-16 w-16 text-muted-foreground" />
@@ -1094,11 +1336,11 @@ export function RemonteesInstitutionnellesDashboard() {
                         </p>
                       </div>
                       <Button
-                        onClick={genererPrevisions}
-                        disabled={loadingPrevisions || comparaisonAnnuelle.length < 3}
+                        onClick={genererPrevisionsRemontees}
+                        disabled={loadingPrevisionsRemontees || comparaisonAnnuelle.length < 3}
                         size="lg"
                       >
-                        {loadingPrevisions ? (
+                        {loadingPrevisionsRemontees ? (
                           <>
                             <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                             Génération en cours...
@@ -1126,7 +1368,7 @@ export function RemonteesInstitutionnellesDashboard() {
                           <CardTitle className="text-sm font-medium">Année Prévue</CardTitle>
                         </CardHeader>
                         <CardContent>
-                          <div className="text-2xl font-bold">{previsions.annee_prevue}</div>
+                          <div className="text-2xl font-bold">{previsionsRemontees.annee_prevue}</div>
                         </CardContent>
                       </Card>
 
@@ -1137,13 +1379,13 @@ export function RemonteesInstitutionnellesDashboard() {
                         <CardContent>
                           <div
                             className={`text-2xl font-bold ${
-                              previsions.analyse.croissance_prevue_pct >= 0
+                              previsionsRemontees.analyse.croissance_prevue_pct >= 0
                                 ? "text-green-600"
                                 : "text-red-600"
                             }`}
                           >
-                            {previsions.analyse.croissance_prevue_pct >= 0 ? "+" : ""}
-                            {previsions.analyse.croissance_prevue_pct.toFixed(1)}%
+                            {previsionsRemontees.analyse.croissance_prevue_pct >= 0 ? "+" : ""}
+                            {previsionsRemontees.analyse.croissance_prevue_pct.toFixed(1)}%
                           </div>
                         </CardContent>
                       </Card>
@@ -1154,7 +1396,7 @@ export function RemonteesInstitutionnellesDashboard() {
                         </CardHeader>
                         <CardContent>
                           <div className="text-2xl font-bold capitalize">
-                            {previsions.analyse.tendance_generale}
+                            {previsionsRemontees.analyse.tendance_generale}
                           </div>
                         </CardContent>
                       </Card>
@@ -1165,7 +1407,7 @@ export function RemonteesInstitutionnellesDashboard() {
                         </CardHeader>
                         <CardContent>
                           <div className="text-2xl font-bold capitalize">
-                            {previsions.analyse.niveau_confiance_global}
+                            {previsionsRemontees.analyse.niveau_confiance_global}
                           </div>
                         </CardContent>
                       </Card>
@@ -1174,11 +1416,11 @@ export function RemonteesInstitutionnellesDashboard() {
                     {/* Graphique des prévisions avec intervalle */}
                     <div className="h-96">
                       <h3 className="text-lg font-semibold mb-4 text-center">
-                        Prévisions Mensuelles {previsions.annee_prevue} avec Intervalle de Confiance
+                        Prévisions Mensuelles {previsionsRemontees.annee_prevue} avec Intervalle de Confiance
                       </h3>
                       <ResponsiveContainer width="100%" height="100%">
                         <AreaChart
-                          data={previsions.previsions_mensuelles.map((p) => ({
+                          data={previsionsRemontees.previsions_mensuelles.map((p) => ({
                             mois: MOIS_NOMS[p.mois - 1],
                             prevu: p.montant_prevu,
                             min: p.montant_min,
@@ -1227,7 +1469,7 @@ export function RemonteesInstitutionnellesDashboard() {
                       </CardHeader>
                       <CardContent>
                         <ul className="space-y-2">
-                          {previsions.analyse.facteurs_cles.map((facteur, idx) => (
+                          {previsionsRemontees.analyse.facteurs_cles.map((facteur, idx) => (
                             <li key={idx} className="flex items-start gap-2">
                               <span className="text-primary">•</span>
                               <span className="text-sm">{facteur}</span>
@@ -1249,10 +1491,10 @@ export function RemonteesInstitutionnellesDashboard() {
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {previsions.previsions_mensuelles.map((prev) => (
+                          {previsionsRemontees.previsions_mensuelles.map((prev) => (
                             <TableRow key={prev.mois}>
                               <TableCell className="font-medium">
-                                {MOIS_NOMS[prev.mois - 1]} {previsions.annee_prevue}
+                                {MOIS_NOMS[prev.mois - 1]} {previsionsRemontees.annee_prevue}
                               </TableCell>
                               <TableCell className="text-right font-semibold">
                                 {prev.montant_prevu.toLocaleString()} FCFA
@@ -1281,7 +1523,7 @@ export function RemonteesInstitutionnellesDashboard() {
                     </div>
 
                     <div className="flex justify-center">
-                      <Button variant="outline" onClick={() => setPrevisions(null)}>
+                      <Button variant="outline" onClick={() => setPrevisionsRemontees(null)}>
                         Régénérer les Prévisions
                       </Button>
                     </div>

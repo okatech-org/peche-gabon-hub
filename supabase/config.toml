@@ -8,3 +8,6 @@ verify_jwt = true
 
 [functions.generer-synthese-remontees]
 verify_jwt = true
+
+[functions.prevoir-recettes-tresor]
+verify_jwt = true
