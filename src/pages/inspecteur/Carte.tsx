@@ -121,6 +121,8 @@ export default function Carte() {
   const [filterType, setFilterType] = useState<string>("tous");
   const [filterStatut, setFilterStatut] = useState<string>("tous");
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
+  const [showHeatmap, setShowHeatmap] = useState(false);
+  const [heatmapFilter, setHeatmapFilter] = useState<string>("tous");
 
   // Token Mapbox depuis les variables d'environnement (configuré dans les secrets du projet)
   const mapboxToken = useMemo(
@@ -182,19 +184,21 @@ export default function Carte() {
     };
   }, [mapboxToken]);
 
-  // Ajouter les marqueurs avec clustering
+  // Ajouter les marqueurs avec clustering et heatmap
   useEffect(() => {
     if (!map.current || !isMapReady) return;
 
-    console.log("🎯 Configuration des marqueurs avec clusters...");
+    console.log("🎯 Configuration des marqueurs avec clusters et heatmap...");
 
     // Supprimer les anciennes sources et layers si elles existent
+    if (map.current.getLayer('heatmap-layer')) map.current.removeLayer('heatmap-layer');
     if (map.current.getLayer('clusters')) map.current.removeLayer('clusters');
     if (map.current.getLayer('cluster-count')) map.current.removeLayer('cluster-count');
     if (map.current.getLayer('unclustered-point')) map.current.removeLayer('unclustered-point');
     if (map.current.getSource('inspections')) map.current.removeSource('inspections');
+    if (map.current.getSource('inspections-heatmap')) map.current.removeSource('inspections-heatmap');
 
-    // Filtrer les inspections
+    // Filtrer les inspections pour les marqueurs
     let filtered = inspections;
     if (filterType !== "tous") {
       filtered = filtered.filter((i) => i.type === filterType);
@@ -203,7 +207,15 @@ export default function Carte() {
       filtered = filtered.filter((i) => i.statut === filterStatut);
     }
 
-    // Créer le GeoJSON pour les inspections
+    // Filtrer les inspections pour la heatmap
+    let heatmapData = inspections;
+    if (heatmapFilter === "infractions") {
+      heatmapData = inspections.filter((i) => i.statut === "non_conforme");
+    } else if (heatmapFilter !== "tous") {
+      heatmapData = inspections.filter((i) => i.statut === heatmapFilter);
+    }
+
+    // Créer le GeoJSON pour les inspections (marqueurs/clusters)
     const geojson: GeoJSON.FeatureCollection = {
       type: 'FeatureCollection',
       features: filtered.map((inspection) => ({
@@ -225,6 +237,81 @@ export default function Carte() {
         }
       }))
     };
+
+    // Créer le GeoJSON pour la heatmap
+    const heatmapGeojson: GeoJSON.FeatureCollection = {
+      type: 'FeatureCollection',
+      features: heatmapData.map((inspection) => ({
+        type: 'Feature',
+        geometry: {
+          type: 'Point',
+          coordinates: [inspection.lng, inspection.lat]
+        },
+        properties: {
+          intensity: inspection.statut === "non_conforme" ? 2 : 1 // Plus d'intensité pour les infractions
+        }
+      }))
+    };
+
+    // Ajouter la source heatmap
+    map.current.addSource('inspections-heatmap', {
+      type: 'geojson',
+      data: heatmapGeojson
+    });
+
+    // Layer heatmap
+    map.current.addLayer({
+      id: 'heatmap-layer',
+      type: 'heatmap',
+      source: 'inspections-heatmap',
+      maxzoom: 15,
+      paint: {
+        // Augmenter le poids en fonction de l'intensité
+        'heatmap-weight': [
+          'interpolate',
+          ['linear'],
+          ['get', 'intensity'],
+          0, 0,
+          6, 1
+        ],
+        // Augmenter l'intensité par niveau de zoom
+        'heatmap-intensity': [
+          'interpolate',
+          ['linear'],
+          ['zoom'],
+          0, 1,
+          15, 3
+        ],
+        // Rayon des points de chaleur
+        'heatmap-radius': [
+          'interpolate',
+          ['linear'],
+          ['zoom'],
+          0, 20,
+          15, 40
+        ],
+        // Transition du rouge au jaune au vert
+        'heatmap-color': [
+          'interpolate',
+          ['linear'],
+          ['heatmap-density'],
+          0, 'rgba(33,102,172,0)',
+          0.2, 'rgb(103,169,207)',
+          0.4, 'rgb(209,229,240)',
+          0.6, 'rgb(253,219,199)',
+          0.8, 'rgb(239,138,98)',
+          1, 'rgb(178,24,43)'
+        ],
+        // Opacité de la heatmap
+        'heatmap-opacity': [
+          'interpolate',
+          ['linear'],
+          ['zoom'],
+          7, showHeatmap ? 0.7 : 0,
+          15, showHeatmap ? 0.5 : 0
+        ]
+      }
+    }, 'clusters'); // Ajouter la heatmap sous les clusters
 
     // Ajouter la source avec clustering
     map.current.addSource('inspections', {
@@ -397,9 +484,9 @@ export default function Carte() {
       map.current.getCanvas().style.cursor = '';
     });
 
-    console.log(`✅ ${filtered.length} inspections affichées avec clustering`);
+    console.log(`✅ ${filtered.length} inspections affichées avec clustering et heatmap`);
 
-  }, [inspections, isMapReady, filterType, filterStatut]);
+  }, [inspections, isMapReady, filterType, filterStatut, showHeatmap, heatmapFilter]);
 
   const getMarkerColor = (statut: string) => {
     switch (statut) {
@@ -461,16 +548,26 @@ export default function Carte() {
             Visualisez vos inspections sur la carte
           </p>
         </div>
-        <Button onClick={handleLocateMe} variant="outline">
-          <Locate className="h-4 w-4 mr-2" />
-          Me localiser
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            variant={showHeatmap ? "default" : "outline"}
+            onClick={() => setShowHeatmap(!showHeatmap)}
+            className="gap-2"
+          >
+            {showHeatmap ? "🔥" : "🗺️"}
+            {showHeatmap ? "Heatmap active" : "Activer Heatmap"}
+          </Button>
+          <Button onClick={handleLocateMe} variant="outline">
+            <Locate className="h-4 w-4 mr-2" />
+            Me localiser
+          </Button>
+        </div>
       </div>
 
       {/* Filtres et légende */}
       <Card>
         <CardContent className="pt-4 space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Select value={filterType} onValueChange={setFilterType}>
               <SelectTrigger>
                 <SelectValue placeholder="Type d'inspection" />
@@ -497,6 +594,21 @@ export default function Carte() {
                 <SelectItem value="non_conforme">Non conforme</SelectItem>
               </SelectContent>
             </Select>
+
+            {/* Filtre heatmap */}
+            {showHeatmap && (
+              <Select value={heatmapFilter} onValueChange={setHeatmapFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Données heatmap" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="tous">Toutes les inspections</SelectItem>
+                  <SelectItem value="infractions">Infractions uniquement</SelectItem>
+                  <SelectItem value="non_conforme">Non conformes</SelectItem>
+                  <SelectItem value="conforme">Conformes</SelectItem>
+                </SelectContent>
+              </Select>
+            )}
           </div>
 
           {/* Légende */}
@@ -517,6 +629,12 @@ export default function Carte() {
               <div className="w-3 h-3 rounded-full bg-red-500" />
               <span className="text-xs text-muted-foreground">Non conforme</span>
             </div>
+            {showHeatmap && (
+              <div className="flex items-center gap-2 ml-auto">
+                <div className="flex h-3 w-16 rounded" style={{background: 'linear-gradient(to right, #2166AC, #67A9CF, #D1E5F0, #FEE090, #F88D51, #B2182B)'}} />
+                <span className="text-xs text-muted-foreground">Densité</span>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
