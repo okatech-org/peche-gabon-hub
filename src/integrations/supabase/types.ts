@@ -300,6 +300,41 @@ export type Database = {
           },
         ]
       }
+      analytics_voice_events: {
+        Row: {
+          at: string
+          data: Json | null
+          event_type: string
+          id: number
+          session_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          at?: string
+          data?: Json | null
+          event_type: string
+          id?: never
+          session_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          at?: string
+          data?: Json | null
+          event_type?: string
+          id?: never
+          session_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "analytics_voice_events_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "conversation_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       armements: {
         Row: {
           adresse: string | null
@@ -953,6 +988,95 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      conversation_messages: {
+        Row: {
+          audio_url: string | null
+          content: string | null
+          content_json: Json | null
+          created_at: string
+          id: number
+          lang: string | null
+          latency_ms: number | null
+          role: string
+          session_id: string
+          tokens: number | null
+        }
+        Insert: {
+          audio_url?: string | null
+          content?: string | null
+          content_json?: Json | null
+          created_at?: string
+          id?: never
+          lang?: string | null
+          latency_ms?: number | null
+          role: string
+          session_id: string
+          tokens?: number | null
+        }
+        Update: {
+          audio_url?: string | null
+          content?: string | null
+          content_json?: Json | null
+          created_at?: string
+          id?: never
+          lang?: string | null
+          latency_ms?: number | null
+          role?: string
+          session_id?: string
+          tokens?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversation_messages_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "conversation_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      conversation_sessions: {
+        Row: {
+          created_at: string
+          ended_at: string | null
+          id: string
+          language: string | null
+          memory_summary: string | null
+          memory_updated_at: string | null
+          settings: Json
+          started_at: string
+          title: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          ended_at?: string | null
+          id?: string
+          language?: string | null
+          memory_summary?: string | null
+          memory_updated_at?: string | null
+          settings?: Json
+          started_at?: string
+          title?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          ended_at?: string | null
+          id?: string
+          language?: string | null
+          memory_summary?: string | null
+          memory_updated_at?: string | null
+          settings?: Json
+          started_at?: string
+          title?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
       }
       conversations_iasted: {
         Row: {
