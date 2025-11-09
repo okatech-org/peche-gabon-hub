@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import ExecutiveStats from "@/components/minister/ExecutiveStats";
 import GlobalFilters from "@/components/minister/GlobalFilters";
+import DailyBriefing from "@/components/minister/DailyBriefing";
 import { useOutletContext } from "react-router-dom";
 
 interface ExecutiveKPIs {
@@ -158,6 +159,9 @@ export default function Overview() {
           <span className="hidden sm:inline">Actualiser</span>
         </Button>
       </div>
+
+      {/* Daily Briefing */}
+      <DailyBriefing />
 
       {/* KPIs Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">

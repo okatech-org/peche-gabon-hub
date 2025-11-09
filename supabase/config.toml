@@ -48,3 +48,6 @@ verify_jwt = true
 [functions.generate-greeting-audio]
 verify_jwt = true
 
+[functions.generate-daily-briefing]
+verify_jwt = true
+
