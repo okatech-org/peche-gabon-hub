@@ -47,9 +47,9 @@ export default function MinisterLayout() {
         
         <div className="flex-1 flex flex-col min-w-0">
           {/* Header amélioré avec breadcrumbs */}
-          <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+          <header className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60">
             <div className="flex items-center gap-4 px-4 md:px-6 py-3">
-              <SidebarTrigger className="hover:bg-muted" />
+              <SidebarTrigger className="hover:bg-muted transition-colors rounded-md" />
               
               <div className="flex-1 min-w-0">
                 {/* Titre et breadcrumbs */}
@@ -57,16 +57,16 @@ export default function MinisterLayout() {
                   <Button 
                     variant="ghost" 
                     size="sm"
-                    className="h-6 px-2 text-muted-foreground hover:text-foreground"
+                    className="h-7 px-2 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all rounded-md group"
                     onClick={() => navigate('/minister-dashboard')}
                   >
-                    <Home className="h-3 w-3" />
+                    <Home className="h-3.5 w-3.5 group-hover:scale-110 transition-transform" />
                   </Button>
                   
                   {breadcrumbs.map((crumb, index) => (
-                    <div key={index} className="flex items-center gap-2">
+                    <div key={index} className="flex items-center gap-2 animate-fade-in" style={{ animationDelay: `${index * 50}ms` }}>
                       <ChevronRight className="h-3 w-3 text-muted-foreground" />
-                      <span className={`text-sm ${index === breadcrumbs.length - 1 ? 'font-medium text-foreground' : 'text-muted-foreground'}`}>
+                      <span className={`text-sm transition-colors ${index === breadcrumbs.length - 1 ? 'font-semibold text-foreground' : 'text-muted-foreground hover:text-foreground'}`}>
                         {crumb.label}
                       </span>
                     </div>
@@ -74,7 +74,9 @@ export default function MinisterLayout() {
                 </div>
                 
                 <div className="hidden md:block">
-                  <h1 className="text-lg md:text-xl font-bold truncate">Tableau de Bord Exécutif</h1>
+                  <h1 className="text-lg md:text-xl font-bold truncate bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
+                    Tableau de Bord Exécutif
+                  </h1>
                   <p className="text-xs md:text-sm text-muted-foreground truncate">
                     Vue stratégique du secteur halieutique
                   </p>
@@ -87,7 +89,7 @@ export default function MinisterLayout() {
                   <GlobalSearch />
                 </div>
                 
-                <Badge variant="secondary" className="bg-primary/10 text-primary hidden sm:flex">
+                <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20 hidden sm:flex font-medium shadow-sm">
                   Ministre
                 </Badge>
                 <ThemeToggle />
@@ -102,11 +104,12 @@ export default function MinisterLayout() {
           </header>
 
           {/* Main Content - Rendered by child routes with transitions */}
-          <main className="flex-1 overflow-auto" id="main-content">
-            <div className="container mx-auto px-4 md:px-6 py-4 md:py-6 max-w-[1600px]">
+          <main className="flex-1 overflow-auto scrollbar-thin scrollbar-thumb-muted" id="main-content">
+            <div className="container mx-auto px-4 md:px-6 py-6 md:py-8 max-w-[1600px]">
               <div 
                 key={location.pathname}
                 className="animate-fade-in"
+                style={{ animationDuration: '0.4s' }}
               >
                 <Outlet context={{ filters, setFilters }} />
               </div>
@@ -114,14 +117,22 @@ export default function MinisterLayout() {
           </main>
 
           {/* Footer informatif */}
-          <footer className="border-t bg-muted/30 py-3">
+          <footer className="border-t border-border/50 bg-muted/20 backdrop-blur-sm py-4">
             <div className="container mx-auto px-4 md:px-6">
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-muted-foreground">
-                <p>© 2025 PÊCHE GABON - Ministère de la Pêche et de l'Aquaculture</p>
-                <p className="flex items-center gap-2">
-                  <span className="inline-block h-2 w-2 rounded-full bg-green-500 animate-pulse" />
-                  Données mises à jour en temps réel
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+                <p className="text-muted-foreground font-medium">
+                  © 2025 PÊCHE GABON - Ministère de la Pêche et de l'Aquaculture
                 </p>
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-green-500/10 border border-green-500/20">
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                    </span>
+                    <span className="text-green-700 dark:text-green-400 font-medium">Temps réel</span>
+                  </div>
+                  <span className="text-muted-foreground">Version 2.0</span>
+                </div>
               </div>
             </div>
           </footer>

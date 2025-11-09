@@ -137,70 +137,82 @@ export default function Overview() {
   return (
     <div className="space-y-6">
       {/* KPIs Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-        <Card className="shadow-card hover:shadow-elevated transition-all duration-300 animate-fade-in hover:-translate-y-1" style={{ animationDelay: "0s" }}>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 md:gap-6">
+        <Card className="relative overflow-hidden shadow-card hover:shadow-elevated transition-all duration-300 animate-fade-in hover:-translate-y-1 group border-border/50" style={{ animationDelay: "0s" }}>
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+          <CardHeader className="relative flex flex-row items-center justify-between space-y-0 pb-3">
             <CardTitle className="text-sm font-medium text-muted-foreground">
               Production Annuelle
             </CardTitle>
-            <TrendingUp className="h-4 w-4 text-primary" />
+            <div className="p-2 rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-colors">
+              <TrendingUp className="h-4 w-4 text-primary group-hover:scale-110 transition-transform" />
+            </div>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{kpis.productionAnnuelle.toFixed(1)}T</div>
+          <CardContent className="relative">
+            <div className="text-3xl font-bold bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text">{kpis.productionAnnuelle.toFixed(1)}T</div>
             {kpis.productionTrend && (
-              <p className={`text-xs ${kpis.productionTrend.startsWith('+') ? 'text-green-600' : 'text-red-600'}`}>
-                {kpis.productionTrend}
+              <p className={`text-xs font-semibold mt-1 flex items-center gap-1 ${kpis.productionTrend.startsWith('+') ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                <span>{kpis.productionTrend}</span>
               </p>
             )}
           </CardContent>
         </Card>
 
-        <Card className="shadow-card hover:shadow-elevated transition-all duration-300 animate-fade-in hover:-translate-y-1" style={{ animationDelay: "0.1s" }}>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <Card className="relative overflow-hidden shadow-card hover:shadow-elevated transition-all duration-300 animate-fade-in hover:-translate-y-1 group border-border/50" style={{ animationDelay: "0.1s" }}>
+          <div className="absolute inset-0 bg-gradient-to-br from-accent/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+          <CardHeader className="relative flex flex-row items-center justify-between space-y-0 pb-3">
             <CardTitle className="text-sm font-medium text-muted-foreground">
               Exportations
             </CardTitle>
-            <BarChart3 className="h-4 w-4 text-primary" />
+            <div className="p-2 rounded-lg bg-accent/10 group-hover:bg-accent/20 transition-colors">
+              <BarChart3 className="h-4 w-4 text-accent group-hover:scale-110 transition-transform" />
+            </div>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{kpis.exportations.toFixed(1)}T</div>
+          <CardContent className="relative">
+            <div className="text-3xl font-bold bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text">{kpis.exportations.toFixed(1)}T</div>
             {kpis.exportationsTrend && (
-              <p className={`text-xs ${kpis.exportationsTrend.startsWith('+') ? 'text-green-600' : 'text-red-600'}`}>
-                {kpis.exportationsTrend}
+              <p className={`text-xs font-semibold mt-1 flex items-center gap-1 ${kpis.exportationsTrend.startsWith('+') ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                <span>{kpis.exportationsTrend}</span>
               </p>
             )}
           </CardContent>
         </Card>
 
-        <Card className="shadow-card hover:shadow-elevated transition-all duration-300 animate-fade-in hover:-translate-y-1" style={{ animationDelay: "0.2s" }}>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <Card className="relative overflow-hidden shadow-card hover:shadow-elevated transition-all duration-300 animate-fade-in hover:-translate-y-1 group border-border/50" style={{ animationDelay: "0.2s" }}>
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+          <CardHeader className="relative flex flex-row items-center justify-between space-y-0 pb-3">
             <CardTitle className="text-sm font-medium text-muted-foreground">
               CPUE Moyenne
             </CardTitle>
-            <Activity className="h-4 w-4 text-primary" />
+            <div className="p-2 rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-colors">
+              <Activity className="h-4 w-4 text-primary group-hover:scale-110 transition-transform" />
+            </div>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{kpis.cpueMoyenne}</div>
+          <CardContent className="relative">
+            <div className="text-3xl font-bold bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text">{kpis.cpueMoyenne}</div>
             {kpis.cpueTrend && (
-              <p className={`text-xs ${kpis.cpueTrend.startsWith('+') ? 'text-green-600' : 'text-red-600'}`}>
-                {kpis.cpueTrend}
+              <p className={`text-xs font-semibold mt-1 flex items-center gap-1 ${kpis.cpueTrend.startsWith('+') ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                <span>{kpis.cpueTrend}</span>
               </p>
             )}
           </CardContent>
         </Card>
 
-        <Card className="shadow-card hover:shadow-elevated transition-all duration-300 animate-fade-in hover:-translate-y-1" style={{ animationDelay: "0.3s" }}>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <Card className="relative overflow-hidden shadow-card hover:shadow-elevated transition-all duration-300 animate-fade-in hover:-translate-y-1 group border-border/50" style={{ animationDelay: "0.3s" }}>
+          <div className="absolute inset-0 bg-gradient-to-br from-destructive/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+          <CardHeader className="relative flex flex-row items-center justify-between space-y-0 pb-3">
             <CardTitle className="text-sm font-medium text-muted-foreground">
               Infractions
             </CardTitle>
-            <AlertTriangle className="h-4 w-4 text-primary" />
+            <div className="p-2 rounded-lg bg-destructive/10 group-hover:bg-destructive/20 transition-colors">
+              <AlertTriangle className="h-4 w-4 text-destructive group-hover:scale-110 transition-transform" />
+            </div>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{kpis.infractions}</div>
+          <CardContent className="relative">
+            <div className="text-3xl font-bold bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text">{kpis.infractions}</div>
             {kpis.infractionsTrend && (
-              <p className={`text-xs ${kpis.infractionsTrend.startsWith('+') ? 'text-red-600' : 'text-green-600'}`}>
-                {kpis.infractionsTrend}
+              <p className={`text-xs font-semibold mt-1 flex items-center gap-1 ${kpis.infractionsTrend.startsWith('+') ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'}`}>
+                <span>{kpis.infractionsTrend}</span>
               </p>
             )}
           </CardContent>
