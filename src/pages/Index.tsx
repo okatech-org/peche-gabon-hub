@@ -33,7 +33,7 @@ const Index = () => {
         </div>
         <div className="relative container mx-auto max-w-6xl py-24 px-4">
           <div className="max-w-2xl">
-            <div className="flex flex-col lg:flex-row items-center gap-3 mb-6">
+            <div className="flex flex-col lg:flex-row lg:items-center gap-4 lg:gap-6 mb-6">
               <Logo size="xl" className="drop-shadow-lg h-40 w-40 lg:h-64 lg:w-64 flex-shrink-0" />
               <h1 className="text-5xl lg:text-7xl font-bold text-white whitespace-nowrap">{t("hero.title")}</h1>
             </div>
