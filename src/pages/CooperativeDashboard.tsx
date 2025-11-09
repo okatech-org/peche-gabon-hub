@@ -9,6 +9,7 @@ import { PaiementsCooperative } from "@/components/cooperative/PaiementsCooperat
 import { StatistiquesCooperative } from "@/components/cooperative/StatistiquesCooperative";
 import { NotificationsHistorique } from "@/components/cooperative/NotificationsHistorique";
 import { CooperativeSidebar } from "@/components/cooperative/CooperativeSidebar";
+import { ActiviteRecente } from "@/components/cooperative/ActiviteRecente";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { LanguageSelector } from "@/components/LanguageSelector";
@@ -125,6 +126,11 @@ export default function CooperativeDashboard() {
             </Badge>
           </CardContent>
         </Card>
+      </div>
+
+      {/* Activité Récente */}
+      <div className="mt-6">
+        <ActiviteRecente />
       </div>
     </div>
   );
