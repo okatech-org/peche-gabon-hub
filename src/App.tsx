@@ -16,6 +16,7 @@ import PecheurLayout from "./pages/pecheur/PecheurLayout";
 import PecheurOverview from "./pages/pecheur/PecheurOverview";
 import InspecteurLayout from "./pages/inspecteur/InspecteurLayout";
 import InspecteurOverview from "./pages/inspecteur/InspecteurOverview";
+import Inspections from "./pages/inspecteur/Inspections";
 import DonneesPubliques from "./pages/DonneesPubliques";
 import Actualites from "./pages/Actualites";
 import Sensibilisation from "./pages/Sensibilisation";
@@ -241,6 +242,7 @@ function App() {
               }
             >
               <Route index element={<InspecteurOverview />} />
+              <Route path="inspections" element={<Inspections />} />
             </Route>
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
