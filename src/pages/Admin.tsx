@@ -31,6 +31,7 @@ import { SuiviObjectifsDashboard } from "@/components/admin/SuiviObjectifsDashbo
 import { FinancialExportDashboard } from "@/components/admin/FinancialExportDashboard";
 import { FinancialCompleteDashboard } from "@/components/admin/FinancialCompleteDashboard";
 import { DashboardFinancesPeche } from "@/components/admin/DashboardFinancesPeche";
+import { BaremesTaxesManagement } from "@/components/admin/BaremesTaxesManagement";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
 const Admin = () => {
@@ -95,6 +96,7 @@ const Admin = () => {
               <Route path="/navires" element={<NaviresManagement />} />
               <Route path="/licences" element={<LicencesManagement />} />
               <Route path="/quittances" element={<QuittancesManagement />} />
+              <Route path="/baremes-taxes" element={<BaremesTaxesManagement />} />
               <Route path="/financial-overview" element={<FinancialOverviewDashboard />} />
               <Route path="/finances-complet" element={<FinancialCompleteDashboard />} />
               <Route path="/finances-dashboard" element={<FinancesDashboard />} />

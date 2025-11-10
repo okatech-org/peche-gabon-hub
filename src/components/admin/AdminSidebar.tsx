@@ -73,6 +73,7 @@ const menuItems = [
       { title: "Dashboard Complet", url: "/admin/finances-complet", icon: BarChart3 },
       { title: "Vue d'Ensemble", url: "/admin/financial-overview", icon: PieChart },
       { title: "Quittances", url: "/admin/quittances", icon: FileText },
+      { title: "Barèmes de Taxes", url: "/admin/baremes-taxes", icon: DollarSign },
       { title: "Tableau de Bord", url: "/admin/finances-dashboard", icon: LayoutDashboard },
       { title: "Taxes & Remontées", url: "/admin/taxes-remontees", icon: DollarSign },
       { title: "Prévisions", url: "/admin/previsions", icon: TrendingUp },

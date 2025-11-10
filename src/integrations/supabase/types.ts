@@ -588,6 +588,50 @@ export type Database = {
           },
         ]
       }
+      bareme_taxes_historique: {
+        Row: {
+          action: string
+          anciennes_valeurs: Json | null
+          bareme_id: string
+          champs_modifies: Json
+          commentaire: string | null
+          id: string
+          modifie_le: string
+          modifie_par: string | null
+          nouvelles_valeurs: Json | null
+        }
+        Insert: {
+          action: string
+          anciennes_valeurs?: Json | null
+          bareme_id: string
+          champs_modifies?: Json
+          commentaire?: string | null
+          id?: string
+          modifie_le?: string
+          modifie_par?: string | null
+          nouvelles_valeurs?: Json | null
+        }
+        Update: {
+          action?: string
+          anciennes_valeurs?: Json | null
+          bareme_id?: string
+          champs_modifies?: Json
+          commentaire?: string | null
+          id?: string
+          modifie_le?: string
+          modifie_par?: string | null
+          nouvelles_valeurs?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bareme_taxes_historique_bareme_id_fkey"
+            columns: ["bareme_id"]
+            isOneToOne: false
+            referencedRelation: "bareme_taxes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       briefings_quotidiens: {
         Row: {
           alertes_prioritaires: Json
