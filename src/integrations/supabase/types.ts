@@ -4499,6 +4499,7 @@ export type Database = {
           bareme_id: string | null
           capture_pa_id: string | null
           created_at: string | null
+          date_echeance: string | null
           date_paiement: string | null
           espece_id: string | null
           id: string
@@ -4516,6 +4517,7 @@ export type Database = {
           bareme_id?: string | null
           capture_pa_id?: string | null
           created_at?: string | null
+          date_echeance?: string | null
           date_paiement?: string | null
           espece_id?: string | null
           id?: string
@@ -4533,6 +4535,7 @@ export type Database = {
           bareme_id?: string | null
           capture_pa_id?: string | null
           created_at?: string | null
+          date_echeance?: string | null
           date_paiement?: string | null
           espece_id?: string | null
           id?: string
