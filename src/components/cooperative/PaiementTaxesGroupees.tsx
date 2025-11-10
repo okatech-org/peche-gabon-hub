@@ -116,7 +116,7 @@ export function PaiementTaxesGroupees() {
         .order("date_echeance", { ascending: true, nullsFirst: false });
 
       if (taxesData && taxesData.length > 0) {
-        // Enrichir avec les infos des pêcheurs
+        // Enrichir avec les infos des utilisateurs
         const capturesMap = new Map(captures.map((c: any) => [c.id, c.declare_par]));
         
         const taxesEnrichies: any[] = [];
@@ -124,19 +124,17 @@ export function PaiementTaxesGroupees() {
         for (const taxe of taxesData) {
           const userId = capturesMap.get(taxe.capture_pa_id);
           
-          // Récupérer les infos du pêcheur et de l'utilisateur
-          const pecheurResult = await supabase
-            .from("pecheurs")
-            .select("nom, prenom, telephone")
-            .eq("user_id", userId)
-            .maybeSingle();
-
-          const authUserResult = await supabase.auth.admin.getUserById(userId || '');
+          // Récupérer les infos de l'utilisateur
+          const { data: userData } = await supabase.auth.admin.getUserById(userId || '');
 
           taxesEnrichies.push({
             ...taxe,
-            pecheur: pecheurResult.data || null,
-            user: { email: authUserResult.data?.user?.email || '' },
+            pecheur: {
+              nom: userData?.user?.user_metadata?.last_name || '',
+              prenom: userData?.user?.user_metadata?.first_name || '',
+              telephone: userData?.user?.phone || null,
+            },
+            user: { email: userData?.user?.email || '' },
           });
         }
 
