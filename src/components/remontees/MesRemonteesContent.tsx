@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,10 +7,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SubmitRemonteeDialog } from "@/components/minister/SubmitRemonteeDialog";
 import { RemonteeMap } from "@/components/RemonteeMap";
 import { AttachmentsList } from "@/components/remontees/AttachmentsList";
+import { RemonteesFilters, RemonteeFilters } from "@/components/remontees/RemonteesFilters";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { Loader2, MessageSquare, Clock, CheckCircle, AlertCircle, FileText, Map } from "lucide-react";
-import { format } from "date-fns";
+import { format, isAfter, isBefore, startOfDay, endOfDay } from "date-fns";
 import { fr } from "date-fns/locale";
 
 const typeLabels: Record<string, string> = {
@@ -57,6 +58,16 @@ export function MesRemonteesContent() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedType, setSelectedType] = useState<string>("all");
   const [viewMode, setViewMode] = useState<"list" | "map">("list");
+  const [filters, setFilters] = useState<RemonteeFilters>({
+    searchText: "",
+    type: "",
+    statut: "",
+    zone: "",
+    dateDebut: undefined,
+    dateFin: undefined,
+    sortBy: "created_at",
+    sortOrder: "desc",
+  });
 
   const { data: remontees, isLoading, refetch } = useQuery({
     queryKey: ["user-remontees", user?.id],
@@ -73,15 +84,112 @@ export function MesRemonteesContent() {
     enabled: !!user?.id,
   });
 
-  const filteredRemontees = selectedType === "all" 
-    ? remontees 
-    : remontees?.filter(r => r.type_remontee === selectedType);
+  // Get unique zones
+  const zones = useMemo(() => {
+    if (!remontees) return [];
+    const uniqueZones = new Set(
+      remontees
+        .map(r => r.localisation)
+        .filter((loc): loc is string => !!loc)
+    );
+    return Array.from(uniqueZones).sort();
+  }, [remontees]);
+
+  // Apply all filters
+  const filteredRemontees = useMemo(() => {
+    if (!remontees) return [];
+
+    let filtered = [...remontees];
+
+    // Type filter from tabs
+    if (selectedType !== "all") {
+      filtered = filtered.filter(r => r.type_remontee === selectedType);
+    }
+
+    // Search text filter
+    if (filters.searchText) {
+      const searchLower = filters.searchText.toLowerCase();
+      filtered = filtered.filter(r =>
+        r.titre?.toLowerCase().includes(searchLower) ||
+        r.description?.toLowerCase().includes(searchLower) ||
+        r.localisation?.toLowerCase().includes(searchLower) ||
+        r.numero_reference?.toLowerCase().includes(searchLower)
+      );
+    }
+
+    // Type filter from dropdown
+    if (filters.type) {
+      filtered = filtered.filter(r => r.type_remontee === filters.type);
+    }
+
+    // Status filter
+    if (filters.statut) {
+      filtered = filtered.filter(r => r.statut === filters.statut);
+    }
+
+    // Zone filter
+    if (filters.zone) {
+      filtered = filtered.filter(r => r.localisation === filters.zone);
+    }
+
+    // Date range filter
+    if (filters.dateDebut) {
+      const startDate = startOfDay(filters.dateDebut);
+      filtered = filtered.filter(r => 
+        isAfter(new Date(r.created_at), startDate) || 
+        new Date(r.created_at).getTime() === startDate.getTime()
+      );
+    }
+
+    if (filters.dateFin) {
+      const endDate = endOfDay(filters.dateFin);
+      filtered = filtered.filter(r => 
+        isBefore(new Date(r.created_at), endDate) ||
+        new Date(r.created_at).getTime() === endDate.getTime()
+      );
+    }
+
+    // Sorting
+    filtered.sort((a, b) => {
+      let aValue: any;
+      let bValue: any;
+
+      switch (filters.sortBy) {
+        case "created_at":
+          aValue = new Date(a.created_at).getTime();
+          bValue = new Date(b.created_at).getTime();
+          break;
+        case "type_remontee":
+          aValue = a.type_remontee;
+          bValue = b.type_remontee;
+          break;
+        case "statut":
+          aValue = a.statut;
+          bValue = b.statut;
+          break;
+        case "priorite":
+          const priorityOrder: Record<string, number> = { critique: 4, haut: 3, moyen: 2, bas: 1 };
+          aValue = priorityOrder[a.niveau_priorite || "bas"];
+          bValue = priorityOrder[b.niveau_priorite || "bas"];
+          break;
+        default:
+          aValue = a.created_at;
+          bValue = b.created_at;
+      }
+
+      if (aValue < bValue) return filters.sortOrder === "asc" ? -1 : 1;
+      if (aValue > bValue) return filters.sortOrder === "asc" ? 1 : -1;
+      return 0;
+    });
+
+    return filtered;
+  }, [remontees, selectedType, filters]);
 
   const stats = {
-    total: remontees?.length || 0,
-    nouveau: remontees?.filter(r => r.statut === "nouveau").length || 0,
-    en_cours: remontees?.filter(r => r.statut === "en_cours").length || 0,
-    traite: remontees?.filter(r => r.statut === "traite").length || 0,
+    total: filteredRemontees?.length || 0,
+    nouveau: filteredRemontees?.filter(r => r.statut === "nouveau").length || 0,
+    en_cours: filteredRemontees?.filter(r => r.statut === "en_cours").length || 0,
+    traite: filteredRemontees?.filter(r => r.statut === "traite").length || 0,
   };
 
   if (isLoading) {
@@ -135,6 +243,12 @@ export function MesRemonteesContent() {
           </CardContent>
         </Card>
       </div>
+
+      <RemonteesFilters
+        filters={filters}
+        onFiltersChange={setFilters}
+        zones={zones}
+      />
 
       <div className="space-y-4">
         <div className="flex justify-between items-center">
