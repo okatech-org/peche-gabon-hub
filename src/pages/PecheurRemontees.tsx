@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import { PecheurNav } from "@/components/PecheurNav";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -94,17 +93,15 @@ export default function PecheurRemontees() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <PecheurNav />
-      <div className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Mes Remontées</h1>
-          <p className="text-muted-foreground">
-            Soumettez vos réclamations, suggestions et dénonciations
-          </p>
-        </div>
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold mb-2">Mes Remontées</h1>
+        <p className="text-muted-foreground">
+          Soumettez vos réclamations, suggestions et dénonciations
+        </p>
+      </div>
 
-        <div className="grid gap-4 md:grid-cols-4 mb-6">
+        <div className="grid gap-4 md:grid-cols-4">
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium">Total</CardTitle>
@@ -137,9 +134,9 @@ export default function PecheurRemontees() {
               <div className="text-2xl font-bold text-green-600">{stats.traite}</div>
             </CardContent>
           </Card>
-        </div>
+      </div>
 
-        <div className="mb-6 space-y-4">
+      <div className="space-y-4">
           <div className="flex justify-between items-center">
             <Tabs value={selectedType} onValueChange={setSelectedType}>
               <TabsList>
@@ -169,10 +166,10 @@ export default function PecheurRemontees() {
                 Nouvelle Remontée
               </Button>
             </div>
-          </div>
         </div>
+      </div>
 
-        {viewMode === "map" ? (
+      {viewMode === "map" ? (
           <Card className="h-[600px]">
             <CardContent className="p-0 h-full">
               {filteredRemontees && filteredRemontees.length > 0 ? (
@@ -199,10 +196,10 @@ export default function PecheurRemontees() {
                 </div>
               )}
             </CardContent>
-          </Card>
-        ) : (
-            <div className="space-y-4">
-              {filteredRemontees?.length === 0 ? (
+        </Card>
+      ) : (
+        <div className="space-y-4">
+          {filteredRemontees?.length === 0 ? (
             <Card>
               <CardContent className="py-12 text-center">
                 <MessageSquare className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
@@ -270,12 +267,11 @@ export default function PecheurRemontees() {
                 </Card>
               );
             })
-            )}
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      )}
 
-      <SubmitRemonteeDialog 
+      <SubmitRemonteeDialog
         open={dialogOpen} 
         onOpenChange={setDialogOpen}
         onSuccess={() => {
