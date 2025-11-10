@@ -134,6 +134,13 @@ const navigationSections = {
         description: "Assistant vocal intelligent",
         highlight: true
       },
+      { 
+        title: "Briefing Quotidien", 
+        url: "/minister-dashboard/briefing", 
+        icon: FileText,
+        description: "Rapport vocal matinal",
+        highlight: true
+      },
     ]
   }
 };
