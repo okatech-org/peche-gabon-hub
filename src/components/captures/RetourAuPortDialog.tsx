@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -51,6 +51,7 @@ interface RetourAuPortDialogProps {
 
 export const RetourAuPortDialog = ({ open, onOpenChange, sortie, onSuccess }: RetourAuPortDialogProps) => {
   const [loading, setLoading] = useState(false);
+  const [submitSuccess, setSubmitSuccess] = useState(false);
   const [effortCalcule, setEffortCalcule] = useState<number | null>(null);
 
   const form = useForm<RetourFormData>({
@@ -64,8 +65,19 @@ export const RetourAuPortDialog = ({ open, onOpenChange, sortie, onSuccess }: Re
   const dateRetour = form.watch("date_retour");
   const heureRetour = form.watch("heure_retour");
 
+  // Réinitialiser le formulaire quand le modal s'ouvre
+  useEffect(() => {
+    if (open) {
+      setSubmitSuccess(false);
+      form.reset({
+        date_retour: new Date().toISOString().split('T')[0],
+        heure_retour: new Date().toTimeString().slice(0, 5),
+      });
+    }
+  }, [open]);
+
   // Calculer l'effort automatiquement
-  useState(() => {
+  useEffect(() => {
     if (!sortie || !dateRetour || !heureRetour) {
       setEffortCalcule(null);
       return;
@@ -86,7 +98,7 @@ export const RetourAuPortDialog = ({ open, onOpenChange, sortie, onSuccess }: Re
     } catch (error) {
       setEffortCalcule(null);
     }
-  });
+  }, [sortie, dateRetour, heureRetour]);
 
   const onSubmit = async (data: RetourFormData) => {
     try {
@@ -113,8 +125,14 @@ export const RetourAuPortDialog = ({ open, onOpenChange, sortie, onSuccess }: Re
 
       if (error) throw error;
 
+      setSubmitSuccess(true);
       toast.success(`Retour enregistré - Effort de pêche: ${effortCalcule.toFixed(2)}h`);
-      onSuccess?.();
+      
+      // Fermer le modal après 2 secondes
+      setTimeout(() => {
+        onOpenChange(false);
+        onSuccess?.();
+      }, 2000);
     } catch (error: any) {
       console.error("Erreur:", error);
       toast.error(error.message || "Erreur lors de l'enregistrement");
@@ -189,20 +207,29 @@ export const RetourAuPortDialog = ({ open, onOpenChange, sortie, onSuccess }: Re
               </Alert>
             )}
 
+            {submitSuccess && (
+              <div className="flex items-center justify-center gap-2 p-4 bg-green-500/10 border border-green-500/20 rounded-lg">
+                <div className="h-2 w-2 bg-green-500 rounded-full animate-pulse" />
+                <p className="text-sm text-green-600 dark:text-green-400 font-medium">
+                  Retour enregistré ! Fermeture automatique...
+                </p>
+              </div>
+            )}
+
             <div className="flex gap-3 pt-4">
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => onOpenChange(false)}
                 className="flex-1"
-                disabled={loading}
+                disabled={loading || submitSuccess}
               >
                 Annuler
               </Button>
               <Button 
                 type="submit" 
                 className="flex-1" 
-                disabled={loading || !effortCalcule || effortCalcule <= 0}
+                disabled={loading || submitSuccess || !effortCalcule || effortCalcule <= 0}
               >
                 {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Enregistrer le Retour
