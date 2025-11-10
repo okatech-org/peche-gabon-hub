@@ -8,6 +8,7 @@ import { DeclarerCaptureDialog } from "@/components/captures/DeclarerCaptureDial
 import { ListeCaptures } from "@/components/captures/ListeCaptures";
 import { StatsCaptures } from "@/components/captures/StatsCaptures";
 import { SortieEnMer } from "@/components/captures/SortieEnMer";
+import { NotificationsPecheur } from "@/components/captures/NotificationsPecheur";
 import { PecheurNav } from "@/components/PecheurNav";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -91,12 +92,15 @@ const Captures = () => {
                 Déclarations et suivi des captures de pêche artisanale
               </p>
             </div>
-            {canDeclare && (
-              <Button onClick={() => setDialogOpen(true)} size="lg">
-                <Plus className="mr-2 h-5 w-5" />
-                Déclarer une Capture
-              </Button>
-            )}
+            <div className="flex items-center gap-3">
+              {canDeclare && <NotificationsPecheur />}
+              {canDeclare && (
+                <Button onClick={() => setDialogOpen(true)} size="lg">
+                  <Plus className="mr-2 h-5 w-5" />
+                  Déclarer une Capture
+                </Button>
+              )}
+            </div>
           </div>
         </div>
       </div>
