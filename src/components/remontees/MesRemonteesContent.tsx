@@ -8,9 +8,10 @@ import { SubmitRemonteeDialog } from "@/components/minister/SubmitRemonteeDialog
 import { RemonteeMap } from "@/components/RemonteeMap";
 import { AttachmentsList } from "@/components/remontees/AttachmentsList";
 import { RemonteesFilters, RemonteeFilters } from "@/components/remontees/RemonteesFilters";
+import { ExportRemonteesDialog } from "@/components/remontees/ExportRemonteesDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
-import { Loader2, MessageSquare, Clock, CheckCircle, AlertCircle, FileText, Map } from "lucide-react";
+import { Loader2, MessageSquare, Clock, CheckCircle, AlertCircle, FileText, Map, Download } from "lucide-react";
 import { format, isAfter, isBefore, startOfDay, endOfDay } from "date-fns";
 import { fr } from "date-fns/locale";
 
@@ -56,6 +57,7 @@ const priorityColors: Record<string, string> = {
 export function MesRemonteesContent() {
   const { user } = useAuth();
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [exportDialogOpen, setExportDialogOpen] = useState(false);
   const [selectedType, setSelectedType] = useState<string>("all");
   const [viewMode, setViewMode] = useState<"list" | "map">("list");
   const [filters, setFilters] = useState<RemonteeFilters>({
@@ -192,6 +194,19 @@ export function MesRemonteesContent() {
     traite: filteredRemontees?.filter(r => r.statut === "traite").length || 0,
   };
 
+  // Générer le texte des filtres actifs pour l'export
+  const getActiveFiltresText = () => {
+    const parts: string[] = [];
+    if (selectedType !== "all") parts.push(`Type: ${typeLabels[selectedType]}`);
+    if (filters.searchText) parts.push(`Recherche: "${filters.searchText}"`);
+    if (filters.type) parts.push(`Type: ${typeLabels[filters.type]}`);
+    if (filters.statut) parts.push(`Statut: ${statusLabels[filters.statut]}`);
+    if (filters.zone) parts.push(`Zone: ${filters.zone}`);
+    if (filters.dateDebut) parts.push(`Du: ${format(filters.dateDebut, "dd/MM/yyyy")}`);
+    if (filters.dateFin) parts.push(`Au: ${format(filters.dateFin, "dd/MM/yyyy")}`);
+    return parts.join(" | ");
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -278,6 +293,10 @@ export function MesRemonteesContent() {
             <Button onClick={() => setDialogOpen(true)}>
               <MessageSquare className="h-4 w-4 mr-2" />
               Nouvelle Remontée
+            </Button>
+            <Button variant="outline" onClick={() => setExportDialogOpen(true)}>
+              <Download className="h-4 w-4 mr-2" />
+              Exporter
             </Button>
           </div>
         </div>
@@ -392,6 +411,13 @@ export function MesRemonteesContent() {
           refetch();
           setDialogOpen(false);
         }}
+      />
+
+      <ExportRemonteesDialog
+        open={exportDialogOpen}
+        onOpenChange={setExportDialogOpen}
+        remontees={filteredRemontees || []}
+        filtresActifs={getActiveFiltresText()}
       />
     </div>
   );
