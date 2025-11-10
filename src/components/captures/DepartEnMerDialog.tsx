@@ -49,6 +49,7 @@ interface DepartEnMerDialogProps {
 export const DepartEnMerDialog = ({ open, onOpenChange, onSuccess }: DepartEnMerDialogProps) => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [submitSuccess, setSubmitSuccess] = useState(false);
   const [pirogues, setPirogues] = useState<any[]>([]);
   const [sites, setSites] = useState<any[]>([]);
 
@@ -64,6 +65,7 @@ export const DepartEnMerDialog = ({ open, onOpenChange, onSuccess }: DepartEnMer
 
   useEffect(() => {
     if (open) {
+      setSubmitSuccess(false);
       loadReferenceData();
       form.reset({
         pirogue_id: "",
@@ -158,8 +160,14 @@ export const DepartEnMerDialog = ({ open, onOpenChange, onSuccess }: DepartEnMer
 
       if (error) throw error;
 
+      setSubmitSuccess(true);
       toast.success("Départ en mer enregistré avec succès");
-      onSuccess?.();
+      
+      // Fermer le modal après 2 secondes
+      setTimeout(() => {
+        onOpenChange(false);
+        onSuccess?.();
+      }, 2000);
     } catch (error: any) {
       console.error("Erreur:", error);
       toast.error(error.message || "Erreur lors de l'enregistrement");
@@ -272,17 +280,26 @@ export const DepartEnMerDialog = ({ open, onOpenChange, onSuccess }: DepartEnMer
               />
             </div>
 
+            {submitSuccess && (
+              <div className="flex items-center justify-center gap-2 p-4 bg-green-500/10 border border-green-500/20 rounded-lg">
+                <div className="h-2 w-2 bg-green-500 rounded-full animate-pulse" />
+                <p className="text-sm text-green-600 dark:text-green-400 font-medium">
+                  Départ enregistré ! Fermeture automatique...
+                </p>
+              </div>
+            )}
+
             <div className="flex gap-3 pt-4">
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => onOpenChange(false)}
                 className="flex-1"
-                disabled={loading}
+                disabled={loading || submitSuccess}
               >
                 Annuler
               </Button>
-              <Button type="submit" className="flex-1" disabled={loading}>
+              <Button type="submit" className="flex-1" disabled={loading || submitSuccess}>
                 {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Enregistrer le Départ
               </Button>
