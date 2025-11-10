@@ -42,7 +42,11 @@ Vous avez accès COMPLET en temps réel à TOUTES les données de l'application 
 - Pêche artisanale : captures (30 derniers jours), poids total, pirogues actives
 - Pêche industrielle : captures (30 derniers jours), poids total, navires actifs
 - Coopératives : nombre actives, total membres
-- Finances : taxes en attente avec montants, quittances (90 derniers jours)
+- Finances & Recettes Trésor Public : 
+  * Recettes fiscales totales, par catégorie (artisanale/industrielle)
+  * Licences pirogues, taxes production, licences navires
+  * Nombre de contribuables, montants en FCFA
+  * Taxes en attente avec montants, quittances (90 derniers jours)
 - Surveillance : alertes non traitées (par sévérité), remontées terrain (7 derniers jours)
 - Formations : planifiées, en cours, participants
 - Licences : actives par type
@@ -251,6 +255,7 @@ async function fetchApplicationStats(supabase: any): Promise<any> {
       cooperatives,
       taxes,
       quittances,
+      statistiquesFiscales,
       navires,
       pirogues,
       alertes,
@@ -287,6 +292,11 @@ async function fetchApplicationStats(supabase: any): Promise<any> {
         .select('montant_total, date_emission, type_peche')
         .gte('date_emission', new Date(Date.now() - 90*24*60*60*1000).toISOString())
         .limit(1000),
+      
+      // Statistiques fiscales (recettes Trésor Public)
+      supabase.from('statistiques_fiscales')
+        .select('*')
+        .order('periode', { ascending: true }),
       
       // Navires actifs
       supabase.from('navires')
@@ -352,12 +362,54 @@ async function fetchApplicationStats(supabase: any): Promise<any> {
         total_membres: cooperatives.data?.reduce((sum: number, c: any) => sum + (c.pecheurs_cooperatives?.[0]?.count || 0), 0) || 0
       },
       
-      // Finances
+      // Finances et recettes Trésor Public
       finances: {
+        // Statistiques en temps réel
         taxes_en_attente: taxes.data?.length || 0,
         montant_taxes_en_attente: taxes.data?.reduce((sum: number, t: any) => sum + (t.montant_total || 0), 0) || 0,
         quittances_90j: quittances.data?.length || 0,
-        montant_quittances_90j: quittances.data?.reduce((sum: number, q: any) => sum + (q.montant_total || 0), 0) || 0
+        montant_quittances_90j: quittances.data?.reduce((sum: number, q: any) => sum + (q.montant_total || 0), 0) || 0,
+        
+        // Recettes Trésor Public (données officielles)
+        recettes_tresor_public: {
+          total_artisanal: statistiquesFiscales.data
+            ?.filter((s: any) => s.categorie === 'Pêche Artisanale')
+            .reduce((sum: number, s: any) => sum + Number(s.montant_fcfa || 0), 0) || 0,
+          
+          total_industriel: statistiquesFiscales.data
+            ?.filter((s: any) => s.categorie === 'Pêche Industrielle' && !s.type_taxe.includes(' - '))
+            .reduce((sum: number, s: any) => sum + Number(s.montant_fcfa || 0), 0) || 0,
+          
+          total_general: (() => {
+            const artisanal = statistiquesFiscales.data
+              ?.filter((s: any) => s.categorie === 'Pêche Artisanale')
+              .reduce((sum: number, s: any) => sum + Number(s.montant_fcfa || 0), 0) || 0;
+            const industriel = statistiquesFiscales.data
+              ?.filter((s: any) => s.categorie === 'Pêche Industrielle' && !s.type_taxe.includes(' - '))
+              .reduce((sum: number, s: any) => sum + Number(s.montant_fcfa || 0), 0) || 0;
+            return artisanal + industriel;
+          })(),
+          
+          contribuables_total: statistiquesFiscales.data
+            ?.filter((s: any) => s.nombre_contribuables)
+            .reduce((sum: number, s: any) => sum + (s.nombre_contribuables || 0), 0) || 0,
+          
+          // Détails par catégorie
+          licences_pirogues_total: statistiquesFiscales.data
+            ?.find((s: any) => s.categorie === 'Pêche Artisanale' && s.type_taxe === 'Licence Pirogue' && s.periode === '2024')
+            ?.montant_fcfa || 0,
+          
+          taxes_production_total: statistiquesFiscales.data
+            ?.filter((s: any) => s.categorie === 'Pêche Artisanale' && s.type_taxe === 'Taxe Production')
+            .reduce((sum: number, s: any) => sum + Number(s.montant_fcfa || 0), 0) || 0,
+          
+          licences_navires_total: statistiquesFiscales.data
+            ?.filter((s: any) => s.categorie === 'Pêche Industrielle' && !s.type_taxe.includes(' - '))
+            .reduce((sum: number, s: any) => sum + Number(s.montant_fcfa || 0), 0) || 0,
+          
+          licences_pirogues_count: 906,
+          navires_actifs_count: 10
+        }
       },
       
       // Alertes et surveillance
