@@ -14,7 +14,7 @@ interface SortieTerminee {
   heure_depart: string;
   date_retour: string;
   heure_retour: string;
-  effort_unite: number;
+  effort_heures: number;
   pirogue: { nom: string };
   site: { nom: string; province?: string };
 }
@@ -51,7 +51,7 @@ export const HistoriqueSorties = () => {
           heure_depart,
           date_retour,
           heure_retour,
-          effort_unite,
+          effort_heures,
           pirogues!inner(nom),
           sites!inner(nom, province)
         `)
@@ -68,7 +68,7 @@ export const HistoriqueSorties = () => {
         heure_depart: s.heure_depart,
         date_retour: s.date_retour,
         heure_retour: s.heure_retour,
-        effort_unite: s.effort_unite || 0,
+        effort_heures: s.effort_heures || 0,
         pirogue: { nom: s.pirogues?.nom || "N/A" },
         site: { nom: s.sites?.nom || "N/A", province: s.sites?.province },
       }));
@@ -78,7 +78,7 @@ export const HistoriqueSorties = () => {
       // Calculer les statistiques
       if (formattedSorties.length > 0) {
         const totalSorties = formattedSorties.length;
-        const effortTotal = formattedSorties.reduce((sum, s) => sum + s.effort_unite, 0);
+        const effortTotal = formattedSorties.reduce((sum, s) => sum + s.effort_heures, 0);
         const dureeToaleMoyenne = effortTotal / totalSorties;
 
         // Sites les plus fréquentés
@@ -250,7 +250,7 @@ export const HistoriqueSorties = () => {
                     </div>
                   </TableCell>
                   <TableCell className="text-right font-medium">
-                    {sortie.effort_unite.toFixed(2)}h
+                    {sortie.effort_heures.toFixed(2)}h
                   </TableCell>
                 </TableRow>
               ))}

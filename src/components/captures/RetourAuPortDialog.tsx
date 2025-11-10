@@ -119,7 +119,7 @@ export const RetourAuPortDialog = ({ open, onOpenChange, sortie, onSuccess }: Re
         .update({
           date_retour: data.date_retour,
           heure_retour: data.heure_retour,
-          effort_unite: effortCalcule,
+          effort_heures: effortCalcule,
         })
         .eq("id", sortie.id);
 
