@@ -42,6 +42,7 @@ export function TaxesPecheur() {
   const [filterStatut, setFilterStatut] = useState<string>("tous");
   const [selectedTaxes, setSelectedTaxes] = useState<string[]>([]);
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
+  const [recentlyPaidTaxes, setRecentlyPaidTaxes] = useState<Set<string>>(new Set());
   const [stats, setStats] = useState({
     totalImpaye: 0,
     totalPaye: 0,
@@ -88,6 +89,24 @@ export function TaxesPecheur() {
         .order("created_at", { ascending: false });
 
       const taxesTyped = taxesData as any || [];
+      
+      // Détecter les taxes qui viennent d'être payées
+      const newRecentlyPaid = new Set<string>();
+      taxesTyped.forEach((newTaxe: any) => {
+        const oldTaxe = taxes.find(t => t.id === newTaxe.id);
+        if (oldTaxe && oldTaxe.statut_paiement === 'impaye' && newTaxe.statut_paiement === 'paye') {
+          newRecentlyPaid.add(newTaxe.id);
+        }
+      });
+      
+      if (newRecentlyPaid.size > 0) {
+        setRecentlyPaidTaxes(newRecentlyPaid);
+        // Retirer l'animation après 2 secondes
+        setTimeout(() => {
+          setRecentlyPaidTaxes(new Set());
+        }, 2000);
+      }
+      
       setTaxes(taxesTyped);
 
       const impayees = taxesTyped.filter((t: any) => t.statut_paiement === 'impaye');
@@ -318,8 +337,16 @@ export function TaxesPecheur() {
                   {filteredTaxes.map((taxe) => {
                     const echeanceStatus = getEcheanceStatus(taxe.date_echeance);
                     const isImpaye = taxe.statut_paiement === 'impaye';
+                    const isRecentlyPaid = recentlyPaidTaxes.has(taxe.id);
                     return (
-                      <TableRow key={taxe.id}>
+                      <TableRow 
+                        key={taxe.id}
+                        className={`transition-all duration-500 ${
+                          isRecentlyPaid 
+                            ? 'animate-in fade-in-0 slide-in-from-left-5 bg-green-50 dark:bg-green-950/20' 
+                            : ''
+                        }`}
+                      >
                         <TableCell>
                           {isImpaye && (
                             <Checkbox
@@ -355,9 +382,18 @@ export function TaxesPecheur() {
                           )}
                         </TableCell>
                         <TableCell>
-                          <Badge variant={taxe.statut_paiement === "paye" ? "default" : "destructive"}>
-                            {taxe.statut_paiement === "paye" ? "Payé" : "Impayé"}
-                          </Badge>
+                          <div className={`inline-flex ${isRecentlyPaid ? 'animate-in zoom-in-75 duration-500' : ''}`}>
+                            <Badge 
+                              variant={taxe.statut_paiement === "paye" ? "default" : "destructive"}
+                              className={`${
+                                taxe.statut_paiement === "paye" 
+                                  ? 'bg-green-600 hover:bg-green-700' 
+                                  : ''
+                              }`}
+                            >
+                              {taxe.statut_paiement === "paye" ? "Payé" : "Impayé"}
+                            </Badge>
+                          </div>
                         </TableCell>
                         <TableCell>
                           {isImpaye && (
