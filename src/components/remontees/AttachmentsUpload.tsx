@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { X, Upload, FileIcon, Image, Video, FileText, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { compressImage } from "@/lib/utils";
 
 interface FileWithPreview {
   file: File;
@@ -42,46 +43,75 @@ export function AttachmentsUpload({
       return;
     }
 
-    // Vérifier la taille des fichiers
-    const oversizedFiles = selectedFiles.filter(
-      (file) => file.size > maxSize * 1024 * 1024
-    );
-    if (oversizedFiles.length > 0) {
-      toast.error(`Certains fichiers dépassent la taille maximale de ${maxSize}MB`);
-      return;
-    }
-
-    // Créer les previews pour les images
-    const newFiles: FileWithPreview[] = await Promise.all(
-      selectedFiles.map(async (file) => {
-        const id = Math.random().toString(36).substring(7);
-        
-        if (file.type.startsWith("image/")) {
-          return new Promise<FileWithPreview>((resolve) => {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-              resolve({
-                file,
-                preview: reader.result as string,
-                id,
-              });
-            };
-            reader.readAsDataURL(file);
-          });
-        }
-        
-        return {
-          file,
-          id,
-        };
-      })
-    );
-
-    onFilesChange([...files, ...newFiles]);
+    setUploading(true);
     
-    // Reset input
-    if (inputRef.current) {
-      inputRef.current.value = "";
+    try {
+      // Compresser et traiter les fichiers
+      const processedFiles: FileWithPreview[] = await Promise.all(
+        selectedFiles.map(async (file) => {
+          const id = Math.random().toString(36).substring(7);
+          
+          // Compresser les images
+          let processedFile = file;
+          if (file.type.startsWith("image/")) {
+            try {
+              const originalSize = file.size / (1024 * 1024);
+              processedFile = await compressImage(file, maxSize * 0.8, 1920);
+              const compressedSize = processedFile.size / (1024 * 1024);
+              
+              if (compressedSize < originalSize) {
+                toast.success(`Image compressée: ${originalSize.toFixed(2)}MB → ${compressedSize.toFixed(2)}MB`);
+              }
+            } catch (error) {
+              console.error("Erreur lors de la compression:", error);
+              toast.warning("Compression échouée, utilisation de l'image originale");
+            }
+          }
+          
+          // Vérifier la taille après compression
+          if (processedFile.size > maxSize * 1024 * 1024) {
+            toast.error(`${processedFile.name} dépasse la taille maximale de ${maxSize}MB`);
+            return null;
+          }
+          
+          // Créer preview pour les images
+          if (processedFile.type.startsWith("image/")) {
+            return new Promise<FileWithPreview>((resolve) => {
+              const reader = new FileReader();
+              reader.onloadend = () => {
+                resolve({
+                  file: processedFile,
+                  preview: reader.result as string,
+                  id,
+                });
+              };
+              reader.readAsDataURL(processedFile);
+            });
+          }
+          
+          return {
+            file: processedFile,
+            id,
+          };
+        })
+      );
+
+      // Filtrer les fichiers null (trop gros)
+      const validFiles = processedFiles.filter((f): f is FileWithPreview => f !== null);
+      
+      if (validFiles.length > 0) {
+        onFilesChange([...files, ...validFiles]);
+      }
+    } catch (error) {
+      console.error("Erreur lors du traitement des fichiers:", error);
+      toast.error("Erreur lors du traitement des fichiers");
+    } finally {
+      setUploading(false);
+      
+      // Reset input
+      if (inputRef.current) {
+        inputRef.current.value = "";
+      }
     }
   };
 
@@ -127,18 +157,30 @@ export function AttachmentsUpload({
                 onChange={handleFileSelect}
                 className="hidden"
                 id="file-upload"
+                disabled={uploading}
               />
               <Label htmlFor="file-upload">
                 <div className="border-2 border-dashed rounded-lg p-6 cursor-pointer hover:bg-muted/50 transition-colors">
                   <div className="flex flex-col items-center gap-2 text-center">
-                    <Upload className="h-8 w-8 text-muted-foreground" />
-                    <div className="text-sm">
-                      <span className="font-medium text-primary">Cliquez pour ajouter</span>
-                      <span className="text-muted-foreground"> ou glissez-déposez</span>
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      Images, vidéos (MP4) ou PDF
-                    </p>
+                    {uploading ? (
+                      <>
+                        <Loader2 className="h-8 w-8 text-muted-foreground animate-spin" />
+                        <div className="text-sm text-muted-foreground">
+                          Compression et traitement des images...
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="h-8 w-8 text-muted-foreground" />
+                        <div className="text-sm">
+                          <span className="font-medium text-primary">Cliquez pour ajouter</span>
+                          <span className="text-muted-foreground"> ou glissez-déposez</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          Images (compression auto), vidéos (MP4) ou PDF
+                        </p>
+                      </>
+                    )}
                   </div>
                 </div>
               </Label>
