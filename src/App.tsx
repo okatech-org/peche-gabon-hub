@@ -28,6 +28,7 @@ import Captures from "./pages/Captures";
 import MonCompte from "./pages/MonCompte";
 import MesTaxes from "./pages/MesTaxes";
 import PecheurRemontees from "./pages/PecheurRemontees";
+import MesRemontees from "./pages/MesRemontees";
 import UserSettings from "./pages/UserSettings";
 import MinisterLayout from "./pages/minister/MinisterLayout";
 import Overview from "./pages/minister/Overview";
@@ -133,6 +134,19 @@ function App() {
               <Route index element={<MonCompte />} />
             </Route>
             <Route
+              path="/mes-remontees"
+              element={
+                <ProtectedRoute allowedRoles={[
+                  'pecheur', 'armateur_pi', 'inspecteur', 'cooperative', 'gestionnaire_coop',
+                  'dgpa', 'anpa', 'agasa', 'dgmm', 'oprag', 'anpn', 'dgddi', 'corep',
+                  'direction_centrale', 'direction_provinciale', 'agent_collecte',
+                  'observateur_pi', 'analyste', 'partenaire_international'
+                ]}>
+                  <MesRemontees />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/parametres"
               element={
                 <ProtectedRoute>
@@ -237,6 +251,7 @@ function App() {
               <Route index element={<ArmeurOverview />} />
               <Route path="flotte" element={<ArmeurFlotte />} />
               <Route path="marees" element={<ArmeurMarees />} />
+              <Route path="remontees" element={<MesRemontees />} />
               <Route path="taxes" element={<ArmeurTaxes />} />
             </Route>
             <Route
@@ -260,6 +275,7 @@ function App() {
               <Route path="carte" element={<Carte />} />
               <Route path="licences" element={<Licences />} />
               <Route path="infractions" element={<Infractions />} />
+              <Route path="remontees" element={<MesRemontees />} />
             </Route>
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

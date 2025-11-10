@@ -10,6 +10,7 @@ import { StatistiquesCooperative } from "@/components/cooperative/StatistiquesCo
 import { NotificationsHistorique } from "@/components/cooperative/NotificationsHistorique";
 import { CooperativeSidebar } from "@/components/cooperative/CooperativeSidebar";
 import { ActiviteRecente } from "@/components/cooperative/ActiviteRecente";
+import { MesRemonteesContent } from "@/components/remontees/MesRemonteesContent";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { LanguageSelector } from "@/components/LanguageSelector";
@@ -172,6 +173,7 @@ export default function CooperativeDashboard() {
                         {displayedTab === "dashboard" && "Gestion de Coopérative"}
                         {displayedTab === "taxes" && "Taxes des Membres"}
                         {displayedTab === "paiements" && "Paiements Groupés"}
+                        {displayedTab === "remontees" && "Mes Remontées"}
                         {displayedTab === "notifications" && "Notifications"}
                         {displayedTab === "membres" && "Gestion des Membres"}
                         {displayedTab === "stats" && "Statistiques"}
@@ -184,6 +186,7 @@ export default function CooperativeDashboard() {
                       {displayedTab === "dashboard" && "Vue d'ensemble de votre coopérative"}
                       {displayedTab === "taxes" && "Gérez les taxes des membres de votre coopérative"}
                       {displayedTab === "paiements" && "Effectuez des paiements groupés pour vos membres"}
+                      {displayedTab === "remontees" && "Soumettez vos réclamations, suggestions et dénonciations"}
                       {displayedTab === "notifications" && "Historique des notifications envoyées"}
                       {displayedTab === "membres" && "Gérez les membres de votre coopérative"}
                       {displayedTab === "stats" && "Visualisez les statistiques de votre coopérative"}
@@ -212,6 +215,7 @@ export default function CooperativeDashboard() {
                   {displayedTab === "dashboard" && renderDashboard()}
                   {displayedTab === "taxes" && <TaxesCooperative key={`taxes-${refreshKey}`} />}
                   {displayedTab === "paiements" && <PaiementsCooperative key={`paiements-${refreshKey}`} />}
+                  {displayedTab === "remontees" && <MesRemonteesContent key={`remontees-${refreshKey}`} />}
                   {displayedTab === "notifications" && <NotificationsHistorique key={`notifications-${refreshKey}`} />}
                   {displayedTab === "membres" && <MembresCooperative key={`membres-${refreshKey}`} />}
                   {displayedTab === "stats" && <StatistiquesCooperative key={`stats-${refreshKey}`} />}

@@ -4,6 +4,7 @@ import {
   Activity,
   Receipt,
   BarChart3,
+  MessageSquare,
   LogOut,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
@@ -43,6 +44,11 @@ const navItems: NavItem[] = [
     title: "Marées",
     url: "/armeur-dashboard/marees",
     icon: Activity,
+  },
+  {
+    title: "Mes Remontées",
+    url: "/armeur-dashboard/remontees",
+    icon: MessageSquare,
   },
   {
     title: "Taxes & Impôts",

@@ -5,6 +5,7 @@ import {
   AlertTriangle,
   ClipboardList,
   BarChart3,
+  MessageSquare,
   LogOut,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
@@ -54,6 +55,11 @@ const navItems: NavItem[] = [
     title: "Licences",
     url: "/inspecteur-dashboard/licences",
     icon: FileCheck,
+  },
+  {
+    title: "Mes Remontées",
+    url: "/inspecteur-dashboard/remontees",
+    icon: MessageSquare,
   },
 ];
 

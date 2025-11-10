@@ -18,6 +18,7 @@ import {
   Bell,
   Users,
   BarChart3,
+  MessageSquare,
   LogOut,
   LayoutDashboard
 } from "lucide-react";
@@ -32,6 +33,7 @@ const navigationItems = [
   { title: "Tableau de bord", value: "dashboard", icon: LayoutDashboard },
   { title: "Taxes des Membres", value: "taxes", icon: Receipt },
   { title: "Paiements Groupés", value: "paiements", icon: DollarSign },
+  { title: "Mes Remontées", value: "remontees", icon: MessageSquare },
   { title: "Notifications", value: "notifications", icon: Bell },
   { title: "Membres", value: "membres", icon: Users },
   { title: "Statistiques", value: "stats", icon: BarChart3 },
