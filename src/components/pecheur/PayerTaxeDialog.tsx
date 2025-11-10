@@ -4,9 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Loader2, CreditCard, Smartphone, Banknote, CheckCircle } from "lucide-react";
+import { Loader2, CreditCard, Smartphone, Banknote, CheckCircle, Download } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { ImprimerQuittanceTaxeDialog } from "./ImprimerQuittanceTaxeDialog";
 
 interface PayerTaxeDialogProps {
   open: boolean;
@@ -19,6 +20,8 @@ interface PayerTaxeDialogProps {
 export function PayerTaxeDialog({ open, onOpenChange, taxesIds, montantTotal, onSuccess }: PayerTaxeDialogProps) {
   const [loading, setLoading] = useState(false);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
+  const [quittanceNumero, setQuittanceNumero] = useState("");
+  const [showQuittanceDialog, setShowQuittanceDialog] = useState(false);
   const [modePaiement, setModePaiement] = useState<"carte" | "airtel" | "especes">("carte");
   const [numeroTelephone, setNumeroTelephone] = useState("");
   const [numeroCarte, setNumeroCarte] = useState("");
@@ -51,7 +54,8 @@ export function PayerTaxeDialog({ open, onOpenChange, taxesIds, montantTotal, on
       }
 
       // Générer un numéro de quittance unique
-      const quittanceNumero = `QT-${Date.now()}-${Math.random().toString(36).substring(7).toUpperCase()}`;
+      const numeroQuittance = `QT-${Date.now()}-${Math.random().toString(36).substring(7).toUpperCase()}`;
+      setQuittanceNumero(numeroQuittance);
       
       // Mettre à jour les taxes (mode démo)
       const { error } = await supabase
@@ -59,7 +63,7 @@ export function PayerTaxeDialog({ open, onOpenChange, taxesIds, montantTotal, on
         .update({
           statut_paiement: "paye",
           date_paiement: new Date().toISOString(),
-          quittance_numero: quittanceNumero,
+          quittance_numero: numeroQuittance,
         })
         .in("id", taxesIds);
 
@@ -67,16 +71,8 @@ export function PayerTaxeDialog({ open, onOpenChange, taxesIds, montantTotal, on
 
       setPaymentSuccess(true);
       toast.success("Paiement effectué avec succès !", {
-        description: `Quittance N° ${quittanceNumero}`,
+        description: `Quittance N° ${numeroQuittance}`,
       });
-
-      // Attendre un peu pour montrer le succès
-      setTimeout(() => {
-        setPaymentSuccess(false);
-        onOpenChange(false);
-        onSuccess();
-        resetForm();
-      }, 2000);
 
     } catch (error) {
       console.error("Erreur paiement:", error);
@@ -96,21 +92,65 @@ export function PayerTaxeDialog({ open, onOpenChange, taxesIds, montantTotal, on
 
   if (paymentSuccess) {
     return (
-      <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-md">
-          <div className="flex flex-col items-center justify-center py-8 space-y-4">
-            <div className="rounded-full bg-green-100 p-3">
-              <CheckCircle className="h-12 w-12 text-green-600" />
+      <>
+        <Dialog open={open} onOpenChange={onOpenChange}>
+          <DialogContent className="sm:max-w-md">
+            <div className="flex flex-col items-center justify-center py-8 space-y-4">
+              <div className="rounded-full bg-green-100 p-3">
+                <CheckCircle className="h-12 w-12 text-green-600" />
+              </div>
+              <div className="text-center space-y-2">
+                <h3 className="text-xl font-semibold">Paiement réussi !</h3>
+                <p className="text-muted-foreground">
+                  Votre paiement de {montantTotal.toLocaleString()} FCFA a été effectué avec succès.
+                </p>
+                <p className="text-sm font-mono text-foreground">
+                  Quittance N° {quittanceNumero}
+                </p>
+              </div>
+              <div className="flex gap-2 w-full pt-4">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setPaymentSuccess(false);
+                    onOpenChange(false);
+                    onSuccess();
+                    resetForm();
+                  }}
+                  className="flex-1"
+                >
+                  Fermer
+                </Button>
+                <Button
+                  onClick={() => {
+                    setShowQuittanceDialog(true);
+                  }}
+                  className="flex-1"
+                >
+                  <Download className="mr-2 h-4 w-4" />
+                  Télécharger
+                </Button>
+              </div>
             </div>
-            <div className="text-center space-y-2">
-              <h3 className="text-xl font-semibold">Paiement réussi !</h3>
-              <p className="text-muted-foreground">
-                Votre paiement de {montantTotal.toLocaleString()} FCFA a été effectué avec succès.
-              </p>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+          </DialogContent>
+        </Dialog>
+
+        <ImprimerQuittanceTaxeDialog
+          open={showQuittanceDialog}
+          onOpenChange={(open) => {
+            setShowQuittanceDialog(open);
+            if (!open) {
+              setPaymentSuccess(false);
+              onOpenChange(false);
+              onSuccess();
+              resetForm();
+            }
+          }}
+          quittanceNumero={quittanceNumero}
+          taxesIds={taxesIds}
+          montantTotal={montantTotal}
+        />
+      </>
     );
   }
 
