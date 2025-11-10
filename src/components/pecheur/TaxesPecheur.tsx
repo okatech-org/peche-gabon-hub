@@ -58,6 +58,74 @@ export function TaxesPecheur() {
     applyFilter();
   }, [taxes, filterStatut]);
 
+  // Écoute des mises à jour en temps réel
+  useEffect(() => {
+    const channel = supabase
+      .channel('taxes-captures-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'taxes_captures'
+        },
+        (payload) => {
+          console.log('Changement détecté:', payload);
+          const updatedTaxe = payload.new as any;
+          
+          // Mise à jour optimiste de l'état local
+          setTaxes((prevTaxes) => {
+            const updatedList = prevTaxes.map(t => 
+              t.id === updatedTaxe.id 
+                ? { ...t, ...updatedTaxe }
+                : t
+            );
+            
+            // Recalculer les stats immédiatement
+            const impayees = updatedList.filter((t: any) => t.statut_paiement === 'impaye');
+            const today = new Date();
+            const echuSoon = impayees.filter((t: any) => {
+              if (!t.date_echeance) return false;
+              const echeance = new Date(t.date_echeance);
+              const daysUntil = differenceInDays(echeance, today);
+              return daysUntil >= 0 && daysUntil <= 5;
+            });
+
+            setStats({
+              totalImpaye: impayees.reduce((sum: number, t: any) => sum + t.montant_taxe, 0),
+              totalPaye: updatedList.filter((t: any) => t.statut_paiement === 'paye').reduce((sum: number, t: any) => sum + t.montant_taxe, 0),
+              nombreImpaye: impayees.length,
+              nombreEchuSoon: echuSoon.length,
+            });
+            
+            return updatedList;
+          });
+
+          // Si c'est un passage de impayé à payé, déclencher l'animation
+          if (payload.old && (payload.old as any).statut_paiement === 'impaye' 
+              && updatedTaxe.statut_paiement === 'paye') {
+            setRecentlyPaidTaxes((prev) => new Set([...prev, updatedTaxe.id]));
+            setTimeout(() => {
+              setRecentlyPaidTaxes((prev) => {
+                const newSet = new Set(prev);
+                newSet.delete(updatedTaxe.id);
+                return newSet;
+              });
+            }, 2000);
+
+            toast.success('Paiement validé en temps réel', {
+              description: `Taxe mise à jour automatiquement`,
+            });
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
   const applyFilter = () => {
     if (filterStatut === "tous") {
       setFilteredTaxes(taxes);
