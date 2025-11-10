@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { MembresCooperative } from "@/components/cooperative/MembresCooperative";
 import { TaxesCooperative } from "@/components/cooperative/TaxesCooperative";
-import { PaiementsCooperative } from "@/components/cooperative/PaiementsCooperative";
+import { PaiementTaxesGroupees } from "@/components/cooperative/PaiementTaxesGroupees";
 import { StatistiquesCooperative } from "@/components/cooperative/StatistiquesCooperative";
 import { NotificationsHistorique } from "@/components/cooperative/NotificationsHistorique";
 import { CooperativeSidebar } from "@/components/cooperative/CooperativeSidebar";
@@ -214,7 +214,7 @@ export default function CooperativeDashboard() {
                 >
                   {displayedTab === "dashboard" && renderDashboard()}
                   {displayedTab === "taxes" && <TaxesCooperative key={`taxes-${refreshKey}`} />}
-                  {displayedTab === "paiements" && <PaiementsCooperative key={`paiements-${refreshKey}`} />}
+                  {displayedTab === "paiements" && <PaiementTaxesGroupees key={`paiements-${refreshKey}`} />}
                   {displayedTab === "remontees" && <MesRemonteesContent key={`remontees-${refreshKey}`} />}
                   {displayedTab === "notifications" && <NotificationsHistorique key={`notifications-${refreshKey}`} />}
                   {displayedTab === "membres" && <MembresCooperative key={`membres-${refreshKey}`} />}
