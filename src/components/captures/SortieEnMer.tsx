@@ -10,6 +10,7 @@ import { format, differenceInHours, differenceInMinutes } from "date-fns";
 import { fr } from "date-fns/locale";
 import { DepartEnMerDialog } from "./DepartEnMerDialog";
 import { RetourAuPortDialog } from "./RetourAuPortDialog";
+import { DeclarerCaptureDialog } from "./DeclarerCaptureDialog";
 
 interface SortieEnCours {
   id: string;
@@ -28,9 +29,11 @@ interface SortieEnMerProps {
 export const SortieEnMer = ({ onSortieChange }: SortieEnMerProps) => {
   const { user } = useAuth();
   const [sortieEnCours, setSortieEnCours] = useState<SortieEnCours | null>(null);
+  const [sortieTerminee, setSortieTerminee] = useState<SortieEnCours | null>(null);
   const [loading, setLoading] = useState(true);
   const [departDialogOpen, setDepartDialogOpen] = useState(false);
   const [retourDialogOpen, setRetourDialogOpen] = useState(false);
+  const [captureDialogOpen, setCaptureDialogOpen] = useState(false);
 
   useEffect(() => {
     loadSortieEnCours();
@@ -89,10 +92,12 @@ export const SortieEnMer = ({ onSortieChange }: SortieEnMerProps) => {
     setDepartDialogOpen(false);
   };
 
-  const handleRetourSuccess = () => {
+  const handleRetourSuccess = (sortieTerminee: SortieEnCours & { date_retour: string; heure_retour: string; effort_heures: number }) => {
     loadSortieEnCours();
     onSortieChange?.();
     setRetourDialogOpen(false);
+    setSortieTerminee(sortieTerminee);
+    setCaptureDialogOpen(true);
   };
 
   const calculerTempsEnMer = () => {
@@ -199,6 +204,12 @@ export const SortieEnMer = ({ onSortieChange }: SortieEnMerProps) => {
         onOpenChange={setRetourDialogOpen}
         sortie={sortieEnCours}
         onSuccess={handleRetourSuccess}
+      />
+
+      <DeclarerCaptureDialog
+        open={captureDialogOpen}
+        onOpenChange={setCaptureDialogOpen}
+        sortieEnCours={sortieTerminee}
       />
     </>
   );

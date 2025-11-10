@@ -46,7 +46,7 @@ interface RetourAuPortDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   sortie: SortieEnCours | null;
-  onSuccess?: () => void;
+  onSuccess?: (sortieTerminee: SortieEnCours & { date_retour: string; heure_retour: string; effort_heures: number }) => void;
 }
 
 export const RetourAuPortDialog = ({ open, onOpenChange, sortie, onSuccess }: RetourAuPortDialogProps) => {
@@ -128,10 +128,15 @@ export const RetourAuPortDialog = ({ open, onOpenChange, sortie, onSuccess }: Re
       setSubmitSuccess(true);
       toast.success(`Retour enregistré - Effort de pêche: ${effortCalcule.toFixed(2)}h`);
       
-      // Fermer le modal après 2 secondes
+      // Fermer le modal et ouvrir la déclaration de capture
       setTimeout(() => {
         onOpenChange(false);
-        onSuccess?.();
+        onSuccess?.({
+          ...sortie,
+          date_retour: data.date_retour,
+          heure_retour: data.heure_retour,
+          effort_heures: effortCalcule,
+        });
       }, 2000);
     } catch (error: any) {
       console.error("Erreur:", error);

@@ -8,6 +8,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { DepartEnMerDialog } from "@/components/captures/DepartEnMerDialog";
 import { RetourAuPortDialog } from "@/components/captures/RetourAuPortDialog";
+import { DeclarerCaptureDialog } from "@/components/captures/DeclarerCaptureDialog";
 import { SortieEnCoursWidget } from "@/components/captures/SortieEnCoursWidget";
 import { HistoriqueSorties } from "@/components/captures/HistoriqueSorties";
 
@@ -39,8 +40,10 @@ export default function PecheurOverview() {
     notifications: 0,
   });
   const [sortieEnCours, setSortieEnCours] = useState<SortieEnCours | null>(null);
+  const [sortieTerminee, setSortieTerminee] = useState<SortieEnCours | null>(null);
   const [departDialogOpen, setDepartDialogOpen] = useState(false);
   const [retourDialogOpen, setRetourDialogOpen] = useState(false);
+  const [captureDialogOpen, setCaptureDialogOpen] = useState(false);
 
   useEffect(() => {
     loadPecheurData();
@@ -95,6 +98,14 @@ export default function PecheurOverview() {
   const handleSortieChange = () => {
     loadSortieEnCours();
     loadPecheurData();
+  };
+
+  const handleRetourSuccess = (sortieTerminee: SortieEnCours & { date_retour: string; heure_retour: string; effort_heures: number }) => {
+    loadSortieEnCours();
+    loadPecheurData();
+    setRetourDialogOpen(false);
+    setSortieTerminee(sortieTerminee);
+    setCaptureDialogOpen(true);
   };
 
   const loadPecheurData = async () => {
@@ -281,7 +292,13 @@ export default function PecheurOverview() {
         open={retourDialogOpen}
         onOpenChange={setRetourDialogOpen}
         sortie={sortieEnCours}
-        onSuccess={handleSortieChange}
+        onSuccess={handleRetourSuccess}
+      />
+
+      <DeclarerCaptureDialog
+        open={captureDialogOpen}
+        onOpenChange={setCaptureDialogOpen}
+        sortieEnCours={sortieTerminee}
       />
     </div>
   );
