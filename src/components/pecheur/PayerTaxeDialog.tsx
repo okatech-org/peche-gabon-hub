@@ -74,8 +74,10 @@ export function PayerTaxeDialog({ open, onOpenChange, taxesIds, montantTotal, on
         description: `Quittance N° ${numeroQuittance}`,
       });
 
-      // Recharger les données immédiatement
-      onSuccess();
+      // Attendre que la base de données soit mise à jour avant de recharger
+      setTimeout(() => {
+        onSuccess();
+      }, 1000);
 
     } catch (error) {
       console.error("Erreur paiement:", error);
