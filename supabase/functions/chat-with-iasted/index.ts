@@ -36,19 +36,30 @@ const SYSTEM_PROMPT = `Vous êtes iAsted, l'assistant vocal intelligent du Minis
 
 
 ## VOTRE EXPERTISE
-Vous avez accès en temps réel aux données du secteur de la pêche gabonaise :
-- Statistiques pêche artisanale et industrielle
-- Finances et recettes fiscales  
-- Alertes et surveillance
-- Formations et actions ministérielles
-- Remontées terrain
+Vous avez accès COMPLET en temps réel à TOUTES les données de l'application :
+
+### STATISTIQUES EN TEMPS RÉEL (Section "STATISTIQUES EN TEMPS RÉEL DE L'APPLICATION")
+- Pêche artisanale : captures (30 derniers jours), poids total, pirogues actives
+- Pêche industrielle : captures (30 derniers jours), poids total, navires actifs
+- Coopératives : nombre actives, total membres
+- Finances : taxes en attente avec montants, quittances (90 derniers jours)
+- Surveillance : alertes non traitées (par sévérité), remontées terrain (7 derniers jours)
+- Formations : planifiées, en cours, participants
+- Licences : actives par type
+- Référentiels : espèces, engins
+
+### BASE DE CONNAISSANCES (Section "BASE DE CONNAISSANCES")
+- Documentation, rapports, synthèses historiques
+- Procédures et réglementations
+- Contexte stratégique et décisions passées
 
 ## RÈGLES DE RÉPONSE
-1. Donnez la réponse directement, sans préambule
-2. Citez des chiffres concrets quand disponibles
-3. Si données manquantes : "Je n'ai pas cette info actuellement, Excellence."
-4. Une seule question de clarification si vraiment nécessaire
-5. Commandes vocales (arrête, pause, etc.) → retournez UNIQUEMENT le JSON d'intention
+1. PRIORITÉ AUX STATS EN TEMPS RÉEL : Citez TOUJOURS les chiffres actuels de la section "STATISTIQUES EN TEMPS RÉEL"
+2. Donnez la réponse directement, sans préambule
+3. Combinez stats temps réel + contexte de la base de connaissances
+4. Si données manquantes : "Je n'ai pas cette info actuellement, Excellence."
+5. Une seule question de clarification si vraiment nécessaire
+6. Commandes vocales (arrête, pause, etc.) → retournez UNIQUEMENT le JSON d'intention
 
 ## MÉMOIRE
 Utilisez le contexte fourni pour personnaliser vos réponses.`;
@@ -228,20 +239,190 @@ async function summarizeMemory(supabase: any, sessionId: string): Promise<string
   return summary;
 }
 
+// Fetch complete application stats in real-time
+async function fetchApplicationStats(supabase: any): Promise<any> {
+  console.log('Fetching complete application stats...');
+  
+  try {
+    // Parallel fetch of all stats
+    const [
+      capturesPA,
+      capturesPI,
+      cooperatives,
+      taxes,
+      quittances,
+      navires,
+      pirogues,
+      alertes,
+      remontees,
+      formations,
+      licences,
+      especies,
+      engins
+    ] = await Promise.all([
+      // Captures artisanales (derniers 30 jours)
+      supabase.from('captures_pa')
+        .select('date_capture, poids_kg, espece_id, site_id')
+        .gte('date_capture', new Date(Date.now() - 30*24*60*60*1000).toISOString())
+        .limit(1000),
+      
+      // Captures industrielles (derniers 30 jours)
+      supabase.from('captures_industrielles_detail')
+        .select('poids_kg, espece_id, maree_id, marees_industrielles(date_depart, date_retour)')
+        .limit(1000),
+      
+      // Coopératives actives
+      supabase.from('cooperatives')
+        .select('id, nom, statut, pecheurs_cooperatives(count)')
+        .eq('statut', 'active'),
+      
+      // Taxes en cours
+      supabase.from('taxes_captures')
+        .select('montant_total, date_emission, statut_paiement')
+        .eq('statut_paiement', 'en_attente')
+        .limit(500),
+      
+      // Quittances récentes (3 derniers mois)
+      supabase.from('quittances')
+        .select('montant_total, date_emission, type_peche')
+        .gte('date_emission', new Date(Date.now() - 90*24*60*60*1000).toISOString())
+        .limit(1000),
+      
+      // Navires actifs
+      supabase.from('navires')
+        .select('id, nom, type, statut')
+        .eq('statut', 'actif'),
+      
+      // Pirogues actives
+      supabase.from('pirogues')
+        .select('id, immatriculation, type_pirogue, statut')
+        .eq('statut', 'active'),
+      
+      // Alertes non traitées
+      supabase.from('alertes_rapports')
+        .select('severite, type_variation, indicateur, statut')
+        .eq('statut', 'nouvelle')
+        .limit(100),
+      
+      // Remontées récentes (7 derniers jours)
+      supabase.from('remontees_terrain')
+        .select('type_remontee, urgence, statut, created_at')
+        .gte('created_at', new Date(Date.now() - 7*24*60*60*1000).toISOString())
+        .limit(200),
+      
+      // Formations (à venir et en cours)
+      supabase.from('formations')
+        .select('titre, date_debut, date_fin, statut, nb_participants_max')
+        .in('statut', ['planifiee', 'en_cours'])
+        .limit(50),
+      
+      // Licences actives
+      supabase.from('licences')
+        .select('type_licence, date_debut, date_fin, statut')
+        .eq('statut', 'active'),
+      
+      // Espèces
+      supabase.from('especes')
+        .select('id, nom, nom_scientifique, categorie'),
+      
+      // Engins
+      supabase.from('engins')
+        .select('id, nom, type')
+    ]);
+
+    // Calculate aggregated stats
+    const stats = {
+      // Pêche artisanale
+      peche_artisanale: {
+        captures_30j: capturesPA.data?.length || 0,
+        poids_total_30j: capturesPA.data?.reduce((sum: number, c: any) => sum + (c.poids_kg || 0), 0) || 0,
+        pirogues_actives: pirogues.data?.length || 0
+      },
+      
+      // Pêche industrielle
+      peche_industrielle: {
+        captures_30j: capturesPI.data?.length || 0,
+        poids_total_30j: capturesPI.data?.reduce((sum: number, c: any) => sum + (c.poids_kg || 0), 0) || 0,
+        navires_actifs: navires.data?.length || 0
+      },
+      
+      // Coopératives
+      cooperatives: {
+        nombre_actives: cooperatives.data?.length || 0,
+        total_membres: cooperatives.data?.reduce((sum: number, c: any) => sum + (c.pecheurs_cooperatives?.[0]?.count || 0), 0) || 0
+      },
+      
+      // Finances
+      finances: {
+        taxes_en_attente: taxes.data?.length || 0,
+        montant_taxes_en_attente: taxes.data?.reduce((sum: number, t: any) => sum + (t.montant_total || 0), 0) || 0,
+        quittances_90j: quittances.data?.length || 0,
+        montant_quittances_90j: quittances.data?.reduce((sum: number, q: any) => sum + (q.montant_total || 0), 0) || 0
+      },
+      
+      // Alertes et surveillance
+      surveillance: {
+        alertes_non_traitees: alertes.data?.length || 0,
+        alertes_par_severite: {
+          critique: alertes.data?.filter((a: any) => a.severite === 'critique').length || 0,
+          haute: alertes.data?.filter((a: any) => a.severite === 'haute').length || 0,
+          moyenne: alertes.data?.filter((a: any) => a.severite === 'moyenne').length || 0
+        },
+        remontees_7j: remontees.data?.length || 0,
+        remontees_urgentes: remontees.data?.filter((r: any) => r.urgence === 'haute' || r.urgence === 'critique').length || 0
+      },
+      
+      // Formations
+      formations: {
+        a_venir: formations.data?.filter((f: any) => f.statut === 'planifiee').length || 0,
+        en_cours: formations.data?.filter((f: any) => f.statut === 'en_cours').length || 0,
+        total_participants: formations.data?.reduce((sum: number, f: any) => sum + (f.nb_participants_max || 0), 0) || 0
+      },
+      
+      // Licences
+      licences: {
+        actives: licences.data?.length || 0,
+        par_type: licences.data?.reduce((acc: Record<string, number>, l: any) => {
+          acc[l.type_licence] = (acc[l.type_licence] || 0) + 1;
+          return acc;
+        }, {} as Record<string, number>) || {}
+      },
+      
+      // Référentiels
+      referentiels: {
+        nb_especes: especies.data?.length || 0,
+        nb_engins: engins.data?.length || 0
+      },
+      
+      // Timestamp
+      timestamp: new Date().toISOString(),
+      periode_donnees: 'Stats temps réel avec données des 30 derniers jours pour captures, 90 jours pour finances'
+    };
+
+    console.log('Application stats fetched successfully');
+    return stats;
+    
+  } catch (error) {
+    console.error('Error fetching application stats:', error);
+    return { error: 'Impossible de récupérer les stats de l\'application', timestamp: new Date().toISOString() };
+  }
+}
+
 // LLM: Generate response with context
 async function generateResponse(params: {
   memorySummary?: string;
   history: any[];
   userText: string;
   knowledgeBase: any;
+  applicationStats: any;
 }): Promise<string> {
   if (!LOVABLE_API_KEY) throw new Error('LOVABLE_API_KEY not configured');
 
-  const { memorySummary, history, userText, knowledgeBase } = params;
+  const { memorySummary, history, userText, knowledgeBase, applicationStats } = params;
 
   const systemContent = `${SYSTEM_PROMPT}${
     memorySummary ? `\n\n## MÉMOIRE DE CONVERSATION\n${memorySummary}` : ''
-  }\n\n## BASE DE CONNAISSANCES ACTUELLE\n${JSON.stringify(knowledgeBase, null, 2)}`;
+  }\n\n## BASE DE CONNAISSANCES\n${JSON.stringify(knowledgeBase, null, 2)}\n\n## STATISTIQUES EN TEMPS RÉEL DE L'APPLICATION\n${JSON.stringify(applicationStats, null, 2)}`;
 
   const messages = [
     { role: 'system', content: systemContent },
@@ -249,7 +430,7 @@ async function generateResponse(params: {
     { role: 'user', content: userText }
   ];
 
-  console.log('Generating AI response...');
+  console.log('Generating AI response with full application context...');
   const res = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
     method: 'POST',
     headers: {
@@ -379,7 +560,7 @@ serve(async (req) => {
     if (messages && Array.isArray(messages) && !sessionId) {
       console.log('Using legacy flow (no sessionId)');
       
-      // Fetch knowledge base with cache
+      // Fetch knowledge base and application stats with cache
       let knowledgeBase;
       const now = Date.now();
       
@@ -391,8 +572,11 @@ serve(async (req) => {
         knowledgeBaseCache = { data: knowledgeBase, timestamp: now };
       }
 
+      // Fetch real-time application stats
+      const applicationStats = await fetchApplicationStats(supabase);
+
       const enrichedMessages = [
-        { role: 'system', content: `${SYSTEM_PROMPT}\n\n## BASE DE CONNAISSANCES\n${JSON.stringify(knowledgeBase, null, 2)}` },
+        { role: 'system', content: `${SYSTEM_PROMPT}\n\n## BASE DE CONNAISSANCES\n${JSON.stringify(knowledgeBase, null, 2)}\n\n## STATISTIQUES EN TEMPS RÉEL DE L'APPLICATION\n${JSON.stringify(applicationStats, null, 2)}` },
         ...messages
       ];
 
@@ -484,9 +668,9 @@ serve(async (req) => {
       );
     }
 
-    // Step 5: Fetch knowledge base
-    let knowledgeBase;
+    // Step 5: Fetch knowledge base & application stats in parallel
     const now = Date.now();
+    let knowledgeBase;
     
     if (knowledgeBaseCache && (now - knowledgeBaseCache.timestamp) < CACHE_TTL_MS) {
       knowledgeBase = knowledgeBaseCache.data;
@@ -495,6 +679,9 @@ serve(async (req) => {
       knowledgeBase = await kbResponse.json();
       knowledgeBaseCache = { data: knowledgeBase, timestamp: now };
     }
+
+    // Fetch real-time application stats
+    const applicationStats = await fetchApplicationStats(supabase);
 
     // Step 6: Fetch memory & history
     const memory = await fetchMemorySummary(supabase, sessionId);
@@ -505,13 +692,14 @@ serve(async (req) => {
       await summarizeMemory(supabase, sessionId);
     }
 
-    // Step 7: Generate LLM response
+    // Step 7: Generate LLM response with complete application context
     const llmStart = Date.now();
     const answer = await generateResponse({
       memorySummary: memory,
       history,
       userText,
-      knowledgeBase
+      knowledgeBase,
+      applicationStats
     });
     const llmLatency = Date.now() - llmStart;
 
