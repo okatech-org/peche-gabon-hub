@@ -129,12 +129,13 @@ const ROUTER_PROMPT = `Vous êtes un routeur d'intentions pour classifier les en
 Catégories EXACTES :
 - "voice_command": commandes agent (arrête, pause, continue, nouvelle question, historique, changer voix à <nom>)
 - "ask_resume": demande de résumé/débrief de session
+- "briefing_request": demande du briefing quotidien (briefing du jour, rapport du matin, situation du jour)
 - "query": question métier/information générale
 - "small_talk": salutation, politesse, remerciements
 
 Répondez UNIQUEMENT en JSON valide, sans texte additionnel :
 {
-  "category": "<voice_command|ask_resume|query|small_talk>",
+  "category": "<voice_command|ask_resume|briefing_request|query|small_talk>",
   "command": "<optionnel, nom canonique>",
   "args": {"target": "...", "voice": "...", "lang": "..."}
 }`;
@@ -746,15 +747,78 @@ serve(async (req) => {
       lang: langHint ?? null
     });
 
-    // Step 4: Handle voice commands or special intents
-    if (intent.category === 'voice_command' || intent.category === 'ask_resume') {
+    // Step 4: Handle voice commands, briefing requests or special intents
+    if (intent.category === 'voice_command' || intent.category === 'ask_resume' || intent.category === 'briefing_request') {
       await supabase.from('conversation_messages').insert({
         session_id: sessionId,
         role: 'router',
         content_json: intent
       });
 
-      // Log analytics
+      // Handle briefing request
+      if (intent.category === 'briefing_request') {
+        console.log('Fetching today\'s briefing...');
+        
+        const today = new Date().toISOString().split('T')[0];
+        const { data: briefing } = await supabase
+          .from('briefings_quotidiens')
+          .select('*')
+          .eq('date_briefing', today)
+          .single();
+
+        if (briefing) {
+          // Mark as read
+          await supabase
+            .from('briefings_quotidiens')
+            .update({ statut: 'lu', lu_le: new Date().toISOString() })
+            .eq('id', briefing.id);
+
+          // Log analytics
+          await supabase.from('analytics_voice_events').insert({
+            session_id: sessionId,
+            user_id: userId,
+            event_type: 'briefing_read',
+            data: { 
+              briefing_id: briefing.id,
+              briefing_date: briefing.date_briefing,
+              latencies: { stt: sttLatency, router: routerLatency, total: Date.now() - started }
+            }
+          });
+
+          // Return briefing content with audio
+          return new Response(
+            JSON.stringify({
+              ok: true,
+              route: { ...intent, action: 'play_briefing' },
+              userText,
+              briefing: {
+                text: briefing.contenu_vocal,
+                audio: briefing.audio_url,
+                points_cles: briefing.points_cles,
+                questions_strategiques: briefing.questions_strategiques
+              },
+              latencies: { stt: sttLatency, router: routerLatency, total: Date.now() - started }
+            }),
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        } else {
+          // No briefing available for today
+          const fallbackMessage = "Excellence, le briefing du jour n'est pas encore disponible. Je peux vous donner les statistiques actuelles si vous le souhaitez.";
+          
+          return new Response(
+            JSON.stringify({
+              ok: true,
+              route: { ...intent, action: 'no_briefing' },
+              userText,
+              message: fallbackMessage,
+              latencies: { stt: sttLatency, router: routerLatency, total: Date.now() - started }
+            }),
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+      }
+
+      // Log analytics for other commands
       await supabase.from('analytics_voice_events').insert({
         session_id: sessionId,
         user_id: userId,

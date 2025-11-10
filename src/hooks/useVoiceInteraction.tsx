@@ -555,6 +555,12 @@ export const useVoiceInteraction = () => {
           return;
         }
 
+        // Handle briefing request
+        if (chatData.route?.category === 'briefing_request') {
+          await handleBriefingRequest(chatData);
+          return;
+        }
+
         // Update messages
         const userMessage: VoiceInteractionMessage = {
           role: 'user',
@@ -658,6 +664,57 @@ export const useVoiceInteraction = () => {
       }
     } catch (error) {
       console.error('Error generating debrief:', error);
+      setVoiceState('idle');
+    }
+  };
+
+  const handleBriefingRequest = async (chatData: any) => {
+    try {
+      setVoiceState('thinking');
+      
+      if (chatData.briefing?.audio) {
+        console.log('📰 Playing briefing audio...');
+        
+        // Update messages with briefing info
+        const userMessage: VoiceInteractionMessage = {
+          role: 'user',
+          content: chatData.userText
+        };
+        
+        const assistantMessage: VoiceInteractionMessage = {
+          role: 'assistant',
+          content: chatData.briefing.text,
+          audio_base64: chatData.briefing.audio.replace('data:audio/mp3;base64,', '')
+        };
+
+        setMessages(prev => [...prev, userMessage, assistantMessage]);
+
+        // Play briefing audio
+        await playAudioResponse(assistantMessage.audio_base64!);
+      } else {
+        // No briefing available, play fallback message
+        console.log('📰 No briefing available, playing fallback...');
+        
+        const userMessage: VoiceInteractionMessage = {
+          role: 'user',
+          content: chatData.userText
+        };
+
+        setMessages(prev => [...prev, userMessage]);
+
+        // Generate audio for fallback message
+        const { data: audioData } = await supabase.functions.invoke('generate-greeting-audio', {
+          body: { text: chatData.message || "Le briefing du jour n'est pas encore disponible." }
+        });
+
+        if (audioData?.audioContent) {
+          await playAudioResponse(audioData.audioContent);
+        } else {
+          setVoiceState('idle');
+        }
+      }
+    } catch (error) {
+      console.error('Error handling briefing request:', error);
       setVoiceState('idle');
     }
   };
