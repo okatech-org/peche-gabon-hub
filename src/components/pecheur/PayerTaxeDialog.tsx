@@ -14,7 +14,7 @@ interface PayerTaxeDialogProps {
   onOpenChange: (open: boolean) => void;
   taxesIds: string[];
   montantTotal: number;
-  onSuccess: () => void;
+  onSuccess: (paidIds?: string[], quittanceNumero?: string) => void;
 }
 
 export function PayerTaxeDialog({ open, onOpenChange, taxesIds, montantTotal, onSuccess }: PayerTaxeDialogProps) {
@@ -64,6 +64,7 @@ export function PayerTaxeDialog({ open, onOpenChange, taxesIds, montantTotal, on
           statut_paiement: "paye",
           date_paiement: new Date().toISOString(),
           quittance_numero: numeroQuittance,
+          mode_paiement: modePaiement,
         })
         .in("id", taxesIds);
 
@@ -74,10 +75,8 @@ export function PayerTaxeDialog({ open, onOpenChange, taxesIds, montantTotal, on
         description: `Quittance N° ${numeroQuittance}`,
       });
 
-      // Attendre que la base de données soit mise à jour avant de recharger
-      setTimeout(() => {
-        onSuccess();
-      }, 1000);
+      // Informer immédiatement le parent pour MAJ optimiste
+      onSuccess?.(taxesIds, numeroQuittance);
 
     } catch (error) {
       console.error("Erreur paiement:", error);

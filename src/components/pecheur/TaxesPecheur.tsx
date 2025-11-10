@@ -424,8 +424,19 @@ export function TaxesPecheur() {
         onOpenChange={setShowPaymentDialog}
         taxesIds={selectedTaxes}
         montantTotal={selectedAmount}
-        onSuccess={() => {
+        onSuccess={(paidIds, quittance) => {
+          if (paidIds && paidIds.length > 0) {
+            // MAJ optimiste immédiate
+            setTaxes((prev) => prev.map(t => paidIds.includes(t.id)
+              ? { ...t, statut_paiement: 'paye', quittance_numero: quittance || t.quittance_numero }
+              : t
+            ));
+            const anim = new Set(paidIds);
+            setRecentlyPaidTaxes(anim);
+            setTimeout(() => setRecentlyPaidTaxes(new Set()), 2000);
+          }
           setSelectedTaxes([]);
+          // Rechargement pour synchroniser avec le backend
           loadTaxes();
         }}
       />
