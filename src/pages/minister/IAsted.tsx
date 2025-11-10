@@ -100,10 +100,10 @@ export default function IAsted() {
         <TabsContent value="settings" className="mt-6">
           <div className="max-w-2xl mx-auto">
             <VoiceSettings
-              onVoiceChange={handleVoiceChange}
-              onSilenceDurationChange={handleSilenceDurationChange}
-              onThresholdChange={handleThresholdChange}
-              onContinuousModeChange={handleContinuousModeChange}
+              onResumeSession={(id) => {
+                // Handle session resume - redirect or update state as needed
+                window.location.reload();
+              }}
             />
           </div>
         </TabsContent>

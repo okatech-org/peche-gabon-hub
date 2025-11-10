@@ -794,12 +794,13 @@ serve(async (req) => {
     // Step 3.5: Handle focus mode
     const { data: sessionData } = await supabase
       .from('conversation_sessions')
-      .select('focus_mode, focus_topic, focus_depth, focus_started_at')
+      .select('focus_mode, focus_topic, focus_depth, focus_started_at, user_id')
       .eq('id', sessionId)
       .single();
 
     let focusContext = '';
     let newFocusDepth = 0;
+    let resumedSession = false;
 
     if (sessionData?.focus_mode) {
       console.log('Focus mode active:', sessionData);
@@ -823,29 +824,93 @@ serve(async (req) => {
       } else {
         // Extract or maintain focus topic
         let topic = sessionData.focus_topic;
+        
+        // Check if this is a new topic or resuming previous session
         if (!topic || sessionData.focus_depth === 0) {
-          // First question in focus mode - extract topic
-          topic = userText.length > 50 ? userText.substring(0, 50) + '...' : userText;
-          newFocusDepth = 1;
+          // Check for previous focus sessions on similar topic
+          const potentialTopic = userText.toLowerCase().trim();
+          
+          const { data: previousFocusSessions } = await supabase
+            .from('conversation_sessions')
+            .select('id, focus_topic, focus_depth, focus_started_at, updated_at')
+            .eq('user_id', sessionData.user_id)
+            .eq('focus_mode', true)
+            .not('focus_topic', 'is', null)
+            .neq('id', sessionId)
+            .order('updated_at', { ascending: false })
+            .limit(10);
+
+          // Check if any previous session has a similar topic
+          if (previousFocusSessions && previousFocusSessions.length > 0) {
+            for (const prevSession of previousFocusSessions) {
+              const prevTopic = prevSession.focus_topic?.toLowerCase() || '';
+              // Check if topics are similar (contains or is contained, or share significant words)
+              const sharedWords = potentialTopic.split(' ').filter((word: string) => 
+                word.length > 4 && prevTopic.includes(word)
+              );
+              
+              if (prevTopic && (
+                potentialTopic.includes(prevTopic) || 
+                prevTopic.includes(potentialTopic) ||
+                sharedWords.length >= 2
+              )) {
+                // Resume this previous session's topic and depth
+                topic = prevSession.focus_topic;
+                newFocusDepth = (prevSession.focus_depth || 0) + 1;
+                resumedSession = true;
+                
+                console.log(`Resuming focus session on topic: ${topic} at depth ${newFocusDepth}`);
+                
+                // Update current session with resumed topic and depth
+                await supabase
+                  .from('conversation_sessions')
+                  .update({ 
+                    focus_topic: topic,
+                    focus_depth: newFocusDepth,
+                    focus_started_at: prevSession.focus_started_at
+                  })
+                  .eq('id', sessionId);
+                
+                break;
+              }
+            }
+          }
+          
+          // If no previous session found, start new topic
+          if (!resumedSession) {
+            topic = userText.length > 50 ? userText.substring(0, 50) + '...' : userText;
+            newFocusDepth = 1;
+            
+            await supabase
+              .from('conversation_sessions')
+              .update({ 
+                focus_topic: topic,
+                focus_depth: newFocusDepth,
+                focus_started_at: new Date().toISOString()
+              })
+              .eq('id', sessionId);
+          }
         } else {
-          // Continue focus - increment depth
+          // Continue current focus - increment depth
           newFocusDepth = (sessionData.focus_depth || 0) + 1;
+          topic = sessionData.focus_topic;
+          
+          await supabase
+            .from('conversation_sessions')
+            .update({ 
+              focus_depth: newFocusDepth
+            })
+            .eq('id', sessionId);
         }
 
-        // Update session with new depth
-        await supabase
-          .from('conversation_sessions')
-          .update({ 
-            focus_topic: topic,
-            focus_depth: newFocusDepth,
-            focus_started_at: sessionData.focus_depth === 0 ? new Date().toISOString() : sessionData.focus_started_at
-          })
-          .eq('id', sessionId);
-
         // Build focus context for AI
+        const resumedMessage = resumedSession 
+          ? `\n⚠️ REPRISE DE CONVERSATION: Vous reprenez une discussion précédente sur ce sujet. Commencez par reconnaître que vous reprenez là où on s'était arrêté.`
+          : '';
+        
         focusContext = `\n\n## MODE FOCUS ACTIVÉ 🎯
 SUJET PRINCIPAL: "${topic}"
-PROFONDEUR ACTUELLE: Niveau ${newFocusDepth}/7
+PROFONDEUR ACTUELLE: Niveau ${newFocusDepth}/7${resumedMessage}
 
 INSTRUCTIONS FOCUS:
 - RESTEZ absolument sur le sujet: "${topic}"

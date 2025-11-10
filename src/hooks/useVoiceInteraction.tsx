@@ -307,7 +307,12 @@ export const useVoiceInteraction = () => {
     }
   };
 
-  const startListening = async () => {
+  const startListening = useCallback(async (resumeSessionId?: string) => {
+    // If resuming a session, update the current session ID
+    const effectiveSessionId = resumeSessionId || sessionId;
+    if (resumeSessionId) {
+      setSessionId(resumeSessionId);
+    }
     try {
       setLiveTranscript(''); // Reset transcript
       
@@ -450,7 +455,17 @@ export const useVoiceInteraction = () => {
       });
       setVoiceState('idle');
     }
-  };
+  }, [
+    sessionId,
+    toast,
+    user,
+    selectedVoiceId,
+    silenceDuration,
+    silenceThreshold,
+    continuousMode,
+    voiceState,
+    mediaRecorder
+  ]);
 
   const stopListening = () => {
     // Stop speech recognition
