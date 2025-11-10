@@ -116,9 +116,16 @@ export const DeclarerCaptureDialog = ({ open, onOpenChange }: DeclarerCaptureDia
   const onSubmit = async (data: CaptureFormData) => {
     setLoading(true);
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error("Vous devez être connecté");
+        return;
+      }
+
       const dateCapture = new Date(data.date_capture);
       
       const { error } = await supabase.from('captures_pa').insert({
+        declare_par: user.id,
         pirogue_id: data.pirogue_id,
         site_id: data.site_id,
         date_capture: data.date_capture,
