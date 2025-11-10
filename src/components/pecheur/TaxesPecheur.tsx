@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Loader2, DollarSign, AlertCircle, CheckCircle, Info, Calendar, Filter, Phone } from "lucide-react";
 import { toast } from "sonner";
 import { format, isPast, differenceInDays } from "date-fns";
@@ -15,6 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { PayerTaxeDialog } from "./PayerTaxeDialog";
 
 interface TaxeCapture {
   id: string;
@@ -38,6 +40,8 @@ export function TaxesPecheur() {
   const [taxes, setTaxes] = useState<TaxeCapture[]>([]);
   const [filteredTaxes, setFilteredTaxes] = useState<TaxeCapture[]>([]);
   const [filterStatut, setFilterStatut] = useState<string>("tous");
+  const [selectedTaxes, setSelectedTaxes] = useState<string[]>([]);
+  const [showPaymentDialog, setShowPaymentDialog] = useState(false);
   const [stats, setStats] = useState({
     totalImpaye: 0,
     totalPaye: 0,
@@ -113,6 +117,23 @@ export function TaxesPecheur() {
     return <div className="flex items-center justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div>;
   }
 
+  const handleSelectTaxe = (taxeId: string, checked: boolean) => {
+    if (checked) {
+      setSelectedTaxes(prev => [...prev, taxeId]);
+    } else {
+      setSelectedTaxes(prev => prev.filter(id => id !== taxeId));
+    }
+  };
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      const impayeesIds = filteredTaxes.filter(t => t.statut_paiement === 'impaye').map(t => t.id);
+      setSelectedTaxes(impayeesIds);
+    } else {
+      setSelectedTaxes([]);
+    }
+  };
+
   const getEcheanceStatus = (dateEcheance: string | null) => {
     if (!dateEcheance) return null;
     const echeance = new Date(dateEcheance);
@@ -128,6 +149,10 @@ export function TaxesPecheur() {
     }
     return { label: "OK", variant: "default" as const, days: daysUntil };
   };
+
+  const selectedAmount = taxes
+    .filter(t => selectedTaxes.includes(t.id))
+    .reduce((sum, t) => sum + t.montant_taxe, 0);
 
   return (
     <div className="space-y-6">
@@ -219,6 +244,26 @@ export function TaxesPecheur() {
         )}
       </div>
 
+      {selectedTaxes.length > 0 && (
+        <Card className="border-primary">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium">
+                  {selectedTaxes.length} taxe{selectedTaxes.length > 1 ? "s" : ""} sélectionnée{selectedTaxes.length > 1 ? "s" : ""}
+                </p>
+                <p className="text-2xl font-bold text-primary">
+                  {selectedAmount.toLocaleString()} FCFA
+                </p>
+              </div>
+              <Button onClick={() => setShowPaymentDialog(true)} size="lg">
+                Payer la sélection
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
@@ -253,6 +298,12 @@ export function TaxesPecheur() {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead className="w-12">
+                      <Checkbox
+                        checked={selectedTaxes.length === filteredTaxes.filter(t => t.statut_paiement === 'impaye').length && filteredTaxes.filter(t => t.statut_paiement === 'impaye').length > 0}
+                        onCheckedChange={handleSelectAll}
+                      />
+                    </TableHead>
                     <TableHead>Date capture</TableHead>
                     <TableHead>Espèce</TableHead>
                     <TableHead>Barème</TableHead>
@@ -260,13 +311,23 @@ export function TaxesPecheur() {
                     <TableHead className="text-right">Montant</TableHead>
                     <TableHead>Échéance</TableHead>
                     <TableHead>Statut</TableHead>
+                    <TableHead>Action</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredTaxes.map((taxe) => {
                     const echeanceStatus = getEcheanceStatus(taxe.date_echeance);
+                    const isImpaye = taxe.statut_paiement === 'impaye';
                     return (
                       <TableRow key={taxe.id}>
+                        <TableCell>
+                          {isImpaye && (
+                            <Checkbox
+                              checked={selectedTaxes.includes(taxe.id)}
+                              onCheckedChange={(checked) => handleSelectTaxe(taxe.id, checked as boolean)}
+                            />
+                          )}
+                        </TableCell>
                         <TableCell className="font-medium">
                           {format(new Date(taxe.created_at), "dd/MM/yyyy", { locale: fr })}
                         </TableCell>
@@ -282,7 +343,7 @@ export function TaxesPecheur() {
                           {taxe.date_echeance ? (
                             <div className="flex flex-col gap-1">
                               <span className="text-sm">{format(new Date(taxe.date_echeance), "dd/MM/yyyy", { locale: fr })}</span>
-                              {echeanceStatus && taxe.statut_paiement === 'impaye' && (
+                              {echeanceStatus && isImpaye && (
                                 <Badge variant={echeanceStatus.variant} className="text-xs w-fit">
                                   {echeanceStatus.label}
                                   {echeanceStatus.days >= 0 && ` (${echeanceStatus.days}j)`}
@@ -298,6 +359,20 @@ export function TaxesPecheur() {
                             {taxe.statut_paiement === "paye" ? "Payé" : "Impayé"}
                           </Badge>
                         </TableCell>
+                        <TableCell>
+                          {isImpaye && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => {
+                                setSelectedTaxes([taxe.id]);
+                                setShowPaymentDialog(true);
+                              }}
+                            >
+                              Payer
+                            </Button>
+                          )}
+                        </TableCell>
                       </TableRow>
                     );
                   })}
@@ -307,6 +382,17 @@ export function TaxesPecheur() {
           )}
         </CardContent>
       </Card>
+
+      <PayerTaxeDialog
+        open={showPaymentDialog}
+        onOpenChange={setShowPaymentDialog}
+        taxesIds={selectedTaxes}
+        montantTotal={selectedAmount}
+        onSuccess={() => {
+          setSelectedTaxes([]);
+          loadTaxes();
+        }}
+      />
     </div>
   );
 }
