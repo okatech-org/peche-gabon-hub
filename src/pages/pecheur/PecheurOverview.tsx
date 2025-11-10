@@ -9,6 +9,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { DepartEnMerDialog } from "@/components/captures/DepartEnMerDialog";
 import { RetourAuPortDialog } from "@/components/captures/RetourAuPortDialog";
 import { SortieEnCoursWidget } from "@/components/captures/SortieEnCoursWidget";
+import { HistoriqueSorties } from "@/components/captures/HistoriqueSorties";
 
 interface PecheurStats {
   capturesMois: number;
@@ -267,7 +268,10 @@ export default function PecheurOverview() {
         </CardContent>
       </Card>
 
-      <DepartEnMerDialog 
+      {/* Historique des Sorties */}
+      <HistoriqueSorties />
+
+      <DepartEnMerDialog
         open={departDialogOpen}
         onOpenChange={setDepartDialogOpen}
         onSuccess={handleSortieChange}
