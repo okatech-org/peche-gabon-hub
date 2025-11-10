@@ -55,6 +55,8 @@ export const DepartEnMerDialog = ({ open, onOpenChange, onSuccess }: DepartEnMer
   const form = useForm<DepartFormData>({
     resolver: zodResolver(departSchema),
     defaultValues: {
+      pirogue_id: "",
+      site_id: "",
       date_depart: new Date().toISOString().split('T')[0],
       heure_depart: new Date().toTimeString().slice(0, 5),
     },
@@ -64,6 +66,8 @@ export const DepartEnMerDialog = ({ open, onOpenChange, onSuccess }: DepartEnMer
     if (open) {
       loadReferenceData();
       form.reset({
+        pirogue_id: "",
+        site_id: "",
         date_depart: new Date().toISOString().split('T')[0],
         heure_depart: new Date().toTimeString().slice(0, 5),
       });
@@ -140,13 +144,17 @@ export const DepartEnMerDialog = ({ open, onOpenChange, onSuccess }: DepartEnMer
         return;
       }
 
+      const dateDepart = new Date(data.date_depart);
+      
       const { error } = await supabase.from("sorties_peche").insert({
         pecheur_id: user.id,
         pirogue_id: data.pirogue_id,
         site_id: data.site_id,
         date_depart: data.date_depart,
         heure_depart: data.heure_depart,
-      } as any);
+        annee: dateDepart.getFullYear(),
+        mois: dateDepart.getMonth() + 1,
+      });
 
       if (error) throw error;
 
