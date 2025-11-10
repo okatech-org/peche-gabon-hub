@@ -36,6 +36,22 @@ const SYSTEM_PROMPT = `Vous êtes iAsted, l'assistant vocal intelligent du Minis
 - Créez un véritable échange humain, pas un simple Q&A
 - L'utilisateur peut dire "non" ou "stop" pour terminer la conversation
 
+## MODE FOCUS (QUAND ACTIVÉ)
+🎯 En mode focus, vous maintenez une conversation approfondie sur UN SEUL sujet :
+- RESTEZ sur le sujet principal identifié dans la première question
+- Posez des questions de plus en plus approfondies sur ce sujet spécifique
+- Explorez TOUTES les facettes du sujet : causes, conséquences, solutions, historique, projections
+- Ne changez PAS de sujet tant que le ministre ne vous le demande pas
+- Allez en profondeur progressive : général → spécifique → très détaillé → expertise
+- Si le ministre tente de changer de sujet, ramenez subtilement la conversation au sujet principal
+- Exemple de progression en profondeur :
+  * Niveau 1 (général) : "Les recettes artisanales sont de 116M FCFA. Voulez-vous connaître la répartition par site ?"
+  * Niveau 2 (spécifique) : "Le site de Libreville domine avec 45M FCFA. Souhaitez-vous analyser l'évolution mensuelle ?"
+  * Niveau 3 (détaillé) : "On observe une baisse de 12% en février. Dois-je identifier les causes possibles ?"
+  * Niveau 4 (expertise) : "La météo et les migrations d'espèces expliquent 80% de la baisse. Voulez-vous des recommandations d'action ?"
+- Comptez mentalement la profondeur et augmentez le niveau de détail à chaque échange
+- Arrêtez seulement si : le ministre dit "stop", "c'est bon", "autre chose", ou si vous avez épuisé le sujet (5-7 niveaux)
+
 ## STYLE DE CONVERSATION (CRITIQUE)
 🎙️ Vous parlez à voix haute comme un assistant vocal naturel :
 - Réponses ULTRA-COURTES (1-2 phrases max, 20-40 mots)
@@ -548,14 +564,17 @@ async function generateResponse(params: {
   userText: string;
   knowledgeBase: any;
   applicationStats: any;
+  focusContext?: string;
 }): Promise<string> {
   if (!LOVABLE_API_KEY) throw new Error('LOVABLE_API_KEY not configured');
 
-  const { memorySummary, history, userText, knowledgeBase, applicationStats } = params;
+  const { memorySummary, history, userText, knowledgeBase, applicationStats, focusContext } = params;
 
   const systemContent = `${SYSTEM_PROMPT}${
     memorySummary ? `\n\n## MÉMOIRE DE CONVERSATION\n${memorySummary}` : ''
-  }\n\n## BASE DE CONNAISSANCES\n${JSON.stringify(knowledgeBase, null, 2)}\n\n## STATISTIQUES EN TEMPS RÉEL DE L'APPLICATION\n${JSON.stringify(applicationStats, null, 2)}`;
+  }\n\n## BASE DE CONNAISSANCES\n${JSON.stringify(knowledgeBase, null, 2)}\n\n## STATISTIQUES EN TEMPS RÉEL DE L'APPLICATION\n${JSON.stringify(applicationStats, null, 2)}${
+    focusContext || ''
+  }`;
 
   const messages = [
     { role: 'system', content: systemContent },
@@ -772,6 +791,76 @@ serve(async (req) => {
       lang: langHint ?? null
     });
 
+    // Step 3.5: Handle focus mode
+    const { data: sessionData } = await supabase
+      .from('conversation_sessions')
+      .select('focus_mode, focus_topic, focus_depth, focus_started_at')
+      .eq('id', sessionId)
+      .single();
+
+    let focusContext = '';
+    let newFocusDepth = 0;
+
+    if (sessionData?.focus_mode) {
+      console.log('Focus mode active:', sessionData);
+      
+      // Check if user wants to exit focus mode
+      const exitKeywords = ['stop', 'arrête', 'c\'est bon', 'ça suffit', 'autre chose', 'autre sujet', 'change de sujet'];
+      const wantsToExit = exitKeywords.some(keyword => userText.toLowerCase().includes(keyword));
+      
+      if (wantsToExit) {
+        // Reset focus mode
+        await supabase
+          .from('conversation_sessions')
+          .update({ 
+            focus_mode: false, 
+            focus_topic: null, 
+            focus_depth: 0 
+          })
+          .eq('id', sessionId);
+        
+        focusContext = '\n\n## MODE FOCUS: DÉSACTIVÉ (utilisateur a demandé à changer de sujet)\nVous pouvez maintenant répondre librement à toute question.';
+      } else {
+        // Extract or maintain focus topic
+        let topic = sessionData.focus_topic;
+        if (!topic || sessionData.focus_depth === 0) {
+          // First question in focus mode - extract topic
+          topic = userText.length > 50 ? userText.substring(0, 50) + '...' : userText;
+          newFocusDepth = 1;
+        } else {
+          // Continue focus - increment depth
+          newFocusDepth = (sessionData.focus_depth || 0) + 1;
+        }
+
+        // Update session with new depth
+        await supabase
+          .from('conversation_sessions')
+          .update({ 
+            focus_topic: topic,
+            focus_depth: newFocusDepth,
+            focus_started_at: sessionData.focus_depth === 0 ? new Date().toISOString() : sessionData.focus_started_at
+          })
+          .eq('id', sessionId);
+
+        // Build focus context for AI
+        focusContext = `\n\n## MODE FOCUS ACTIVÉ 🎯
+SUJET PRINCIPAL: "${topic}"
+PROFONDEUR ACTUELLE: Niveau ${newFocusDepth}/7
+
+INSTRUCTIONS FOCUS:
+- RESTEZ absolument sur le sujet: "${topic}"
+- Vous êtes au niveau ${newFocusDepth} de profondeur
+- Posez une question de niveau ${newFocusDepth + 1} (plus approfondie que la précédente)
+- Progression suggérée:
+  * Niveau 1-2: Vue d'ensemble et chiffres clés
+  * Niveau 3-4: Analyses détaillées et tendances
+  * Niveau 5-6: Causes profondes et impacts
+  * Niveau 7+: Recommandations d'experts et actions précises
+- Si niveau >= 7, proposez des recommandations concrètes et demandez si le ministre veut continuer
+- Ne déviez PAS du sujet principal même si la question semble s'en éloigner`;
+      }
+    }
+
     // Step 4: Handle voice commands, briefing requests or special intents
     if (intent.category === 'voice_command' || intent.category === 'ask_resume' || intent.category === 'briefing_request') {
       await supabase.from('conversation_messages').insert({
@@ -897,7 +986,8 @@ serve(async (req) => {
       history,
       userText,
       knowledgeBase,
-      applicationStats
+      applicationStats,
+      focusContext // Add focus context
     });
     const llmLatency = Date.now() - llmStart;
 

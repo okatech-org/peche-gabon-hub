@@ -1094,6 +1094,10 @@ export type Database = {
         Row: {
           created_at: string
           ended_at: string | null
+          focus_depth: number | null
+          focus_mode: boolean | null
+          focus_started_at: string | null
+          focus_topic: string | null
           id: string
           language: string | null
           memory_summary: string | null
@@ -1107,6 +1111,10 @@ export type Database = {
         Insert: {
           created_at?: string
           ended_at?: string | null
+          focus_depth?: number | null
+          focus_mode?: boolean | null
+          focus_started_at?: string | null
+          focus_topic?: string | null
           id?: string
           language?: string | null
           memory_summary?: string | null
@@ -1120,6 +1128,10 @@ export type Database = {
         Update: {
           created_at?: string
           ended_at?: string | null
+          focus_depth?: number | null
+          focus_mode?: boolean | null
+          focus_started_at?: string | null
+          focus_topic?: string | null
           id?: string
           language?: string | null
           memory_summary?: string | null
@@ -4535,6 +4547,7 @@ export type Database = {
           updated_at: string
           user_id: string
           voice_continuous_mode: boolean | null
+          voice_focus_mode: boolean | null
           voice_id: string | null
           voice_silence_duration: number | null
           voice_silence_threshold: number | null
@@ -4549,6 +4562,7 @@ export type Database = {
           updated_at?: string
           user_id: string
           voice_continuous_mode?: boolean | null
+          voice_focus_mode?: boolean | null
           voice_id?: string | null
           voice_silence_duration?: number | null
           voice_silence_threshold?: number | null
@@ -4563,6 +4577,7 @@ export type Database = {
           updated_at?: string
           user_id?: string
           voice_continuous_mode?: boolean | null
+          voice_focus_mode?: boolean | null
           voice_id?: string | null
           voice_silence_duration?: number | null
           voice_silence_threshold?: number | null

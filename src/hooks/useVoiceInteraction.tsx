@@ -120,7 +120,7 @@ export const useVoiceInteraction = () => {
       try {
         const { data, error } = await supabase
           .from('user_preferences')
-          .select('voice_silence_duration, voice_silence_threshold, voice_continuous_mode')
+          .select('voice_silence_duration, voice_silence_threshold, voice_continuous_mode, voice_focus_mode')
           .eq('user_id', user.id)
           .single();
 
@@ -135,6 +135,14 @@ export const useVoiceInteraction = () => {
           const newContinuousMode = data.voice_continuous_mode || false;
           setContinuousMode(newContinuousMode);
           
+          // Update session with focus mode if active
+          if (sessionId && data.voice_focus_mode) {
+            await supabase
+              .from('conversation_sessions')
+              .update({ focus_mode: data.voice_focus_mode })
+              .eq('id', sessionId);
+          }
+          
           if (!newContinuousMode) {
             continuousModeToastShownRef.current = false;
           }
@@ -145,7 +153,7 @@ export const useVoiceInteraction = () => {
     };
 
     loadVoicePreferences();
-  }, [user]);
+  }, [user, sessionId]);
 
   const getGreetingMessage = () => {
     const now = new Date();
