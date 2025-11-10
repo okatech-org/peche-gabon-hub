@@ -561,6 +561,36 @@ export const useVoiceInteraction = () => {
           return;
         }
 
+        // Check for "non" to close conversation
+        const userTextLower = chatData.userText.toLowerCase().trim();
+        if (['non', 'non merci', 'c\'est bon', 'ça suffit', 'stop', 'arrête'].includes(userTextLower)) {
+          console.log('👋 User said no, closing conversation');
+          
+          const userMessage: VoiceInteractionMessage = {
+            role: 'user',
+            content: chatData.userText
+          };
+          
+          const farewellMessage: VoiceInteractionMessage = {
+            role: 'assistant',
+            content: 'Très bien Excellence, à votre service.',
+          };
+
+          setMessages(prev => [...prev, userMessage, farewellMessage]);
+
+          // Generate farewell audio
+          const { data: farewellAudio } = await supabase.functions.invoke('generate-greeting-audio', {
+            body: { text: farewellMessage.content }
+          });
+
+          if (farewellAudio?.audioContent) {
+            await playAudioResponse(farewellAudio.audioContent, false); // false = don't auto-restart
+          } else {
+            setVoiceState('idle');
+          }
+          return;
+        }
+
         // Update messages
         const userMessage: VoiceInteractionMessage = {
           role: 'user',
@@ -589,10 +619,11 @@ export const useVoiceInteraction = () => {
           }
         });
 
-        // Play audio response
+        // Play audio response with auto-restart based on follow-up question
         if (audioBase64) {
           console.log('🔊 Playing audio response...');
-          await playAudioResponse(audioBase64);
+          const shouldAutoRestart = chatData.hasFollowUpQuestion || continuousMode;
+          await playAudioResponse(audioBase64, shouldAutoRestart);
         } else {
           console.log('ℹ️ No audio to play, returning to idle');
           setVoiceState('idle');
@@ -658,7 +689,7 @@ export const useVoiceInteraction = () => {
       });
 
       if (!greetingError && greetingData.audioContent) {
-        await playAudioResponse(greetingData.audioContent);
+        await playAudioResponse(greetingData.audioContent, false); // No auto-restart for resume
       } else {
         setVoiceState('idle');
       }
@@ -689,8 +720,8 @@ export const useVoiceInteraction = () => {
 
         setMessages(prev => [...prev, userMessage, assistantMessage]);
 
-        // Play briefing audio
-        await playAudioResponse(assistantMessage.audio_base64!);
+        // Play briefing audio (no auto-restart for briefing)
+        await playAudioResponse(assistantMessage.audio_base64!, false);
       } else {
         // No briefing available, play fallback message
         console.log('📰 No briefing available, playing fallback...');
@@ -708,7 +739,7 @@ export const useVoiceInteraction = () => {
         });
 
         if (audioData?.audioContent) {
-          await playAudioResponse(audioData.audioContent);
+          await playAudioResponse(audioData.audioContent, false);
         } else {
           setVoiceState('idle');
         }
@@ -719,8 +750,8 @@ export const useVoiceInteraction = () => {
     }
   };
 
-  const playAudioResponse = async (base64Audio: string) => {
-    console.log('🔊 Starting audio playback...');
+  const playAudioResponse = async (base64Audio: string, autoRestart: boolean = false) => {
+    console.log('🔊 Starting audio playback... (autoRestart:', autoRestart, ')');
     try {
       setVoiceState('speaking');
 
@@ -756,9 +787,9 @@ export const useVoiceInteraction = () => {
           });
           setVoiceState('idle');
           
-          // Mode continu: relancer l'écoute
-          if (continuousMode && !continuousModePaused) {
-            console.log('♻️ Continuous mode active, restarting listening (WebAudio)...');
+          // Auto-restart listening if follow-up question or continuous mode
+          if (autoRestart && !continuousModePaused) {
+            console.log('♻️ Auto-restarting listening after follow-up question...');
             setTimeout(() => startListening(), 300);
           }
           return;
@@ -794,8 +825,9 @@ export const useVoiceInteraction = () => {
       setCurrentAudio(null);
       setVoiceState('idle');
 
-      if (continuousMode && !continuousModePaused) {
-        console.log('♻️ Continuous mode active, restarting listening (fallback)...');
+      // Auto-restart listening if follow-up question or continuous mode
+      if (autoRestart && !continuousModePaused) {
+        console.log('♻️ Auto-restarting listening after follow-up question (fallback)...');
         setTimeout(() => startListening(), 300);
       }
 

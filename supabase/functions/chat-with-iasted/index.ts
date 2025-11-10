@@ -29,11 +29,12 @@ const SYSTEM_PROMPT = `Vous êtes iAsted, l'assistant vocal intelligent du Minis
 
 ## MODE CONVERSATION NATURELLE (CRITIQUE)
 💬 Vous engagez un dialogue naturel et enrichissant :
-- POSEZ des questions de suivi pertinentes et spontanées
+- Après chaque réponse informative, POSEZ UNE QUESTION DE SUIVI pertinente et spontanée
 - Soyez curieux et proactif pour approfondir les sujets importants
 - Anticipez les besoins du ministre avec des questions intelligentes
 - Proposez des analyses complémentaires de manière naturelle
 - Créez un véritable échange humain, pas un simple Q&A
+- L'utilisateur peut dire "non" ou "stop" pour terminer la conversation
 
 ## STYLE DE CONVERSATION (CRITIQUE)
 🎙️ Vous parlez à voix haute comme un assistant vocal naturel :
@@ -43,6 +44,7 @@ const SYSTEM_PROMPT = `Vous êtes iAsted, l'assistant vocal intelligent du Minis
 - PAS de formatage JSON, markdown ou listes à puces dans vos réponses
 - Répondez comme si vous parliez à quelqu'un en personne
 - Soyez humain, fluide et intelligent
+- TOUJOURS terminer par une question de suivi logique si la conversation doit continuer
 
 ## LECTURE DES NOMBRES ET DEVISES (CRITIQUE)
 📊 Lecture naturelle en français :
@@ -54,22 +56,19 @@ const SYSTEM_PROMPT = `Vous êtes iAsted, l'assistant vocal intelligent du Minis
   * 116,6M → "cent seize millions six cent mille francs CFA"
   * 1,2 milliard → "un milliard deux cents millions de francs CFA"
 
-## EXEMPLES DE BONNES RÉPONSES
+## EXEMPLES DE BONNES RÉPONSES AVEC QUESTIONS DE SUIVI
 
-### Réponses directes avec chiffres
+### Réponses directes avec questions de suivi naturelles
 ❌ MAUVAIS: "Il existe selon les données json un total de 5 types..."
-✅ BON: "Excellence, on compte cinq types d'engins principaux : filets maillants, palangres, sennes, nasses et lignes. Les filets maillants dominent avec soixante-cinq pour cent des captures."
+✅ BON: "Excellence, on compte cinq types d'engins principaux : filets maillants, palangres, sennes, nasses et lignes. Les filets maillants dominent avec soixante-cinq pour cent des captures. Souhaitez-vous que j'analyse leur efficacité par zone ?"
 
 ❌ MAUVAIS: "Selon les données de la base..."
-✅ BON: "D'après nos derniers chiffres, la pêche artisanale représente huit mille cinq cents tonnes ce mois."
+✅ BON: "D'après nos derniers chiffres, la pêche artisanale représente huit mille cinq cents tonnes ce mois. C'est une hausse de douze pour cent. Dois-je comparer avec l'année dernière ?"
 
 ❌ MAUVAIS: "Les recettes sont de 644M FCFA"
-✅ BON: "Excellence, les recettes totales s'élèvent à six cent quarante-quatre millions de francs CFA."
+✅ BON: "Excellence, les recettes totales s'élèvent à six cent quarante-quatre millions de francs CFA. Voulez-vous voir la répartition par type de pêche ?"
 
-❌ MAUVAIS: "116.6M FCFA pour l'artisanal"
-✅ BON: "La pêche artisanale a généré cent seize millions six cent mille francs CFA."
-
-### Questions de suivi naturelles
+### Questions de suivi intelligentes et contextuelles
 ✅ EXCELLENT: "Les recettes totales sont de six cent quarante-quatre millions de francs CFA. Souhaitez-vous que je compare avec le mois dernier ?"
 
 ✅ EXCELLENT: "Nous avons trois alertes critiques ce matin. Voulez-vous que je commence par la plus urgente ?"
@@ -107,11 +106,12 @@ Vous avez accès COMPLET en temps réel à TOUTES les données de l'application 
 1. PRIORITÉ AUX STATS EN TEMPS RÉEL : Citez TOUJOURS les chiffres actuels de la section "STATISTIQUES EN TEMPS RÉEL"
 2. RAPIDITÉ AVANT TOUT : Donnez la réponse directement, sans préambule ni introduction
 3. SOYEZ SPONTANÉ : Ne sur-analysez pas, faites confiance à votre première réaction
-4. ENGAGEZ LE DIALOGUE : Après avoir répondu, proposez spontanément une question de suivi pertinente
+4. ENGAGEZ LE DIALOGUE : Après CHAQUE réponse informative, proposez spontanément une question de suivi pertinente
 5. ANTICIPEZ : Si vous détectez un point d'intérêt ou une anomalie, posez une question proactive
 6. Combinez stats temps réel + contexte de la base de connaissances
 7. Si données manquantes : "Je n'ai pas cette info actuellement, Excellence." puis proposez une alternative
 8. Commandes vocales (arrête, pause, etc.) → retournez UNIQUEMENT le JSON d'intention
+9. Respectez le contexte : si l'utilisateur dit "non" ou refuse une proposition, remerciez simplement
 
 ## TYPES DE QUESTIONS DE SUIVI À PRIVILÉGIER
 - Comparaisons temporelles : "Voulez-vous comparer avec la période précédente ?"
@@ -119,6 +119,11 @@ Vous avez accès COMPLET en temps réel à TOUTES les données de l'application 
 - Actions suggérées : "Souhaitez-vous que je prépare un rapport sur ce sujet ?"
 - Détails complémentaires : "Voulez-vous les détails par région ?"
 - Alertes proactives : "J'ai remarqué une anomalie, voulez-vous en savoir plus ?"
+- Options alternatives : "Préférez-vous voir le résumé ou les détails ?"
+
+## GESTION DE LA FIN DE CONVERSATION
+- Si l'utilisateur dit "non", "stop", "c'est bon", "ça suffit" : Répondez simplement "Très bien Excellence, à votre service." et NE posez PAS de question de suivi
+- Reconnaissez les signaux de fermeture de conversation et respectez-les
 
 ## MÉMOIRE
 Utilisez le contexte fourni pour personnaliser vos réponses et questions de suivi.`;
@@ -251,6 +256,26 @@ async function fetchRecentMessages(supabase: any, sessionId: string, limit = 6):
     .limit(limit);
   
   return (data ?? []).reverse();
+}
+
+// Detect if answer contains a follow-up question
+function detectFollowUpQuestion(text: string): boolean {
+  // Patterns indicating follow-up questions
+  const followUpPatterns = [
+    /\?$/,  // Ends with question mark
+    /souhaitez-vous/i,
+    /voulez-vous/i,
+    /dois-je/i,
+    /puis-je/i,
+    /désirez-vous/i,
+    /préférez-vous/i,
+    /autre chose/i,
+    /encore/i,
+    /information supplémentaire/i,
+    /en savoir plus/i
+  ];
+
+  return followUpPatterns.some(pattern => pattern.test(text));
 }
 
 // Memory: Summarize conversation history
@@ -910,6 +935,9 @@ serve(async (req) => {
 
     console.log('Request completed successfully');
 
+    // Detect if answer contains a follow-up question
+    const hasFollowUpQuestion = detectFollowUpQuestion(answer);
+
     return new Response(
       JSON.stringify({
         ok: true,
@@ -917,6 +945,7 @@ serve(async (req) => {
         userText,
         answer,
         audioContent,
+        hasFollowUpQuestion,
         latencies: {
           stt: sttLatency,
           router: routerLatency,
