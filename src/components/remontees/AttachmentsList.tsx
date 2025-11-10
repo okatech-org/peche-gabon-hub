@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Image as ImageIcon, Video, FileText, Download, ExternalLink, Loader2, Paperclip } from "lucide-react";
+import { Image as ImageIcon, Video as VideoIcon, FileText, Download, ExternalLink, Loader2, Paperclip, Play } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ImageGallery } from "./ImageGallery";
+import { VideoPlayer } from "./VideoPlayer";
 
 interface Attachment {
   id: string;
@@ -25,6 +26,8 @@ export function AttachmentsList({ remonteeId }: AttachmentsListProps) {
   const [loading, setLoading] = useState(true);
   const [galleryOpen, setGalleryOpen] = useState(false);
   const [galleryIndex, setGalleryIndex] = useState(0);
+  const [videoPlayerOpen, setVideoPlayerOpen] = useState(false);
+  const [videoIndex, setVideoIndex] = useState(0);
 
   useEffect(() => {
     loadAttachments();
@@ -52,7 +55,7 @@ export function AttachmentsList({ remonteeId }: AttachmentsListProps) {
     if (mimeType.startsWith("image/")) {
       return <ImageIcon className="h-5 w-5 text-blue-500" />;
     } else if (mimeType.startsWith("video/")) {
-      return <Video className="h-5 w-5 text-purple-500" />;
+      return <VideoIcon className="h-5 w-5 text-purple-500" />;
     } else if (mimeType === "application/pdf") {
       return <FileText className="h-5 w-5 text-red-500" />;
     }
@@ -66,12 +69,28 @@ export function AttachmentsList({ remonteeId }: AttachmentsListProps) {
       name: att.file_name,
     }));
 
+  const videoAttachments = attachments
+    .filter((att) => att.mime_type.startsWith("video/"))
+    .map((att) => ({
+      url: supabase.storage.from("remontees-attachments").getPublicUrl(att.file_path).data.publicUrl,
+      name: att.file_name,
+    }));
+
   const openGallery = (attachment: Attachment) => {
     const publicUrl = supabase.storage.from("remontees-attachments").getPublicUrl(attachment.file_path).data.publicUrl;
     const index = imageAttachments.findIndex((img) => img.url === publicUrl);
     if (index !== -1) {
       setGalleryIndex(index);
       setGalleryOpen(true);
+    }
+  };
+
+  const openVideoPlayer = (attachment: Attachment) => {
+    const publicUrl = supabase.storage.from("remontees-attachments").getPublicUrl(attachment.file_path).data.publicUrl;
+    const index = videoAttachments.findIndex((vid) => vid.url === publicUrl);
+    if (index !== -1) {
+      setVideoIndex(index);
+      setVideoPlayerOpen(true);
     }
   };
 
@@ -143,6 +162,7 @@ export function AttachmentsList({ remonteeId }: AttachmentsListProps) {
             <div className="space-y-2">
               {attachments.map((attachment) => {
                 const isImage = attachment.mime_type.startsWith("image/");
+                const isVideo = attachment.mime_type.startsWith("video/");
                 const publicUrl = supabase.storage.from("remontees-attachments").getPublicUrl(attachment.file_path).data.publicUrl;
                 
                 return (
@@ -162,6 +182,19 @@ export function AttachmentsList({ remonteeId }: AttachmentsListProps) {
                         />
                         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
                           <ImageIcon className="h-5 w-5 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                        </div>
+                      </button>
+                    ) : isVideo ? (
+                      <button
+                        onClick={() => openVideoPlayer(attachment)}
+                        className="relative h-12 w-12 rounded overflow-hidden flex-shrink-0 hover:ring-2 hover:ring-primary transition-all bg-black"
+                      >
+                        <video
+                          src={publicUrl}
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                          <Play className="h-6 w-6 text-white" />
                         </div>
                       </button>
                     ) : (
@@ -188,7 +221,17 @@ export function AttachmentsList({ remonteeId }: AttachmentsListProps) {
                           <ImageIcon className="h-4 w-4" />
                         </Button>
                       )}
-                      {(isImage || attachment.mime_type === "application/pdf") && (
+                      {isVideo && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => openVideoPlayer(attachment)}
+                          title="Lire la vidéo"
+                        >
+                          <Play className="h-4 w-4" />
+                        </Button>
+                      )}
+                      {(isImage || isVideo || attachment.mime_type === "application/pdf") && (
                         <Button
                           variant="ghost"
                           size="sm"
@@ -221,6 +264,13 @@ export function AttachmentsList({ remonteeId }: AttachmentsListProps) {
         initialIndex={galleryIndex}
         isOpen={galleryOpen}
         onClose={() => setGalleryOpen(false)}
+      />
+
+      <VideoPlayer
+        videos={videoAttachments}
+        initialIndex={videoIndex}
+        isOpen={videoPlayerOpen}
+        onClose={() => setVideoPlayerOpen(false)}
       />
     </>
   );
