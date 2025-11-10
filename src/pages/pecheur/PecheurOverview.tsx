@@ -1,17 +1,29 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Fish, FileText, Activity, Bell, Loader2 } from "lucide-react";
+import { Fish, FileText, Activity, Bell, Loader2, Ship, Anchor } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { DepartEnMerDialog } from "@/components/captures/DepartEnMerDialog";
+import { RetourAuPortDialog } from "@/components/captures/RetourAuPortDialog";
 
 interface PecheurStats {
   capturesMois: number;
   licenceStatut: string;
   cpueMoyen: number;
   notifications: number;
+}
+
+interface SortieEnCours {
+  id: string;
+  pirogue_id: string;
+  site_id: string;
+  date_depart: string;
+  heure_depart: string;
+  pirogue_nom?: string;
+  site_nom?: string;
 }
 
 export default function PecheurOverview() {
@@ -24,10 +36,64 @@ export default function PecheurOverview() {
     cpueMoyen: 0,
     notifications: 0,
   });
+  const [sortieEnCours, setSortieEnCours] = useState<SortieEnCours | null>(null);
+  const [departDialogOpen, setDepartDialogOpen] = useState(false);
+  const [retourDialogOpen, setRetourDialogOpen] = useState(false);
 
   useEffect(() => {
     loadPecheurData();
+    loadSortieEnCours();
   }, [user]);
+
+  const loadSortieEnCours = async () => {
+    if (!user) return;
+
+    try {
+      const { data, error } = await supabase
+        .from("sorties_peche")
+        .select(`
+          id,
+          pirogue_id,
+          site_id,
+          date_depart,
+          heure_depart,
+          pirogues!inner(nom),
+          sites!inner(nom)
+        `)
+        .eq("pecheur_id", user.id)
+        .is("date_retour", null)
+        .order("date_depart", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (error && error.code !== 'PGRST116') {
+        console.error("Erreur chargement sortie:", error);
+        return;
+      }
+
+      if (data) {
+        const sortieData = data as any;
+        setSortieEnCours({
+          id: sortieData.id,
+          pirogue_id: sortieData.pirogue_id,
+          site_id: sortieData.site_id,
+          date_depart: sortieData.date_depart,
+          heure_depart: sortieData.heure_depart,
+          pirogue_nom: sortieData.pirogues?.nom,
+          site_nom: sortieData.sites?.nom,
+        });
+      } else {
+        setSortieEnCours(null);
+      }
+    } catch (error) {
+      console.error("Erreur:", error);
+    }
+  };
+
+  const handleSortieChange = () => {
+    loadSortieEnCours();
+    loadPecheurData();
+  };
 
   const loadPecheurData = async () => {
     try {
@@ -154,8 +220,30 @@ export default function PecheurOverview() {
           </p>
         </CardHeader>
         <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {!sortieEnCours ? (
+            <Button
+              size="lg"
+              className="w-full h-auto py-6 flex-col gap-3"
+              onClick={() => setDepartDialogOpen(true)}
+            >
+              <Ship className="h-6 w-6" />
+              <span className="text-base">Départ en Mer</span>
+            </Button>
+          ) : (
+            <Button
+              size="lg"
+              variant="default"
+              className="w-full h-auto py-6 flex-col gap-3"
+              onClick={() => setRetourDialogOpen(true)}
+            >
+              <Anchor className="h-6 w-6" />
+              <span className="text-base">Retour au Port</span>
+            </Button>
+          )}
+
           <Button
             size="lg"
+            variant="outline"
             className="w-full h-auto py-6 flex-col gap-3"
             onClick={() => navigate("/captures")}
           >
@@ -174,6 +262,19 @@ export default function PecheurOverview() {
           </Button>
         </CardContent>
       </Card>
+
+      <DepartEnMerDialog 
+        open={departDialogOpen}
+        onOpenChange={setDepartDialogOpen}
+        onSuccess={handleSortieChange}
+      />
+
+      <RetourAuPortDialog
+        open={retourDialogOpen}
+        onOpenChange={setRetourDialogOpen}
+        sortie={sortieEnCours}
+        onSuccess={handleSortieChange}
+      />
     </div>
   );
 }
