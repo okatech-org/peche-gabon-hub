@@ -74,6 +74,9 @@ export function PayerTaxeDialog({ open, onOpenChange, taxesIds, montantTotal, on
         description: `Quittance N° ${numeroQuittance}`,
       });
 
+      // Recharger les données immédiatement
+      onSuccess();
+
     } catch (error) {
       console.error("Erreur paiement:", error);
       toast.error("Erreur lors du paiement");
@@ -114,7 +117,6 @@ export function PayerTaxeDialog({ open, onOpenChange, taxesIds, montantTotal, on
                   onClick={() => {
                     setPaymentSuccess(false);
                     onOpenChange(false);
-                    onSuccess();
                     resetForm();
                   }}
                   className="flex-1"
@@ -142,7 +144,6 @@ export function PayerTaxeDialog({ open, onOpenChange, taxesIds, montantTotal, on
             if (!open) {
               setPaymentSuccess(false);
               onOpenChange(false);
-              onSuccess();
               resetForm();
             }
           }}
