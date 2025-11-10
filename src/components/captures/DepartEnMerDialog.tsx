@@ -72,21 +72,42 @@ export const DepartEnMerDialog = ({ open, onOpenChange, onSuccess }: DepartEnMer
 
   const loadReferenceData = async () => {
     try {
+      console.log("Chargement des données de référence...");
+      
       // Load pirogues
-      const { data: piroguesData } = await supabase
+      const { data: piroguesData, error: piroguesError } = await supabase
         .from('pirogues')
         .select('id, nom, immatriculation')
-        .eq('statut', 'active');
+        .eq('statut', 'active')
+        .order('nom');
+      
+      if (piroguesError) {
+        console.error("Erreur pirogues:", piroguesError);
+      } else {
+        console.log("Pirogues chargées:", piroguesData);
+      }
       
       // Load sites  
-      // @ts-expect-error - Types not yet regenerated after migration
-      const { data: sitesData } = await supabase
+      const { data: sitesData, error: sitesError } = await supabase
         .from('sites')
         .select('id, nom, province')
-        .eq('actif', true);
+        .order('nom');
 
-      setPirogues((piroguesData as any) || []);
-      setSites((sitesData as any) || []);
+      if (sitesError) {
+        console.error("Erreur sites:", sitesError);
+      } else {
+        console.log("Sites chargés:", sitesData);
+      }
+
+      setPirogues(piroguesData || []);
+      setSites(sitesData || []);
+      
+      if (!piroguesData || piroguesData.length === 0) {
+        toast.info("Aucune pirogue active disponible");
+      }
+      if (!sitesData || sitesData.length === 0) {
+        toast.info("Aucun site actif disponible");
+      }
     } catch (error) {
       console.error("Erreur chargement données:", error);
       toast.error("Erreur lors du chargement des données");
@@ -103,12 +124,16 @@ export const DepartEnMerDialog = ({ open, onOpenChange, onSuccess }: DepartEnMer
       }
 
       // Vérifier qu'il n'y a pas déjà une sortie en cours
-      const { data: sortieEnCours } = await supabase
+      const { data: sortieEnCours, error: checkError } = await supabase
         .from("sorties_peche")
         .select("id")
         .eq("pecheur_id", user.id)
         .is("date_retour", null)
-        .single();
+        .maybeSingle();
+
+      if (checkError && checkError.code !== 'PGRST116') {
+        console.error("Erreur vérification sortie:", checkError);
+      }
 
       if (sortieEnCours) {
         toast.error("Vous avez déjà une sortie en cours");
@@ -159,12 +184,18 @@ export const DepartEnMerDialog = ({ open, onOpenChange, onSuccess }: DepartEnMer
                         <SelectValue placeholder="Sélectionnez une pirogue" />
                       </SelectTrigger>
                     </FormControl>
-                    <SelectContent>
-                      {pirogues.map((pirogue) => (
-                        <SelectItem key={pirogue.id} value={pirogue.id}>
-                          {pirogue.nom} - {pirogue.immatriculation}
-                        </SelectItem>
-                      ))}
+                    <SelectContent className="max-h-[300px]">
+                      {pirogues.length === 0 ? (
+                        <div className="py-6 text-center text-sm text-muted-foreground">
+                          Aucune pirogue disponible
+                        </div>
+                      ) : (
+                        pirogues.map((pirogue) => (
+                          <SelectItem key={pirogue.id} value={pirogue.id}>
+                            {pirogue.nom} - {pirogue.immatriculation}
+                          </SelectItem>
+                        ))
+                      )}
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -184,12 +215,18 @@ export const DepartEnMerDialog = ({ open, onOpenChange, onSuccess }: DepartEnMer
                         <SelectValue placeholder="Sélectionnez un site" />
                       </SelectTrigger>
                     </FormControl>
-                    <SelectContent>
-                      {sites.map((site) => (
-                        <SelectItem key={site.id} value={site.id}>
-                          {site.nom} ({site.province})
-                        </SelectItem>
-                      ))}
+                    <SelectContent className="max-h-[300px]">
+                      {sites.length === 0 ? (
+                        <div className="py-6 text-center text-sm text-muted-foreground">
+                          Aucun site disponible
+                        </div>
+                      ) : (
+                        sites.map((site) => (
+                          <SelectItem key={site.id} value={site.id}>
+                            {site.nom} {site.province ? `(${site.province})` : ''}
+                          </SelectItem>
+                        ))
+                      )}
                     </SelectContent>
                   </Select>
                   <FormMessage />
