@@ -50,7 +50,11 @@ import AGASADashboard from "./pages/AGASADashboard";
 import DGMMDashboard from "./pages/DGMMDashboard";
 import OPRAGDashboard from "./pages/OPRAGDashboard";
 import ANPNDashboard from "./pages/ANPNDashboard";
-import ArmeurDashboard from "./pages/ArmeurDashboard";
+import ArmeurLayout from "./pages/armeur/ArmeurLayout";
+import ArmeurOverview from "./pages/armeur/ArmeurOverview";
+import ArmeurFlotte from "./pages/armeur/ArmeurFlotte";
+import ArmeurMarees from "./pages/armeur/ArmeurMarees";
+import ArmeurTaxes from "./pages/armeur/ArmeurTaxes";
 import CooperativeDashboard from "./pages/CooperativeDashboard";
 import SuperAdminDashboard from "./pages/SuperAdminDashboard";
 import NotFound from "./pages/NotFound";
@@ -226,10 +230,15 @@ function App() {
               path="/armeur-dashboard"
               element={
                 <ProtectedRoute allowedRoles={['armateur_pi', 'admin']}>
-                  <ArmeurDashboard />
+                  <ArmeurLayout />
                 </ProtectedRoute>
               }
-            />
+            >
+              <Route index element={<ArmeurOverview />} />
+              <Route path="flotte" element={<ArmeurFlotte />} />
+              <Route path="marees" element={<ArmeurMarees />} />
+              <Route path="taxes" element={<ArmeurTaxes />} />
+            </Route>
             <Route
               path="/cooperative-dashboard"
               element={
