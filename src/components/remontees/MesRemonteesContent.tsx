@@ -9,9 +9,10 @@ import { RemonteeMap } from "@/components/RemonteeMap";
 import { AttachmentsList } from "@/components/remontees/AttachmentsList";
 import { RemonteesFilters, RemonteeFilters } from "@/components/remontees/RemonteesFilters";
 import { ExportRemonteesDialog } from "@/components/remontees/ExportRemonteesDialog";
+import { GenerateGroupedAudioSummaryDialog } from "@/components/remontees/GenerateGroupedAudioSummaryDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
-import { Loader2, MessageSquare, Clock, CheckCircle, AlertCircle, FileText, Map, Download } from "lucide-react";
+import { Loader2, MessageSquare, Clock, CheckCircle, AlertCircle, FileText, Map, Download, Volume2 } from "lucide-react";
 import { format, isAfter, isBefore, startOfDay, endOfDay } from "date-fns";
 import { fr } from "date-fns/locale";
 
@@ -58,6 +59,7 @@ export function MesRemonteesContent() {
   const { user } = useAuth();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [exportDialogOpen, setExportDialogOpen] = useState(false);
+  const [audioDialogOpen, setAudioDialogOpen] = useState(false);
   const [selectedType, setSelectedType] = useState<string>("all");
   const [viewMode, setViewMode] = useState<"list" | "map">("list");
   const [filters, setFilters] = useState<RemonteeFilters>({
@@ -298,6 +300,12 @@ export function MesRemonteesContent() {
               <Download className="h-4 w-4 mr-2" />
               Exporter
             </Button>
+            {filteredRemontees && filteredRemontees.length > 0 && (
+              <Button variant="secondary" onClick={() => setAudioDialogOpen(true)}>
+                <Volume2 className="h-4 w-4 mr-2" />
+                Résumé audio ({filteredRemontees.length})
+              </Button>
+            )}
           </div>
         </div>
       </div>
@@ -418,6 +426,12 @@ export function MesRemonteesContent() {
         onOpenChange={setExportDialogOpen}
         remontees={filteredRemontees || []}
         filtresActifs={getActiveFiltresText()}
+      />
+
+      <GenerateGroupedAudioSummaryDialog
+        open={audioDialogOpen}
+        onOpenChange={setAudioDialogOpen}
+        selectedRemontees={filteredRemontees || []}
       />
     </div>
   );

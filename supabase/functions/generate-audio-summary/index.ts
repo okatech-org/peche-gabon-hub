@@ -12,7 +12,7 @@ serve(async (req) => {
   }
 
   try {
-    const { text } = await req.json();
+    const { text, voiceId } = await req.json();
 
     if (!text) {
       throw new Error('Le texte est requis');
@@ -25,11 +25,11 @@ serve(async (req) => {
 
     console.log('Génération audio avec ElevenLabs pour:', text.substring(0, 100));
 
-    // Voix professionnelle masculine française (Roger)
-    const voiceId = 'CwhRBWXzGAHq8TQ4Fs17';
+    // Utiliser la voix fournie ou Roger par défaut
+    const selectedVoiceId = voiceId || 'CwhRBWXzGAHq8TQ4Fs17';
 
     // Générer l'audio avec ElevenLabs
-    const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
+    const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${selectedVoiceId}`, {
       method: 'POST',
       headers: {
         'xi-api-key': ELEVENLABS_API_KEY,
