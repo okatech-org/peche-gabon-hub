@@ -8,6 +8,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { DepartEnMerDialog } from "@/components/captures/DepartEnMerDialog";
 import { RetourAuPortDialog } from "@/components/captures/RetourAuPortDialog";
+import { SortieEnCoursWidget } from "@/components/captures/SortieEnCoursWidget";
 
 interface PecheurStats {
   capturesMois: number;
@@ -210,6 +211,9 @@ export default function PecheurOverview() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Widget Sortie en Cours */}
+      <SortieEnCoursWidget sortie={sortieEnCours} />
 
       {/* Actions Rapides */}
       <Card className="border-border">
