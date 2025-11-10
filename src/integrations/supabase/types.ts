@@ -4112,10 +4112,13 @@ export type Database = {
           demersaux_kg: number | null
           effort_heures: number | null
           engin_id: string | null
+          heure_depart: string | null
+          heure_retour: string | null
           id: string
           mois: number
           nb_pecheurs: number | null
           observations: string | null
+          pecheur_id: string | null
           pelagiques_kg: number | null
           pirogue_id: string
           site_id: string
@@ -4138,10 +4141,13 @@ export type Database = {
           demersaux_kg?: number | null
           effort_heures?: number | null
           engin_id?: string | null
+          heure_depart?: string | null
+          heure_retour?: string | null
           id?: string
           mois: number
           nb_pecheurs?: number | null
           observations?: string | null
+          pecheur_id?: string | null
           pelagiques_kg?: number | null
           pirogue_id: string
           site_id: string
@@ -4164,10 +4170,13 @@ export type Database = {
           demersaux_kg?: number | null
           effort_heures?: number | null
           engin_id?: string | null
+          heure_depart?: string | null
+          heure_retour?: string | null
           id?: string
           mois?: number
           nb_pecheurs?: number | null
           observations?: string | null
+          pecheur_id?: string | null
           pelagiques_kg?: number | null
           pirogue_id?: string
           site_id?: string

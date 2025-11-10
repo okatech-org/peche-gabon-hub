@@ -63,14 +63,15 @@ export const SortieEnMer = ({ onSortieChange }: SortieEnMerProps) => {
       }
 
       if (data) {
+        const sortieData = data as any;
         setSortieEnCours({
-          id: data.id,
-          pirogue_id: data.pirogue_id,
-          site_id: data.site_id,
-          date_depart: data.date_depart,
-          heure_depart: data.heure_depart,
-          pirogue_nom: data.pirogues?.nom,
-          site_nom: data.sites?.nom,
+          id: sortieData.id,
+          pirogue_id: sortieData.pirogue_id,
+          site_id: sortieData.site_id,
+          date_depart: sortieData.date_depart,
+          heure_depart: sortieData.heure_depart,
+          pirogue_nom: sortieData.pirogues?.nom,
+          site_nom: sortieData.sites?.nom,
         });
       } else {
         setSortieEnCours(null);

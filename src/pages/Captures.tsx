@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus } from "lucide-react";
 import { DeclarerCaptureDialog } from "@/components/captures/DeclarerCaptureDialog";
 import { ListeCaptures } from "@/components/captures/ListeCaptures";
 import { StatsCaptures } from "@/components/captures/StatsCaptures";
+import { SortieEnMer } from "@/components/captures/SortieEnMer";
 import { PecheurNav } from "@/components/PecheurNav";
 
 const Captures = () => {
@@ -44,20 +45,25 @@ const Captures = () => {
 
       {/* Content */}
       <div className="container mx-auto px-4 py-8">
-        <Tabs defaultValue="liste" className="space-y-6">
-          <TabsList>
-            <TabsTrigger value="liste">Liste des Captures</TabsTrigger>
-            <TabsTrigger value="stats">Statistiques</TabsTrigger>
-          </TabsList>
+        <div className="space-y-6">
+          {/* Sortie en Mer Component */}
+          {canDeclare && <SortieEnMer />}
 
-          <TabsContent value="liste" className="space-y-4">
-            <ListeCaptures />
-          </TabsContent>
+          <Tabs defaultValue="liste" className="space-y-6">
+            <TabsList>
+              <TabsTrigger value="liste">Liste des Captures</TabsTrigger>
+              <TabsTrigger value="stats">Statistiques</TabsTrigger>
+            </TabsList>
 
-          <TabsContent value="stats" className="space-y-4">
-            <StatsCaptures />
-          </TabsContent>
-        </Tabs>
+            <TabsContent value="liste" className="space-y-4">
+              <ListeCaptures />
+            </TabsContent>
+
+            <TabsContent value="stats" className="space-y-4">
+              <StatsCaptures />
+            </TabsContent>
+          </Tabs>
+        </div>
       </div>
 
       {canDeclare && (
