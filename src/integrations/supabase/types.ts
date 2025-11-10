@@ -2700,6 +2700,42 @@ export type Database = {
         }
         Relationships: []
       }
+      notifications_pecheurs: {
+        Row: {
+          created_at: string
+          id: string
+          lue: boolean | null
+          lue_le: string | null
+          message: string
+          metadata: Json | null
+          titre: string
+          type_notification: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          lue?: boolean | null
+          lue_le?: string | null
+          message: string
+          metadata?: Json | null
+          titre: string
+          type_notification?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          lue?: boolean | null
+          lue_le?: string | null
+          message?: string
+          metadata?: Json | null
+          titre?: string
+          type_notification?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       objectifs_peche: {
         Row: {
           annee: number
@@ -3277,6 +3313,47 @@ export type Database = {
             columns: ["licence_id"]
             isOneToOne: false
             referencedRelation: "licences"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rappels_declaration_captures: {
+        Row: {
+          created_at: string
+          date_retour: string
+          id: string
+          notification_envoyee_le: string
+          notification_lue: boolean | null
+          notification_lue_le: string | null
+          pecheur_id: string
+          sortie_id: string
+        }
+        Insert: {
+          created_at?: string
+          date_retour: string
+          id?: string
+          notification_envoyee_le?: string
+          notification_lue?: boolean | null
+          notification_lue_le?: string | null
+          pecheur_id: string
+          sortie_id: string
+        }
+        Update: {
+          created_at?: string
+          date_retour?: string
+          id?: string
+          notification_envoyee_le?: string
+          notification_lue?: boolean | null
+          notification_lue_le?: string | null
+          pecheur_id?: string
+          sortie_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rappels_declaration_captures_sortie_id_fkey"
+            columns: ["sortie_id"]
+            isOneToOne: false
+            referencedRelation: "sorties_peche"
             referencedColumns: ["id"]
           },
         ]
