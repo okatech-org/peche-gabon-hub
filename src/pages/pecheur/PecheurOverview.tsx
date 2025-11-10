@@ -40,6 +40,7 @@ export default function PecheurOverview() {
       const { data: captures } = await supabase
         .from("captures_pa")
         .select("poids_kg, cpue")
+        .eq("declare_par", user.id)
         .eq("mois", currentMonth)
         .eq("annee", currentYear);
 
@@ -51,7 +52,7 @@ export default function PecheurOverview() {
         : 0;
 
       setStats({
-        capturesMois: capturesMois / 1000, // Convert to tonnes
+        capturesMois: capturesMois,
         licenceStatut: "Non renseigné", // TODO: Load from DB
         cpueMoyen: Number(cpueMoyen.toFixed(1)),
         notifications: 0,
