@@ -149,11 +149,14 @@ export const DeclarerCaptureDialog = ({ open, onOpenChange, sortieEnCours }: Dec
   };
 
   const onSubmit = async (data: CaptureFormData) => {
+    if (loading) return; // Empêcher les doubles soumissions
+    
     setLoading(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         toast.error("Vous devez être connecté");
+        setLoading(false);
         return;
       }
 
