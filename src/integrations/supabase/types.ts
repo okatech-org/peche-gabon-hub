@@ -588,6 +588,60 @@ export type Database = {
           },
         ]
       }
+      briefings_quotidiens: {
+        Row: {
+          alertes_prioritaires: Json
+          audio_url: string | null
+          contenu_structure: Json
+          contenu_vocal: string
+          created_at: string
+          date_briefing: string
+          genere_par: string | null
+          id: string
+          lu_le: string | null
+          points_cles: Json
+          questions_strategiques: Json
+          statistiques_resumees: Json
+          statut: string
+          titre: string
+          updated_at: string
+        }
+        Insert: {
+          alertes_prioritaires?: Json
+          audio_url?: string | null
+          contenu_structure: Json
+          contenu_vocal: string
+          created_at?: string
+          date_briefing: string
+          genere_par?: string | null
+          id?: string
+          lu_le?: string | null
+          points_cles?: Json
+          questions_strategiques?: Json
+          statistiques_resumees?: Json
+          statut?: string
+          titre: string
+          updated_at?: string
+        }
+        Update: {
+          alertes_prioritaires?: Json
+          audio_url?: string | null
+          contenu_structure?: Json
+          contenu_vocal?: string
+          created_at?: string
+          date_briefing?: string
+          genere_par?: string | null
+          id?: string
+          lu_le?: string | null
+          points_cles?: Json
+          questions_strategiques?: Json
+          statistiques_resumees?: Json
+          statut?: string
+          titre?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       calendrier_presence: {
         Row: {
           created_at: string
@@ -2890,6 +2944,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      preferences_briefing: {
+        Row: {
+          created_at: string
+          heure_generation: string
+          id: string
+          inclure_comparaisons: boolean
+          inclure_predictions: boolean
+          niveau_detail: string
+          notification_active: boolean
+          sections_incluses: Json
+          updated_at: string
+          user_id: string
+          voix_preferee: string | null
+        }
+        Insert: {
+          created_at?: string
+          heure_generation?: string
+          id?: string
+          inclure_comparaisons?: boolean
+          inclure_predictions?: boolean
+          niveau_detail?: string
+          notification_active?: boolean
+          sections_incluses?: Json
+          updated_at?: string
+          user_id: string
+          voix_preferee?: string | null
+        }
+        Update: {
+          created_at?: string
+          heure_generation?: string
+          id?: string
+          inclure_comparaisons?: boolean
+          inclure_predictions?: boolean
+          niveau_detail?: string
+          notification_active?: boolean
+          sections_incluses?: Json
+          updated_at?: string
+          user_id?: string
+          voix_preferee?: string | null
+        }
+        Relationships: []
       }
       previsions_history: {
         Row: {

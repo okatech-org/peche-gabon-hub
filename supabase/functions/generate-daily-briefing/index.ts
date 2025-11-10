@@ -158,36 +158,49 @@ serve(async (req) => {
       })) || []
     };
 
-    // ============= GÉNÉRATION DU BRIEFING TEXTUEL =============
+    // ============= GÉNÉRATION DU BRIEFING TEXTUEL STRUCTURÉ =============
     
     const systemPrompt = `Tu es iAsted, l'assistant vocal du Ministre de la Pêche du Gabon.
 
-Génère un briefing matinal naturel et vocal, en style conversationnel professionnel.
+Génère un briefing matinal intelligent et structuré en JSON avec 3 sections distinctes.
 
-STRUCTURE OBLIGATOIRE:
+STRUCTURE JSON OBLIGATOIRE:
+{
+  "contenu_vocal": "Le briefing complet à lire (300 mots max)",
+  "points_cles": ["point 1", "point 2", ...],
+  "questions_strategiques": ["question 1", "question 2", ...]
+}
+
+CONTENU VOCAL (conversationnel, naturel):
 1. Salutation personnalisée avec la date
 2. Aperçu rapide de la situation (1-2 phrases)
 3. Indicateurs clés de la journée précédente
 4. Points d'attention critiques (alertes, remontées urgentes)
 5. Actions et échéances importantes
 6. Événements du jour (formations, documents)
-7. Conclusion positive avec recommandation d'action
+7. Conclusion positive
+
+POINTS CLÉS (5-7 points concis):
+- Les chiffres importants
+- Les alertes critiques
+- Les échéances du jour
+- Les événements majeurs
+
+QUESTIONS STRATÉGIQUES (3-5 questions intelligentes):
+- Anticipation des décisions
+- Analyses approfondies suggérées
+- Comparaisons pertinentes
+- Actions à considérer
 
 STYLE:
-- Ton conversationnel mais professionnel
-- Phrases courtes et claires
-- Chiffres concrets et contextualisés
-- Focus sur l'actionnable
 - Naturel pour être écouté (pas lu)
-- Maximum 300 mots
+- Chiffres en toutes lettres (ex: "cent seize millions")
+- "franc CFA" jamais "FCFA"
+- Focus sur l'actionnable
 
-IMPORTANT: 
-- Ne mentionne que les éléments significatifs
-- Si un indicateur est à 0, ne le mentionne pas
-- Priorise les informations urgentes
-- Termine toujours par une note constructive`;
+Retourne UNIQUEMENT le JSON valide, sans texte supplémentaire.`;
 
-    console.log('Generating briefing text with AI...');
+    console.log('Generating briefing with AI...');
     const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -203,25 +216,39 @@ IMPORTANT:
             content: `Génère le briefing matinal avec ces données:\n\n${JSON.stringify(briefingContext, null, 2)}` 
           }
         ],
-        temperature: 0.7,
-        max_tokens: 800
+        temperature: 0.8,
+        max_tokens: 1200,
+        response_format: { type: "json_object" }
       })
     });
 
     if (!aiResponse.ok) {
       const error = await aiResponse.text();
       console.error('AI generation error:', error);
-      throw new Error('Failed to generate briefing text');
+      throw new Error('Failed to generate briefing');
     }
 
     const aiData = await aiResponse.json();
-    const briefingText = aiData.choices?.[0]?.message?.content || '';
+    const briefingContent = aiData.choices?.[0]?.message?.content || '';
     
-    if (!briefingText) {
-      throw new Error('No briefing text generated');
+    if (!briefingContent) {
+      throw new Error('No briefing generated');
     }
 
-    console.log('Briefing text generated:', briefingText.substring(0, 100) + '...');
+    // Parse the structured JSON response
+    let parsedBriefing;
+    try {
+      parsedBriefing = JSON.parse(briefingContent);
+    } catch (e) {
+      console.error('Failed to parse briefing JSON:', briefingContent);
+      throw new Error('Invalid briefing format');
+    }
+
+    const briefingText = parsedBriefing.contenu_vocal;
+    const pointsCles = parsedBriefing.points_cles || [];
+    const questionsStrategiques = parsedBriefing.questions_strategiques || [];
+
+    console.log('Structured briefing generated successfully');
 
     // ============= GÉNÉRATION DE L'AUDIO =============
     
@@ -283,8 +310,44 @@ IMPORTANT:
       }
     }
 
+    // ============= SAUVEGARDE DU BRIEFING =============
+    
+    const { data: existingBriefing } = await supabase
+      .from('briefings_quotidiens')
+      .select('id')
+      .eq('date_briefing', dateStr)
+      .single();
+
+    const briefingData = {
+      date_briefing: dateStr,
+      titre: `Briefing du ${briefingContext.date}`,
+      contenu_structure: briefingContext,
+      contenu_vocal: briefingText,
+      points_cles: pointsCles,
+      questions_strategiques: questionsStrategiques,
+      alertes_prioritaires: briefingContext.alertes_critiques,
+      statistiques_resumees: {
+        captures_pa: totalCapturesPA,
+        marees_pi: mareesPI?.length || 0,
+        recettes: recettesJour,
+        alertes_critiques: alertesCritiques?.length || 0
+      },
+      audio_url: audioContent ? `data:audio/mp3;base64,${audioContent}` : null
+    };
+
+    if (existingBriefing) {
+      await supabase
+        .from('briefings_quotidiens')
+        .update(briefingData)
+        .eq('id', existingBriefing.id);
+    } else {
+      await supabase
+        .from('briefings_quotidiens')
+        .insert(briefingData);
+    }
+
     const totalTime = Date.now() - startTime;
-    console.log(`Briefing generated in ${totalTime}ms`);
+    console.log(`Briefing generated and saved in ${totalTime}ms`);
 
     return new Response(
       JSON.stringify({
@@ -292,6 +355,8 @@ IMPORTANT:
         briefing: {
           text: briefingText,
           audio: audioContent,
+          points_cles: pointsCles,
+          questions_strategiques: questionsStrategiques,
           context: briefingContext,
           generated_at: new Date().toISOString(),
           generation_time_ms: totalTime
