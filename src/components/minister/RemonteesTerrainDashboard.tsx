@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { AttachmentsList } from "@/components/remontees/AttachmentsList";
 import { 
   FileText, 
   MessageSquare, 
@@ -650,6 +651,8 @@ export function RemonteesTerrainDashboard() {
                 <h3 className="font-semibold text-lg">{selectedRemontee.titre}</h3>
                 <p className="text-sm text-muted-foreground mt-2">{selectedRemontee.description}</p>
               </div>
+
+              <AttachmentsList remonteeId={selectedRemontee.id} />
 
               <div className="grid grid-cols-2 gap-4 text-sm">
                 {selectedRemontee.source && (

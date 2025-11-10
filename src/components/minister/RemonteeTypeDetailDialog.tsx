@@ -10,6 +10,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { AttachmentsList } from "@/components/remontees/AttachmentsList";
 import {
   Download,
   Sparkles,
@@ -222,6 +223,9 @@ export function RemonteeTypeDetailDialog({
 
                       {/* Content */}
                       <p className="text-sm text-muted-foreground">{remontee.description}</p>
+
+                      {/* Pièces jointes */}
+                      <AttachmentsList remonteeId={remontee.id} />
 
                       {/* Meta info */}
                       <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { AttachmentsList } from "@/components/remontees/AttachmentsList";
 import { 
   Eye, 
   FileDown, 
@@ -330,6 +331,11 @@ export function RemonteeCardEnriched({ remontee, onViewDetails, selected, onSele
             <p className="text-[11px] leading-snug line-clamp-2">{remontee.impact_estime}</p>
           </div>
         )}
+
+        {/* Pièces jointes preview */}
+        <div className="text-[10px] text-muted-foreground">
+          <AttachmentsList remonteeId={remontee.id} />
+        </div>
 
         {/* Actions */}
         <div className="flex items-center gap-1.5 pt-2 mt-auto border-t border-border/50">

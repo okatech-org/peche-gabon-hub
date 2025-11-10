@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SubmitRemonteeDialog } from "@/components/minister/SubmitRemonteeDialog";
 import { RemonteeMap } from "@/components/RemonteeMap";
+import { AttachmentsList } from "@/components/remontees/AttachmentsList";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { Loader2, MessageSquare, Clock, CheckCircle, AlertCircle, FileText, Map } from "lucide-react";
@@ -241,10 +242,13 @@ export function MesRemonteesContent() {
                       </div>
                     </div>
                   </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-muted-foreground line-clamp-2 mb-4">
+                  <CardContent className="space-y-4">
+                    <p className="text-sm text-muted-foreground line-clamp-2">
                       {remontee.description}
                     </p>
+
+                    <AttachmentsList remonteeId={remontee.id} />
+                    
                     {remontee.commentaire_validation && remontee.statut === "traite" && (
                       <div className="mt-4 p-4 bg-muted rounded-lg">
                         <div className="flex items-center gap-2 mb-2">

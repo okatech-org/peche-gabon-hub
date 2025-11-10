@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Loader2 } from "lucide-react";
 import { MapLocationPicker } from "@/components/MapLocationPicker";
+import { AttachmentsUpload } from "@/components/remontees/AttachmentsUpload";
 
 const TYPE_REMONTEE_OPTIONS = [
   { value: "reclamation", label: "Réclamation" },
@@ -69,6 +70,8 @@ export function SubmitRemonteeDialog({
     longitude: null as number | null,
   });
 
+  const [attachments, setAttachments] = useState<Array<{ file: File; preview?: string; id: string }>>([]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -85,30 +88,73 @@ export function SubmitRemonteeDialog({
         return;
       }
 
-      const { error } = await supabase.from("remontees_terrain").insert({
-        type_remontee: formData.type_remontee,
-        titre: formData.titre,
-        description: formData.description,
-        source: formData.source,
-        url_source: formData.url_source,
-        localisation: formData.localisation,
-        niveau_priorite: formData.niveau_priorite,
-        sentiment: formData.sentiment,
-        categorie: formData.categorie,
-        mots_cles: formData.mots_cles ? formData.mots_cles.split(",").map(k => k.trim()) : [],
-        nb_personnes_concernees: formData.nb_personnes_concernees ? parseInt(formData.nb_personnes_concernees) : null,
-        date_incident: formData.date_incident || null,
-        impact_estime: formData.impact_estime,
-        latitude: formData.latitude,
-        longitude: formData.longitude,
-        soumis_par: userData.user.id,
-      });
+      // Insérer la remontée
+      const { data: remonteeData, error: remonteeError } = await supabase
+        .from("remontees_terrain")
+        .insert({
+          type_remontee: formData.type_remontee,
+          titre: formData.titre,
+          description: formData.description,
+          source: formData.source,
+          url_source: formData.url_source,
+          localisation: formData.localisation,
+          niveau_priorite: formData.niveau_priorite,
+          sentiment: formData.sentiment,
+          categorie: formData.categorie,
+          mots_cles: formData.mots_cles ? formData.mots_cles.split(",").map(k => k.trim()) : [],
+          nb_personnes_concernees: formData.nb_personnes_concernees ? parseInt(formData.nb_personnes_concernees) : null,
+          date_incident: formData.date_incident || null,
+          impact_estime: formData.impact_estime,
+          latitude: formData.latitude,
+          longitude: formData.longitude,
+          soumis_par: userData.user.id,
+        })
+        .select()
+        .single();
 
-      if (error) throw error;
+      if (remonteeError) throw remonteeError;
+
+      // Upload des pièces jointes si présentes
+      if (attachments.length > 0 && remonteeData) {
+        const uploadPromises = attachments.map(async (attachment) => {
+          const fileExt = attachment.file.name.split(".").pop();
+          const fileName = `${Math.random().toString(36).substring(7)}.${fileExt}`;
+          const filePath = `${userData.user.id}/${fileName}`;
+
+          // Upload vers Storage
+          const { error: uploadError } = await supabase.storage
+            .from("remontees-attachments")
+            .upload(filePath, attachment.file, {
+              cacheControl: "3600",
+              upsert: false,
+            });
+
+          if (uploadError) throw uploadError;
+
+          // Enregistrer les métadonnées
+          const { error: metadataError } = await supabase
+            .from("remontees_attachments")
+            .insert({
+              remontee_id: remonteeData.id,
+              file_name: attachment.file.name,
+              file_path: filePath,
+              file_type: fileExt || "unknown",
+              file_size: attachment.file.size,
+              mime_type: attachment.file.type,
+              uploaded_by: userData.user.id,
+            });
+
+          if (metadataError) throw metadataError;
+        });
+
+        await Promise.all(uploadPromises);
+      }
 
       toast({
         title: "Remontée soumise",
-        description: "Votre remontée a été enregistrée et sera validée prochainement",
+        description: attachments.length > 0 
+          ? `Votre remontée avec ${attachments.length} pièce(s) jointe(s) a été enregistrée`
+          : "Votre remontée a été enregistrée et sera validée prochainement",
       });
 
       if (onSuccess) {
@@ -133,6 +179,7 @@ export function SubmitRemonteeDialog({
         latitude: null,
         longitude: null,
       });
+      setAttachments([]);
     } catch (error: any) {
       console.error("Error submitting remontee:", error);
       toast({
@@ -159,9 +206,10 @@ export function SubmitRemonteeDialog({
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <Tabs defaultValue="informations" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="informations">Informations</TabsTrigger>
               <TabsTrigger value="localisation">Localisation</TabsTrigger>
+              <TabsTrigger value="fichiers">Pièces jointes</TabsTrigger>
             </TabsList>
             
             <TabsContent value="informations" className="space-y-4 mt-4">
@@ -345,6 +393,13 @@ export function SubmitRemonteeDialog({
                 onChange={(e) => setFormData({ ...formData, localisation: e.target.value })}
               />
             </div>
+          </TabsContent>
+
+          <TabsContent value="fichiers" className="space-y-4 mt-4">
+            <AttachmentsUpload
+              files={attachments}
+              onFilesChange={setAttachments}
+            />
           </TabsContent>
           </Tabs>
 

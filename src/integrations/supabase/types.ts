@@ -3604,6 +3604,53 @@ export type Database = {
         }
         Relationships: []
       }
+      remontees_attachments: {
+        Row: {
+          created_at: string | null
+          file_name: string
+          file_path: string
+          file_size: number
+          file_type: string
+          id: string
+          mime_type: string
+          remontee_id: string
+          updated_at: string | null
+          uploaded_by: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          file_name: string
+          file_path: string
+          file_size: number
+          file_type: string
+          id?: string
+          mime_type: string
+          remontee_id: string
+          updated_at?: string | null
+          uploaded_by?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          file_name?: string
+          file_path?: string
+          file_size?: number
+          file_type?: string
+          id?: string
+          mime_type?: string
+          remontee_id?: string
+          updated_at?: string | null
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "remontees_attachments_remontee_id_fkey"
+            columns: ["remontee_id"]
+            isOneToOne: false
+            referencedRelation: "remontees_terrain"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       remontees_effectives: {
         Row: {
           created_at: string
