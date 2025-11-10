@@ -53,14 +53,13 @@ export function PayerTaxeDialog({ open, onOpenChange, taxesIds, montantTotal, on
       // Générer un numéro de quittance unique
       const quittanceNumero = `QT-${Date.now()}-${Math.random().toString(36).substring(7).toUpperCase()}`;
       
-      // Mettre à jour les taxes
+      // Mettre à jour les taxes (mode démo)
       const { error } = await supabase
         .from("taxes_captures")
         .update({
           statut_paiement: "paye",
           date_paiement: new Date().toISOString(),
           quittance_numero: quittanceNumero,
-          mode_paiement: modePaiement,
         })
         .in("id", taxesIds);
 
@@ -119,11 +118,13 @@ export function PayerTaxeDialog({ open, onOpenChange, taxesIds, montantTotal, on
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Payer mes taxes</DialogTitle>
+          <DialogTitle>Payer mes taxes (Mode Démo)</DialogTitle>
           <DialogDescription>
             Montant à payer : <span className="font-semibold text-foreground">{montantTotal.toLocaleString()} FCFA</span>
             <br />
             {taxesIds.length} taxe{taxesIds.length > 1 ? "s" : ""} sélectionnée{taxesIds.length > 1 ? "s" : ""}
+            <br />
+            <span className="text-xs text-muted-foreground mt-1 block">Le paiement sera validé automatiquement en mode démo</span>
           </DialogDescription>
         </DialogHeader>
 

@@ -4590,6 +4590,7 @@ export type Database = {
           espece_id: string | null
           id: string
           maree_industrielle_id: string | null
+          mode_paiement: string | null
           montant_taxe: number
           montant_unitaire: number | null
           notes: string | null
@@ -4608,6 +4609,7 @@ export type Database = {
           espece_id?: string | null
           id?: string
           maree_industrielle_id?: string | null
+          mode_paiement?: string | null
           montant_taxe: number
           montant_unitaire?: number | null
           notes?: string | null
@@ -4626,6 +4628,7 @@ export type Database = {
           espece_id?: string | null
           id?: string
           maree_industrielle_id?: string | null
+          mode_paiement?: string | null
           montant_taxe?: number
           montant_unitaire?: number | null
           notes?: string | null
