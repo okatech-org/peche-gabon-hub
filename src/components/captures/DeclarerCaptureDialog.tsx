@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { differenceInHours, differenceInMinutes } from "date-fns";
 import {
   Dialog,
   DialogContent,
@@ -51,12 +52,23 @@ const captureSchema = z.object({
 
 type CaptureFormData = z.infer<typeof captureSchema>;
 
+interface SortieEnCours {
+  id: string;
+  pirogue_id: string;
+  site_id: string;
+  date_depart: string;
+  heure_depart: string;
+  pirogue_nom?: string;
+  site_nom?: string;
+}
+
 interface DeclarerCaptureDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  sortieEnCours?: SortieEnCours | null;
 }
 
-export const DeclarerCaptureDialog = ({ open, onOpenChange }: DeclarerCaptureDialogProps) => {
+export const DeclarerCaptureDialog = ({ open, onOpenChange, sortieEnCours }: DeclarerCaptureDialogProps) => {
   const [loading, setLoading] = useState(false);
   const [pirogues, setPirogues] = useState<any[]>([]);
   const [sites, setSites] = useState<any[]>([]);
@@ -70,6 +82,19 @@ export const DeclarerCaptureDialog = ({ open, onOpenChange }: DeclarerCaptureDia
       date_capture: new Date().toISOString().split('T')[0],
     },
   });
+
+  // Calculer l'effort automatiquement depuis la sortie en cours
+  const calculerEffortSortie = () => {
+    if (!sortieEnCours) return null;
+    
+    const maintenant = new Date();
+    const depart = new Date(`${sortieEnCours.date_depart}T${sortieEnCours.heure_depart}`);
+    
+    const heures = differenceInHours(maintenant, depart);
+    const minutes = differenceInMinutes(maintenant, depart) % 60;
+    
+    return (heures + minutes / 60).toFixed(2);
+  };
 
   const poids = form.watch("poids_kg");
   const effort = form.watch("effort_unite");
@@ -91,8 +116,18 @@ export const DeclarerCaptureDialog = ({ open, onOpenChange }: DeclarerCaptureDia
   useEffect(() => {
     if (open) {
       loadReferenceData();
+      
+      // Pré-remplir les champs si sortie en cours
+      if (sortieEnCours) {
+        const effortCalcule = calculerEffortSortie();
+        form.setValue('pirogue_id', sortieEnCours.pirogue_id);
+        form.setValue('site_id', sortieEnCours.site_id);
+        if (effortCalcule) {
+          form.setValue('effort_unite', effortCalcule);
+        }
+      }
     }
-  }, [open]);
+  }, [open, sortieEnCours]);
 
   const loadReferenceData = async () => {
     try {
@@ -159,7 +194,9 @@ export const DeclarerCaptureDialog = ({ open, onOpenChange }: DeclarerCaptureDia
         <DialogHeader>
           <DialogTitle>Déclarer une Capture</DialogTitle>
           <DialogDescription>
-            Enregistrez les détails de la capture. Le CPUE sera calculé automatiquement.
+            {sortieEnCours 
+              ? "Sortie en cours détectée - Les informations de la sortie sont pré-remplies automatiquement."
+              : "Enregistrez les détails de la capture. Le CPUE sera calculé automatiquement."}
           </DialogDescription>
         </DialogHeader>
 
@@ -172,7 +209,7 @@ export const DeclarerCaptureDialog = ({ open, onOpenChange }: DeclarerCaptureDia
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Pirogue *</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value} disabled={!!sortieEnCours}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Sélectionnez une pirogue" />
@@ -186,6 +223,9 @@ export const DeclarerCaptureDialog = ({ open, onOpenChange }: DeclarerCaptureDia
                         ))}
                       </SelectContent>
                     </Select>
+                    {sortieEnCours && (
+                      <FormDescription>Pré-rempli depuis la sortie en cours</FormDescription>
+                    )}
                     <FormMessage />
                   </FormItem>
                 )}
@@ -197,7 +237,7 @@ export const DeclarerCaptureDialog = ({ open, onOpenChange }: DeclarerCaptureDia
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Site de débarquement *</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value} disabled={!!sortieEnCours}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Sélectionnez un site" />
@@ -211,6 +251,9 @@ export const DeclarerCaptureDialog = ({ open, onOpenChange }: DeclarerCaptureDia
                         ))}
                       </SelectContent>
                     </Select>
+                    {sortieEnCours && (
+                      <FormDescription>Pré-rempli depuis la sortie en cours</FormDescription>
+                    )}
                     <FormMessage />
                   </FormItem>
                 )}
@@ -316,9 +359,19 @@ export const DeclarerCaptureDialog = ({ open, onOpenChange }: DeclarerCaptureDia
                   <FormItem>
                     <FormLabel>Effort (heures)</FormLabel>
                     <FormControl>
-                      <Input type="number" step="0.1" placeholder="Ex: 4.5" {...field} />
+                      <Input 
+                        type="number" 
+                        step="0.1" 
+                        placeholder="Ex: 4.5" 
+                        {...field}
+                        disabled={!!sortieEnCours}
+                      />
                     </FormControl>
-                    <FormDescription>Pour calcul du CPUE</FormDescription>
+                    <FormDescription>
+                      {sortieEnCours 
+                        ? "Calculé automatiquement depuis le départ en mer"
+                        : "Pour calcul du CPUE"}
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
