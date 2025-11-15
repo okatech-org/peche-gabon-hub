@@ -7,6 +7,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from "recharts";
 import { CreateWorkflowDialog } from "@/components/workflows/CreateWorkflowDialog";
 import { WorkflowsList } from "@/components/workflows/WorkflowsList";
+import { LicencesManagement } from "@/components/workflows/LicencesManagement";
+import { ConformitePanel } from "@/components/workflows/ConformitePanel";
 
 export default function DGPADashboard() {
   const [stats, setStats] = useState({
@@ -214,9 +216,7 @@ export default function DGPADashboard() {
                 <CardDescription>Suivi des demandes et renouvellements</CardDescription>
               </CardHeader>
               <CardContent>
-                <p className="text-muted-foreground">
-                  Module de gestion détaillée des licences en développement
-                </p>
+                <LicencesManagement />
               </CardContent>
             </Card>
           </TabsContent>
@@ -250,17 +250,7 @@ export default function DGPADashboard() {
           </TabsContent>
 
           <TabsContent value="conformite" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Conformité Réglementaire</CardTitle>
-                <CardDescription>Application du Code des Pêches</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">
-                  Module de suivi de conformité en développement
-                </p>
-              </CardContent>
-            </Card>
+            <ConformitePanel />
           </TabsContent>
         </Tabs>
       </div>
